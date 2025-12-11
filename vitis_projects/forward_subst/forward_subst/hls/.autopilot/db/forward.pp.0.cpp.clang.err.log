@@ -1,7 +1,0 @@
-directive:1:1: warning: HLS pragma dump _XLX_SEP_ PragmaIsValid=1_XLX_SEP_ PragmaType=top_XLX_SEP_ PragmaContext=directive_XLX_SEP_ PragmaFunction=forward_substitution_XLX_SEP_ PragmaOptions=name=forward_substitution_XLX_SEP_ [-Wdump-hls-pragmas]
-#pragma HLSDIRECTIVE TOP name=forward_substitution
-^
-forward.cpp:13:1: warning: HLS pragma dump _XLX_SEP_ PragmaIsValid=1_XLX_SEP_ PragmaType=pipeline_XLX_SEP_ PragmaContext=hls_XLX_SEP_ PragmaFunction=forward_substitution_XLX_SEP_ PragmaOptions=II=11_XLX_SEP_ [-Wdump-hls-pragmas]
-#pragma HLS PIPELINE II=11
-^
-2 warnings generated.

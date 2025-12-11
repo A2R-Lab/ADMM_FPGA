@@ -1,3 +1,0 @@
-relativeroot=/home/andrea/ADMM_FPGA/vitis_projects/forward_subst
-original_argv=-c --mode hls --config ./hls_config.cfg --work_dir forward_subst 
-
