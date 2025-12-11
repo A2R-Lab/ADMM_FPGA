@@ -1,0 +1,24 @@
+#-----------------------------------------------------------
+# Vivado v2025.2 (64-bit)
+# SW Build 6299465 on Fri Nov 14 12:34:56 MST 2025
+# IP Build 6300035 on Fri Nov 14 10:48:45 MST 2025
+# SharedData Build 6298862 on Thu Nov 13 04:50:51 MST 2025
+# Start of session at: Wed Dec 10 19:53:30 2025
+# Process ID         : 2105638
+# Current directory  : /home/andrea/ADMM_FPGA/uart_forward_subst/uart_forward_subst.runs/synth_1
+# Command line       : vivado -log uart_forward_substitution_top.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source uart_forward_substitution_top.tcl
+# Log file           : /home/andrea/ADMM_FPGA/uart_forward_subst/uart_forward_subst.runs/synth_1/uart_forward_substitution_top.vds
+# Journal file       : /home/andrea/ADMM_FPGA/uart_forward_subst/uart_forward_subst.runs/synth_1/vivado.jou
+# Running On         : ag-think
+# Platform           : Debian
+# Operating System   : Debian GNU/Linux 12 (bookworm)
+# Processor Detail   : AMD Ryzen 5 5500U with Radeon Graphics
+# CPU Frequency      : 4041.535 MHz
+# CPU Physical cores : 6
+# CPU Logical cores  : 12
+# Host memory        : 15520 MB
+# Swap memory        : 16000 MB
+# Total Virtual      : 31520 MB
+# Available Virtual  : 16457 MB
+#-----------------------------------------------------------
+source uart_forward_substitution_top.tcl -notrace

@@ -1,0 +1,548 @@
+
+*** Running vivado
+    with args -log uart_forward_substitution_top.vds -m64 -product Vivado -mode batch -messageDb vivado.pb -notrace -source uart_forward_substitution_top.tcl
+
+
+****** Vivado v2025.2 (64-bit)
+  **** SW Build 6299465 on Fri Nov 14 12:34:56 MST 2025
+  **** IP Build 6300035 on Fri Nov 14 10:48:45 MST 2025
+  **** SharedData Build 6298862 on Thu Nov 13 04:50:51 MST 2025
+  **** Start of session at: Wed Dec 10 17:25:58 2025
+    ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+    ** Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+
+source uart_forward_substitution_top.tcl -notrace
+WARNING: [Common 17-1361] You have specified a new message control rule that is equivalent to an existing rule with attributes ' -id {17-179}  -suppress '. The existing rule will be replaced.
+WARNING: [Common 17-1361] You have specified a new message control rule that is equivalent to an existing rule with attributes ' -id {17-179}  -suppress '. The existing rule will be replaced.
+WARNING: [Common 17-1361] You have specified a new message control rule that is equivalent to an existing rule with attributes ' -id {17-179}  -suppress '. The existing rule will be replaced.
+WARNING: [Common 17-1361] You have specified a new message control rule that is equivalent to an existing rule with attributes ' -id {17-179}  -suppress '. The existing rule will be replaced.
+Command: read_checkpoint -auto_incremental -incremental /home/andrea/uart_forward_subst/uart_forward_subst.srcs/utils_1/imports/synth_1/uart_forward_substitution_top.dcp
+INFO: [Vivado 12-5825] Read reference checkpoint from /home/andrea/uart_forward_subst/uart_forward_subst.srcs/utils_1/imports/synth_1/uart_forward_substitution_top.dcp for incremental synthesis
+INFO: [Vivado 12-7989] Please ensure there are no constraint changes
+Command: synth_design -top uart_forward_substitution_top -part xc7a100tcsg324-1
+Starting synth_design
+Attempting to get a license for feature 'Synthesis' and/or device 'xc7a100t'
+INFO: [Common 17-349] Got license for feature 'Synthesis' and/or device 'xc7a100t'
+INFO: [Device 21-403] Loading part xc7a100tcsg324-1
+INFO: [Designutils 20-5440] No compile time benefit to using incremental synthesis; A full resynthesis will be run
+INFO: [Designutils 20-4379] Flow is switching to default flow due to incremental criteria not met. If you would like to alter this behaviour and have the flow terminate instead, please set the following parameter config_implementation {autoIncr.Synth.RejectBehavior Terminate}
+INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 7 processes.
+INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
+WARNING: [Common 17-1361] You have specified a new message control rule that is equivalent to an existing rule with attributes ' -id {17-179}  -suppress '. The existing rule will be replaced.
+INFO: [Synth 8-7075] Helper process launched with PID 2066853
+---------------------------------------------------------------------------------
+Starting RTL Elaboration : Time (s): cpu = 00:00:04 ; elapsed = 00:00:05 . Memory (MB): peak = 2257.719 ; gain = 482.875 ; free physical = 845 ; free virtual = 7816
+---------------------------------------------------------------------------------
+INFO: [Synth 8-6157] synthesizing module 'uart_forward_substitution_top' [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/top.v:3]
+INFO: [Synth 8-155] case statement is not full and has no default [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/top.v:141]
+INFO: [Synth 8-155] case statement is not full and has no default [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/top.v:189]
+INFO: [Synth 8-6157] synthesizing module 'forward_substitution' [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/forward_substitution.v:9]
+INFO: [Synth 8-6157] synthesizing module 'forward_substitution_p_ZL5L_row_0_ROM_AUTO_1R' [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/forward_substitution_p_ZL5L_row_0_ROM_AUTO_1R.v:7]
+	Parameter DataWidth bound to: 16 - type: integer 
+	Parameter AddressWidth bound to: 4 - type: integer 
+	Parameter AddressRange bound to: 10 - type: integer 
+INFO: [Synth 8-3876] $readmem data file './forward_substitution_p_ZL5L_row_0_ROM_AUTO_1R.dat' is read successfully [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/forward_substitution_p_ZL5L_row_0_ROM_AUTO_1R.v:28]
+INFO: [Synth 8-6155] done synthesizing module 'forward_substitution_p_ZL5L_row_0_ROM_AUTO_1R' (0#1) [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/forward_substitution_p_ZL5L_row_0_ROM_AUTO_1R.v:7]
+INFO: [Synth 8-6157] synthesizing module 'forward_substitution_p_ZL5L_row_1_ROM_AUTO_1R' [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/forward_substitution_p_ZL5L_row_1_ROM_AUTO_1R.v:7]
+	Parameter DataWidth bound to: 16 - type: integer 
+	Parameter AddressWidth bound to: 4 - type: integer 
+	Parameter AddressRange bound to: 10 - type: integer 
+INFO: [Synth 8-3876] $readmem data file './forward_substitution_p_ZL5L_row_1_ROM_AUTO_1R.dat' is read successfully [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/forward_substitution_p_ZL5L_row_1_ROM_AUTO_1R.v:28]
+INFO: [Synth 8-6155] done synthesizing module 'forward_substitution_p_ZL5L_row_1_ROM_AUTO_1R' (0#1) [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/forward_substitution_p_ZL5L_row_1_ROM_AUTO_1R.v:7]
+INFO: [Synth 8-6157] synthesizing module 'forward_substitution_p_ZL5L_row_2_ROM_AUTO_1R' [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/forward_substitution_p_ZL5L_row_2_ROM_AUTO_1R.v:7]
+	Parameter DataWidth bound to: 16 - type: integer 
+	Parameter AddressWidth bound to: 4 - type: integer 
+	Parameter AddressRange bound to: 10 - type: integer 
+INFO: [Synth 8-3876] $readmem data file './forward_substitution_p_ZL5L_row_2_ROM_AUTO_1R.dat' is read successfully [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/forward_substitution_p_ZL5L_row_2_ROM_AUTO_1R.v:28]
+INFO: [Synth 8-6155] done synthesizing module 'forward_substitution_p_ZL5L_row_2_ROM_AUTO_1R' (0#1) [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/forward_substitution_p_ZL5L_row_2_ROM_AUTO_1R.v:7]
+INFO: [Synth 8-6157] synthesizing module 'forward_substitution_mul_16s_32s_48_2_1' [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/forward_substitution_mul_16s_32s_48_2_1.v:5]
+	Parameter ID bound to: 1 - type: integer 
+	Parameter NUM_STAGE bound to: 2 - type: integer 
+	Parameter din0_WIDTH bound to: 16 - type: integer 
+	Parameter din1_WIDTH bound to: 32 - type: integer 
+	Parameter dout_WIDTH bound to: 48 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'forward_substitution_mul_16s_32s_48_2_1' (0#1) [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/forward_substitution_mul_16s_32s_48_2_1.v:5]
+INFO: [Synth 8-6157] synthesizing module 'forward_substitution_mul_33s_16ns_48_2_1' [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/forward_substitution_mul_33s_16ns_48_2_1.v:5]
+	Parameter ID bound to: 1 - type: integer 
+	Parameter NUM_STAGE bound to: 2 - type: integer 
+	Parameter din0_WIDTH bound to: 33 - type: integer 
+	Parameter din1_WIDTH bound to: 16 - type: integer 
+	Parameter dout_WIDTH bound to: 48 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'forward_substitution_mul_33s_16ns_48_2_1' (0#1) [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/forward_substitution_mul_33s_16ns_48_2_1.v:5]
+INFO: [Synth 8-6157] synthesizing module 'forward_substitution_flow_control_loop_pipe' [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/forward_substitution_flow_control_loop_pipe.v:11]
+INFO: [Synth 8-6155] done synthesizing module 'forward_substitution_flow_control_loop_pipe' (0#1) [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/forward_substitution_flow_control_loop_pipe.v:11]
+INFO: [Synth 8-6155] done synthesizing module 'forward_substitution' (0#1) [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/forward_substitution.v:9]
+INFO: [Synth 8-6157] synthesizing module 'uart_rx' [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/uart_rx.v:8]
+	Parameter BIT_RATE bound to: 115200 - type: integer 
+	Parameter CLK_HZ bound to: 100000000 - type: integer 
+	Parameter PAYLOAD_BITS bound to: 8 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'uart_rx' (0#1) [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/uart_rx.v:8]
+INFO: [Synth 8-6157] synthesizing module 'uart_tx' [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/uart_tx.v:9]
+	Parameter BIT_RATE bound to: 115200 - type: integer 
+	Parameter CLK_HZ bound to: 100000000 - type: integer 
+	Parameter PAYLOAD_BITS bound to: 8 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'uart_tx' (0#1) [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/uart_tx.v:9]
+INFO: [Synth 8-6155] done synthesizing module 'uart_forward_substitution_top' (0#1) [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/sources_1/new/top.v:3]
+INFO: [Synth 8-4490] FSM extraction disabled for register 'ap_CS_fsm_reg' through user attribute
+WARNING: [Synth 8-7129] Port ap_done_int in module forward_substitution_flow_control_loop_pipe is either unconnected or has no load
+WARNING: [Synth 8-7129] Port reset in module forward_substitution_mul_33s_16ns_48_2_1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port reset in module forward_substitution_mul_16s_32s_48_2_1 is either unconnected or has no load
+WARNING: [Synth 8-7129] Port reset in module forward_substitution_p_ZL5L_row_2_ROM_AUTO_1R is either unconnected or has no load
+WARNING: [Synth 8-7129] Port reset in module forward_substitution_p_ZL5L_row_1_ROM_AUTO_1R is either unconnected or has no load
+WARNING: [Synth 8-7129] Port reset in module forward_substitution_p_ZL5L_row_0_ROM_AUTO_1R is either unconnected or has no load
+---------------------------------------------------------------------------------
+Finished RTL Elaboration : Time (s): cpu = 00:00:06 ; elapsed = 00:00:06 . Memory (MB): peak = 2347.656 ; gain = 572.812 ; free physical = 722 ; free virtual = 7693
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Handling Custom Attributes
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:06 ; elapsed = 00:00:07 . Memory (MB): peak = 2362.500 ; gain = 587.656 ; free physical = 721 ; free virtual = 7692
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:06 ; elapsed = 00:00:07 . Memory (MB): peak = 2362.500 ; gain = 587.656 ; free physical = 721 ; free virtual = 7692
+---------------------------------------------------------------------------------
+Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 2362.500 ; gain = 0.000 ; free physical = 721 ; free virtual = 7692
+INFO: [Project 1-570] Preparing netlist for logic optimization
+
+Processing XDC Constraints
+Initializing timing engine
+Parsing XDC File [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/constrs_1/new/design.xdc]
+Finished Parsing XDC File [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/constrs_1/new/design.xdc]
+INFO: [Project 1-236] Implementation specific constraints were found while reading constraint file [/home/andrea/uart_forward_subst/uart_forward_subst.srcs/constrs_1/new/design.xdc]. These constraints will be ignored for synthesis but will be used in implementation. Impacted constraints are listed in the file [.Xil/uart_forward_substitution_top_propImpl.xdc].
+Resolution: To avoid this warning, move constraints listed in [.Xil/uart_forward_substitution_top_propImpl.xdc] to another XDC file and exclude this new file from synthesis with the used_in_synthesis property (File Properties dialog in GUI) and re-run elaboration/synthesis.
+Completed Processing XDC Constraints
+
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2475.238 ; gain = 0.000 ; free physical = 698 ; free virtual = 7668
+INFO: [Project 1-111] Unisim Transformation Summary:
+No Unisim elements were transformed.
+
+Constraint Validation Runtime : Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2475.273 ; gain = 0.000 ; free physical = 696 ; free virtual = 7667
+INFO: [Designutils 20-5440] No compile time benefit to using incremental synthesis; A full resynthesis will be run
+INFO: [Designutils 20-4379] Flow is switching to default flow due to incremental criteria not met. If you would like to alter this behaviour and have the flow terminate instead, please set the following parameter config_implementation {autoIncr.Synth.RejectBehavior Terminate}
+---------------------------------------------------------------------------------
+Finished Constraint Validation : Time (s): cpu = 00:00:13 ; elapsed = 00:00:13 . Memory (MB): peak = 2475.273 ; gain = 700.430 ; free physical = 699 ; free virtual = 7621
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Loading Part and Timing Information
+---------------------------------------------------------------------------------
+Loading part: xc7a100tcsg324-1
+---------------------------------------------------------------------------------
+Finished Loading Part and Timing Information : Time (s): cpu = 00:00:13 ; elapsed = 00:00:13 . Memory (MB): peak = 2483.242 ; gain = 708.398 ; free physical = 699 ; free virtual = 7621
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Applying 'set_property' XDC Constraints
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:13 ; elapsed = 00:00:13 . Memory (MB): peak = 2483.242 ; gain = 708.398 ; free physical = 699 ; free virtual = 7621
+---------------------------------------------------------------------------------
+INFO: [Synth 8-4490] FSM extraction disabled for register 'ap_CS_fsm_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'ap_CS_fsm_reg' through user attribute
+INFO: [Synth 8-802] inferred FSM for state register 'fsm_state_reg' in module 'uart_rx'
+INFO: [Synth 8-802] inferred FSM for state register 'fsm_state_reg' in module 'uart_tx'
+INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'uart_forward_substitution_top'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                FSM_IDLE |                               00 |                              000
+               FSM_START |                               11 |                              001
+                FSM_RECV |                               10 |                              010
+                FSM_STOP |                               01 |                              011
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'fsm_state_reg' using encoding 'sequential' in module 'uart_rx'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                FSM_IDLE |                               00 |                              000
+               FSM_START |                               11 |                              001
+                FSM_SEND |                               10 |                              010
+                FSM_STOP |                               01 |                              011
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'fsm_state_reg' using encoding 'sequential' in module 'uart_tx'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                    IDLE |                            00001 |                              000
+                 RX_DATA |                            00010 |                              001
+                 COMPUTE |                            00100 |                              010
+                 TX_DATA |                            01000 |                              011
+                    DONE |                            10000 |                              100
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 'one-hot' in module 'uart_forward_substitution_top'
+---------------------------------------------------------------------------------
+Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:14 ; elapsed = 00:00:14 . Memory (MB): peak = 2483.242 ; gain = 708.398 ; free physical = 700 ; free virtual = 7623
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start RTL Component Statistics 
+---------------------------------------------------------------------------------
+Detailed RTL Component Info : 
++---Adders : 
+	   2 Input   48 Bit       Adders := 1     
+	   3 Input   33 Bit       Adders := 1     
+	   2 Input   11 Bit       Adders := 2     
+	   2 Input    4 Bit       Adders := 7     
++---Registers : 
+	               48 Bit    Registers := 3     
+	               33 Bit    Registers := 1     
+	               32 Bit    Registers := 17    
+	               16 Bit    Registers := 6     
+	               11 Bit    Registers := 2     
+	                9 Bit    Registers := 1     
+	                8 Bit    Registers := 4     
+	                4 Bit    Registers := 9     
+	                1 Bit    Registers := 9     
++---Multipliers : 
+	              16x32  Multipliers := 1     
+	              17x33  Multipliers := 1     
++---RAMs : 
+	              320 Bit	(10 X 32 bit)          RAMs := 1     
++---Muxes : 
+	   2 Input   32 Bit        Muxes := 3     
+	   4 Input   32 Bit        Muxes := 1     
+	   5 Input   32 Bit        Muxes := 2     
+	  11 Input   16 Bit        Muxes := 3     
+	   2 Input   16 Bit        Muxes := 1     
+	   2 Input    8 Bit        Muxes := 3     
+	   4 Input    8 Bit        Muxes := 1     
+	   2 Input    4 Bit        Muxes := 2     
+	   5 Input    4 Bit        Muxes := 5     
+	   5 Input    3 Bit        Muxes := 1     
+	   2 Input    2 Bit        Muxes := 13    
+	   4 Input    2 Bit        Muxes := 4     
+	   2 Input    1 Bit        Muxes := 48    
+	   3 Input    1 Bit        Muxes := 1     
+	   4 Input    1 Bit        Muxes := 12    
+	   5 Input    1 Bit        Muxes := 18    
+---------------------------------------------------------------------------------
+Finished RTL Component Statistics 
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Part Resource Summary
+---------------------------------------------------------------------------------
+Part Resources:
+DSPs: 240 (col length:80)
+BRAMs: 270 (col length: RAMB18 80 RAMB36 40)
+---------------------------------------------------------------------------------
+Finished Part Resource Summary
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Cross Boundary and Area Optimization
+---------------------------------------------------------------------------------
+DSP Report: Generating DSP dut/mul_16s_32s_48_2_1_U1/tmp_product, operation Mode is: A*B.
+DSP Report: operator dut/mul_16s_32s_48_2_1_U1/tmp_product is absorbed into DSP dut/mul_16s_32s_48_2_1_U1/tmp_product.
+DSP Report: operator dut/mul_16s_32s_48_2_1_U1/tmp_product is absorbed into DSP dut/mul_16s_32s_48_2_1_U1/tmp_product.
+DSP Report: Generating DSP dut/mul_16s_32s_48_2_1_U1/buff0_reg, operation Mode is: (PCIN>>17)+A*B.
+DSP Report: register dut/mul_16s_32s_48_2_1_U1/buff0_reg is absorbed into DSP dut/mul_16s_32s_48_2_1_U1/buff0_reg.
+DSP Report: operator dut/mul_16s_32s_48_2_1_U1/tmp_product is absorbed into DSP dut/mul_16s_32s_48_2_1_U1/buff0_reg.
+DSP Report: operator dut/mul_16s_32s_48_2_1_U1/tmp_product is absorbed into DSP dut/mul_16s_32s_48_2_1_U1/buff0_reg.
+DSP Report: Generating DSP dut/mul_33s_16ns_48_2_1_U2/tmp_product, operation Mode is: A2*B''.
+DSP Report: register dut/mul_33s_16ns_48_2_1_U2/tmp_product is absorbed into DSP dut/mul_33s_16ns_48_2_1_U2/tmp_product.
+DSP Report: register dut/mul_33s_16ns_48_2_1_U2/tmp_product is absorbed into DSP dut/mul_33s_16ns_48_2_1_U2/tmp_product.
+DSP Report: register dut/mul_33s_16ns_48_2_1_U2/tmp_product is absorbed into DSP dut/mul_33s_16ns_48_2_1_U2/tmp_product.
+DSP Report: operator dut/mul_33s_16ns_48_2_1_U2/tmp_product is absorbed into DSP dut/mul_33s_16ns_48_2_1_U2/tmp_product.
+DSP Report: operator dut/mul_33s_16ns_48_2_1_U2/tmp_product is absorbed into DSP dut/mul_33s_16ns_48_2_1_U2/tmp_product.
+DSP Report: Generating DSP dut/mul_33s_16ns_48_2_1_U2/buff0_reg, operation Mode is: (PCIN>>17)+A''*B2.
+DSP Report: register dut/sub_ln30_reg_383_reg is absorbed into DSP dut/mul_33s_16ns_48_2_1_U2/buff0_reg.
+DSP Report: register dut/mul_33s_16ns_48_2_1_U2/buff0_reg is absorbed into DSP dut/mul_33s_16ns_48_2_1_U2/buff0_reg.
+DSP Report: register dut/mul_33s_16ns_48_2_1_U2/buff0_reg is absorbed into DSP dut/mul_33s_16ns_48_2_1_U2/buff0_reg.
+DSP Report: register dut/mul_33s_16ns_48_2_1_U2/buff0_reg is absorbed into DSP dut/mul_33s_16ns_48_2_1_U2/buff0_reg.
+DSP Report: operator dut/mul_33s_16ns_48_2_1_U2/tmp_product is absorbed into DSP dut/mul_33s_16ns_48_2_1_U2/buff0_reg.
+DSP Report: operator dut/mul_33s_16ns_48_2_1_U2/tmp_product is absorbed into DSP dut/mul_33s_16ns_48_2_1_U2/buff0_reg.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[47]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[46]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[45]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[44]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[43]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[42]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[41]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[40]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[39]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[38]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[37]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[36]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[35]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[34]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[33]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[32]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[31]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[30]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[29]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[28]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[27]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[26]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[25]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[24]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[23]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[22]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[21]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[20]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[19]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[18]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[17]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[14]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[13]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[12]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[11]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[10]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[9]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[8]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[7]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[6]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[5]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[4]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[3]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[2]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[1]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_16s_32s_48_2_1_U1/buff0_reg[0]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[47]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[46]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[45]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[44]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[43]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[42]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[41]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[40]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[39]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[38]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[37]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[36]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[35]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[34]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[33]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[32]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[31]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[30]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[29]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[28]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[27]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[26]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[25]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[24]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[23]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[22]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[21]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[20]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[19]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[18]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[17]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[15]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[14]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[13]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[12]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[11]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[10]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[9]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[8]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[7]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[6]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[5]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[4]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[3]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[2]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[1]) is unused and will be removed from module uart_forward_substitution_top.
+WARNING: [Synth 8-3332] Sequential element (dut/mul_33s_16ns_48_2_1_U2/buff0_reg[0]) is unused and will be removed from module uart_forward_substitution_top.
+---------------------------------------------------------------------------------
+Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:17 ; elapsed = 00:00:18 . Memory (MB): peak = 2483.242 ; gain = 708.398 ; free physical = 686 ; free virtual = 7586
+---------------------------------------------------------------------------------
+ Sort Area is  dut/mul_33s_16ns_48_2_1_U2/tmp_product_3 : 0 0 : 3069 5888 : Used 1 time 0
+ Sort Area is  dut/mul_33s_16ns_48_2_1_U2/tmp_product_3 : 0 1 : 2819 5888 : Used 1 time 0
+ Sort Area is  dut/mul_16s_32s_48_2_1_U1/tmp_product_0 : 0 0 : 2304 4300 : Used 1 time 0
+ Sort Area is  dut/mul_16s_32s_48_2_1_U1/tmp_product_0 : 0 1 : 1996 4300 : Used 1 time 0
+---------------------------------------------------------------------------------
+Start ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+
+Distributed RAM: Preliminary Mapping Report (see note below)
++------------------------------+------------+-----------+----------------------+-------------+
+|Module Name                   | RTL Object | Inference | Size (Depth x Width) | Primitives  | 
++------------------------------+------------+-----------+----------------------+-------------+
+|uart_forward_substitution_top | x_mem_reg  | Implied   | 16 x 32              | RAM32M x 6  | 
++------------------------------+------------+-----------+----------------------+-------------+
+
+Note: The table above is a preliminary report that shows the Distributed RAMs at the current stage of the synthesis flow. Some Distributed RAMs may be reimplemented as non Distributed RAM primitives later in the synthesis flow. Multiple instantiated RAMs are reported only once.
+
+DSP: Preliminary Mapping Report (see note below. The ' indicates corresponding REG is set)
++------------------------------+-------------------+--------+--------+--------+--------+--------+------+------+------+------+-------+------+------+
+|Module Name                   | DSP Mapping       | A Size | B Size | C Size | D Size | P Size | AREG | BREG | CREG | DREG | ADREG | MREG | PREG | 
++------------------------------+-------------------+--------+--------+--------+--------+--------+------+------+------+------+-------+------+------+
+|uart_forward_substitution_top | A*B               | 18     | 16     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|uart_forward_substitution_top | (PCIN>>17)+A*B    | 16     | 15     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 1    | 
+|uart_forward_substitution_top | A2*B''            | 18     | 17     | -      | -      | 48     | 1    | 2    | -    | -    | -     | 0    | 0    | 
+|uart_forward_substitution_top | (PCIN>>17)+A''*B2 | 17     | 16     | -      | -      | 48     | 2    | 1    | -    | -    | -     | 0    | 1    | 
++------------------------------+-------------------+--------+--------+--------+--------+--------+------+------+------+------+-------+------+------+
+
+Note: The table above is a preliminary report that shows the DSPs inferred at the current stage of the synthesis flow. Some DSP may be reimplemented as non DSP primitives later in the synthesis flow. Multiple instantiated DSPs are reported only once.
+---------------------------------------------------------------------------------
+Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Applying XDC Timing Constraints
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Applying XDC Timing Constraints : Time (s): cpu = 00:00:23 ; elapsed = 00:00:24 . Memory (MB): peak = 2586.242 ; gain = 811.398 ; free physical = 540 ; free virtual = 7416
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Timing Optimization
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Timing Optimization : Time (s): cpu = 00:00:25 ; elapsed = 00:00:26 . Memory (MB): peak = 2637.289 ; gain = 862.445 ; free physical = 648 ; free virtual = 7524
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+
+Distributed RAM: Final Mapping Report
++------------------------------+------------+-----------+----------------------+-------------+
+|Module Name                   | RTL Object | Inference | Size (Depth x Width) | Primitives  | 
++------------------------------+------------+-----------+----------------------+-------------+
+|uart_forward_substitution_top | x_mem_reg  | Implied   | 16 x 32              | RAM32M x 6  | 
++------------------------------+------------+-----------+----------------------+-------------+
+
+---------------------------------------------------------------------------------
+Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Technology Mapping
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Technology Mapping : Time (s): cpu = 00:00:25 ; elapsed = 00:00:26 . Memory (MB): peak = 2645.297 ; gain = 870.453 ; free physical = 632 ; free virtual = 7507
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Flattening Before IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Flattening Before IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Final Netlist Cleanup
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Final Netlist Cleanup
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished IO Insertion : Time (s): cpu = 00:00:29 ; elapsed = 00:00:30 . Memory (MB): peak = 2797.109 ; gain = 1022.266 ; free physical = 523 ; free virtual = 7377
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Instances
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Instances : Time (s): cpu = 00:00:29 ; elapsed = 00:00:30 . Memory (MB): peak = 2797.109 ; gain = 1022.266 ; free physical = 523 ; free virtual = 7377
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Rebuilding User Hierarchy
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Rebuilding User Hierarchy : Time (s): cpu = 00:00:29 ; elapsed = 00:00:30 . Memory (MB): peak = 2797.109 ; gain = 1022.266 ; free physical = 523 ; free virtual = 7377
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Ports
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Ports : Time (s): cpu = 00:00:29 ; elapsed = 00:00:30 . Memory (MB): peak = 2797.109 ; gain = 1022.266 ; free physical = 523 ; free virtual = 7377
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Handling Custom Attributes
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:29 ; elapsed = 00:00:30 . Memory (MB): peak = 2797.109 ; gain = 1022.266 ; free physical = 523 ; free virtual = 7377
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Nets
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Nets : Time (s): cpu = 00:00:29 ; elapsed = 00:00:30 . Memory (MB): peak = 2797.109 ; gain = 1022.266 ; free physical = 523 ; free virtual = 7377
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Writing Synthesis Report
+---------------------------------------------------------------------------------
+
+DSP Final Report (the ' indicates corresponding REG is set)
++------------------------------+--------------------+--------+--------+--------+--------+--------+------+------+------+------+-------+------+------+
+|Module Name                   | DSP Mapping        | A Size | B Size | C Size | D Size | P Size | AREG | BREG | CREG | DREG | ADREG | MREG | PREG | 
++------------------------------+--------------------+--------+--------+--------+--------+--------+------+------+------+------+-------+------+------+
+|uart_forward_substitution_top | A*B                | 17     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 0    | 
+|uart_forward_substitution_top | (PCIN>>17+A*B)'    | 30     | 18     | -      | -      | 48     | 0    | 0    | -    | -    | -     | 0    | 1    | 
+|uart_forward_substitution_top | A'*B''             | 17     | 16     | -      | -      | 48     | 1    | 2    | -    | -    | -     | 0    | 0    | 
+|uart_forward_substitution_top | (PCIN>>17+A''*B')' | 16     | 18     | -      | -      | 48     | 2    | 1    | -    | -    | -     | 0    | 1    | 
++------------------------------+--------------------+--------+--------+--------+--------+--------+------+------+------+------+-------+------+------+
+
+
+Report BlackBoxes: 
++-+--------------+----------+
+| |BlackBox name |Instances |
++-+--------------+----------+
++-+--------------+----------+
+
+Report Cell Usage: 
++------+---------+------+
+|      |Cell     |Count |
++------+---------+------+
+|1     |BUFG     |     1|
+|2     |CARRY4   |    18|
+|3     |DSP48E1  |     4|
+|7     |LUT1     |     5|
+|8     |LUT2     |    92|
+|9     |LUT3     |    69|
+|10    |LUT4     |    45|
+|11    |LUT5     |    93|
+|12    |LUT6     |   145|
+|13    |RAM32M   |     5|
+|14    |RAM32X1D |     2|
+|15    |FDRE     |   735|
+|16    |FDSE     |    13|
+|17    |IBUF     |     3|
+|18    |OBUF     |     5|
++------+---------+------+
+---------------------------------------------------------------------------------
+Finished Writing Synthesis Report : Time (s): cpu = 00:00:29 ; elapsed = 00:00:30 . Memory (MB): peak = 2797.109 ; gain = 1022.266 ; free physical = 523 ; free virtual = 7377
+---------------------------------------------------------------------------------
+Synthesis finished with 0 errors, 0 critical warnings and 93 warnings.
+Synthesis Optimization Runtime : Time (s): cpu = 00:00:28 ; elapsed = 00:00:28 . Memory (MB): peak = 2797.109 ; gain = 909.492 ; free physical = 519 ; free virtual = 7373
+Synthesis Optimization Complete : Time (s): cpu = 00:00:29 ; elapsed = 00:00:30 . Memory (MB): peak = 2797.117 ; gain = 1022.266 ; free physical = 519 ; free virtual = 7373
+INFO: [Project 1-571] Translating synthesized netlist
+Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 2797.117 ; gain = 0.000 ; free physical = 519 ; free virtual = 7373
+INFO: [Netlist 29-17] Analyzing 29 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
+INFO: [Project 1-570] Preparing netlist for logic optimization
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2853.137 ; gain = 0.000 ; free physical = 705 ; free virtual = 7546
+INFO: [Project 1-111] Unisim Transformation Summary:
+  A total of 7 instances were transformed.
+  RAM32M => RAM32M (RAMD32(x6), RAMS32(x2)): 5 instances
+  RAM32X1D => RAM32X1D (RAMD32(x2)): 2 instances
+
+Synth Design complete | Checksum: 251b56c
+INFO: [Common 17-83] Releasing license: Synthesis
+55 Infos, 104 Warnings, 0 Critical Warnings and 0 Errors encountered.
+synth_design completed successfully
+synth_design: Time (s): cpu = 00:00:37 ; elapsed = 00:00:36 . Memory (MB): peak = 2853.172 ; gain = 1259.555 ; free physical = 699 ; free virtual = 7540
+INFO: [Common 17-2834] synth_design peak Physical Memory [PSS] (MB): overall = 2330.639; main = 2154.018; forked = 331.725
+INFO: [Common 17-2834] synth_design peak Virtual Memory [VSS] (MB): overall = 3785.668; main = 2853.137; forked = 988.559
+Write ShapeDB Complete: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2877.148 ; gain = 0.000 ; free physical = 699 ; free virtual = 7541
+INFO: [Common 17-1381] The checkpoint '/home/andrea/uart_forward_subst/uart_forward_subst.runs/synth_1/uart_forward_substitution_top.dcp' has been generated.
+INFO: [Vivado 12-24828] Executing command : report_utilization -file uart_forward_substitution_top_utilization_synth.rpt -pb uart_forward_substitution_top_utilization_synth.pb
+INFO: [Common 17-206] Exiting Vivado at Wed Dec 10 17:26:42 2025...
+
+*** Running vivado
+    with args -log uart_forward_substitution_top.vds -m64 -product Vivado -mode batch -messageDb vivado.pb -notrace -source uart_forward_substitution_top.tcl
+
+
+****** Vivado v2025.2 (64-bit)
+  **** SW Build 6299465 on Fri Nov 14 12:34:56 MST 2025
+  **** IP Build 6300035 on Fri Nov 14 10:48:45 MST 2025
+  **** SharedData Build 6298862 on Thu Nov 13 04:50:51 MST 2025
+  **** Start of session at: Wed Dec 10 19:53:30 2025
+    ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+    ** Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+
+source uart_forward_substitution_top.tcl -notrace
+WARNING: [Common 17-1361] You have specified a new message control rule that is equivalent to an existing rule with attributes ' -id {17-179}  -suppress '. The existing rule will be replaced.
+WARNING: [Common 17-1361] You have specified a new message control rule that is equivalent to an existing rule with attributes ' -id {17-179}  -suppress '. The existing rule will be replaced.
+WARNING: [Common 17-1361] You have specified a new message control rule that is equivalent to an existing rule with attributes ' -id {17-179}  -suppress '. The existing rule will be replaced.
+WARNING: [Common 17-1361] You have specified a new message control rule that is equivalent to an existing rule with attributes ' -id {17-179}  -suppress '. The existing rule will be replaced.
+INFO: [Common 17-41] Interrupt caught. Command should exit soon.
+INFO: [Common 17-344] 'source' was cancelled
+INFO: [Common 17-206] Exiting Vivado at Wed Dec 10 19:53:36 2025...
