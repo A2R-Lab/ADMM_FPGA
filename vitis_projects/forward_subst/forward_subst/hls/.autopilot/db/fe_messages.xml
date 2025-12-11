@@ -1,0 +1,26 @@
+<xilinx:hls_fe_msgs>
+    <msg msg_groups="PRAGMA_VERBOSE_DUMP" msg_id="207-6999" msg_severity="WARNING" msg_loc="directive:1:1" msg_body="HLS pragma dump">
+        <args ARG_PragmaContext="directive" ARG_PragmaFunction="forward_substitution" ARG_PragmaIsValid="1" ARG_PragmaOptions="name=forward_substitution" ARG_PragmaType="top" ClangWarningOption="dump-hls-pragmas"/>
+    </msg>
+    <msg msg_groups="PRAGMA_VERBOSE_DUMP" msg_id="207-6999" msg_severity="WARNING" msg_loc="forward.cpp:13:1" msg_body="HLS pragma dump">
+        <args ARG_PragmaContext="hls" ARG_PragmaFunction="forward_substitution" ARG_PragmaIsValid="1" ARG_PragmaOptions="II=11" ARG_PragmaType="pipeline" ClangWarningOption="dump-hls-pragmas"/>
+    </msg>
+    <msg msg_groups="PRAGMA_UNROLL" msg_id="214-291" msg_severity="INFO" msg_loc="forward.cpp:18:30" msg_body="Loop 'VITIS_LOOP_18_2' is marked as complete unroll implied by the pipeline pragma">
+        <args LoopName="VITIS_LOOP_18_2"/>
+    </msg>
+    <msg msg_groups="PRAGMA_UNROLL" msg_id="214-291" msg_severity="INFO" msg_loc="forward.cpp:27:30" msg_body="Loop 'VITIS_LOOP_27_3' is marked as complete unroll implied by the pipeline pragma">
+        <args LoopName="VITIS_LOOP_27_3"/>
+    </msg>
+    <msg msg_groups="PRAGMA_UNROLL" msg_id="214-186" msg_severity="INFO" msg_loc="forward.cpp:8:0" msg_body="Unrolling loop 'VITIS_LOOP_18_2' (forward.cpp:18:30) in function 'forward_substitution' completely with a factor of 2">
+        <args Factor="2" LoopLoc="forward.cpp:18:30" LoopName="VITIS_LOOP_18_2"/>
+    </msg>
+    <msg msg_groups="PRAGMA_UNROLL" msg_id="214-186" msg_severity="INFO" msg_loc="forward.cpp:8:0" msg_body="Unrolling loop 'VITIS_LOOP_27_3' (forward.cpp:27:30) in function 'forward_substitution' completely with a factor of 1">
+        <args Factor="1" LoopLoc="forward.cpp:27:30" LoopName="VITIS_LOOP_27_3"/>
+    </msg>
+    <msg msg_groups="AUTOMATION PRAGMA_MISC" msg_id="214-449" msg_severity="INFO" msg_loc="./forward_10_3.h:11:0" msg_body="Partitioning array 'L_row' dimension 2 due to constant index.">
+        <args Dim="2" Value="L_row"/>
+    </msg>
+    <msg msg_groups="PRAGMA_MISC" msg_id="214-248" msg_severity="INFO" msg_loc="./forward_10_3.h:11:0" msg_body="Applying array_partition to '_ZL5L_row': Complete partitioning on dimension 2.">
+        <args Dim="2" Mode="Complete" UOName="_ZL5L_row"/>
+    </msg>
+</xilinx:hls_fe_msgs>

@@ -1,0 +1,23 @@
+{
+  "0": {
+    "basicblocks": 72,
+    "calls": "",
+    "control_depth": 3,
+    "def_use_depth": 10,
+    "file": "forward.cpp",
+    "fileloc": 5,
+    "instructions": 154,
+    "loads": {
+      "G": 3,
+      "L": 4,
+      "T": 3
+    },
+    "memory_accesses": 12,
+    "name": "forward_substitution",
+    "stores": {
+      "L": 5,
+      "T": 1
+    },
+    "total_instructions": 154
+  }
+}

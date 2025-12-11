@@ -1,0 +1,35 @@
+/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp:2271:5: remark: Added loop label VITIS_LOOP_676_1:   [xilinx-label-all-loops]
+    for (unsigned i = low; i != high+1; ++i) {
+    ^
+    VITIS_LOOP_676_1: 
+/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp:2271:5: note: FIX-IT applied suggested code changes
+/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp:2285:5: remark: Added loop label VITIS_LOOP_690_1:   [xilinx-label-all-loops]
+    for (unsigned i = low; i != high+1; ++i) {
+    ^
+    VITIS_LOOP_690_1: 
+/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp:2285:5: note: FIX-IT applied suggested code changes
+/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp:2299:5: remark: Added loop label VITIS_LOOP_704_1:   [xilinx-label-all-loops]
+    for (unsigned i = low; i != high+1; ++i) {
+    ^
+    VITIS_LOOP_704_1: 
+/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp:2299:5: note: FIX-IT applied suggested code changes
+/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp:5838:7: remark: Added loop label VITIS_LOOP_1251_1:   [xilinx-label-all-loops]
+      for (i = 0; i < __N - 1; ++i) {
+      ^
+      VITIS_LOOP_1251_1: 
+/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp:5838:7: note: FIX-IT applied suggested code changes
+/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp:54534:9: remark: Added loop label VITIS_LOOP_12_1:   [xilinx-label-all-loops]
+        for (int i = 0; i < 10; i++) {
+        ^
+        VITIS_LOOP_12_1: 
+/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp:54534:9: note: FIX-IT applied suggested code changes
+/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp:54540:13: remark: Added loop label VITIS_LOOP_18_2:   [xilinx-label-all-loops]
+            for (int j = 0; j < 3 - 1; j++) {
+            ^
+            VITIS_LOOP_18_2: 
+/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp:54540:13: note: FIX-IT applied suggested code changes
+/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp:54549:13: remark: Added loop label VITIS_LOOP_27_3:   [xilinx-label-all-loops]
+            for (int k = 0; k < 3 - 2; k++) {
+            ^
+            VITIS_LOOP_27_3: 
+/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp:54549:13: note: FIX-IT applied suggested code changes

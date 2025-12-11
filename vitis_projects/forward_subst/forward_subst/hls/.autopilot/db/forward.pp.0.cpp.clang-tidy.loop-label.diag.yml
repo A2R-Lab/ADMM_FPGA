@@ -1,0 +1,88 @@
+---
+MainSourceFile:  '/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp'
+Diagnostics:
+  - DiagnosticName:  xilinx-label-all-loops
+    DiagnosticMessage:
+      Message:         'Added loop label VITIS_LOOP_676_1:  '
+      FilePath:        '/media/andrea/48a1bd03-3653-4c55-8d37-cd7d804e2212/amdfpga/2025.2/Vitis/common/technology/autopilot/etc/ap_int_ref.h'
+      FileOffset:      676
+      Replacements:
+        - FilePath:        '/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp'
+          Offset:          282989
+          Length:          0
+          ReplacementText: 'VITIS_LOOP_676_1: '
+    Level:           Remark
+    BuildDirectory:  '/home/andrea/ADMM_FPGA/vitis_projects/forward_subst'
+  - DiagnosticName:  xilinx-label-all-loops
+    DiagnosticMessage:
+      Message:         'Added loop label VITIS_LOOP_690_1:  '
+      FilePath:        '/media/andrea/48a1bd03-3653-4c55-8d37-cd7d804e2212/amdfpga/2025.2/Vitis/common/technology/autopilot/etc/ap_int_ref.h'
+      FileOffset:      690
+      Replacements:
+        - FilePath:        '/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp'
+          Offset:          283460
+          Length:          0
+          ReplacementText: 'VITIS_LOOP_690_1: '
+    Level:           Remark
+    BuildDirectory:  '/home/andrea/ADMM_FPGA/vitis_projects/forward_subst'
+  - DiagnosticName:  xilinx-label-all-loops
+    DiagnosticMessage:
+      Message:         'Added loop label VITIS_LOOP_704_1:  '
+      FilePath:        '/media/andrea/48a1bd03-3653-4c55-8d37-cd7d804e2212/amdfpga/2025.2/Vitis/common/technology/autopilot/etc/ap_int_ref.h'
+      FileOffset:      704
+      Replacements:
+        - FilePath:        '/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp'
+          Offset:          283932
+          Length:          0
+          ReplacementText: 'VITIS_LOOP_704_1: '
+    Level:           Remark
+    BuildDirectory:  '/home/andrea/ADMM_FPGA/vitis_projects/forward_subst'
+  - DiagnosticName:  xilinx-label-all-loops
+    DiagnosticMessage:
+      Message:         'Added loop label VITIS_LOOP_1251_1:  '
+      FilePath:        '/media/andrea/48a1bd03-3653-4c55-8d37-cd7d804e2212/amdfpga/2025.2/Vitis/common/technology/autopilot/etc/ap_fixed_base.h'
+      FileOffset:      1251
+      Replacements:
+        - FilePath:        '/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp'
+          Offset:          632872
+          Length:          0
+          ReplacementText: 'VITIS_LOOP_1251_1: '
+    Level:           Remark
+    BuildDirectory:  '/home/andrea/ADMM_FPGA/vitis_projects/forward_subst'
+  - DiagnosticName:  xilinx-label-all-loops
+    DiagnosticMessage:
+      Message:         'Added loop label VITIS_LOOP_12_1:  '
+      FilePath:        forward.cpp
+      FileOffset:      12
+      Replacements:
+        - FilePath:        '/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp'
+          Offset:          2392115
+          Length:          0
+          ReplacementText: 'VITIS_LOOP_12_1: '
+    Level:           Remark
+    BuildDirectory:  '/home/andrea/ADMM_FPGA/vitis_projects/forward_subst'
+  - DiagnosticName:  xilinx-label-all-loops
+    DiagnosticMessage:
+      Message:         'Added loop label VITIS_LOOP_18_2:  '
+      FilePath:        forward.cpp
+      FileOffset:      18
+      Replacements:
+        - FilePath:        '/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp'
+          Offset:          2392218
+          Length:          0
+          ReplacementText: 'VITIS_LOOP_18_2: '
+    Level:           Remark
+    BuildDirectory:  '/home/andrea/ADMM_FPGA/vitis_projects/forward_subst'
+  - DiagnosticName:  xilinx-label-all-loops
+    DiagnosticMessage:
+      Message:         'Added loop label VITIS_LOOP_27_3:  '
+      FilePath:        forward.cpp
+      FileOffset:      27
+      Replacements:
+        - FilePath:        '/home/andrea/ADMM_FPGA/vitis_projects/forward_subst/forward_subst/hls/.autopilot/db/forward.pp.0.cpp'
+          Offset:          2392420
+          Length:          0
+          ReplacementText: 'VITIS_LOOP_27_3: '
+    Level:           Remark
+    BuildDirectory:  '/home/andrea/ADMM_FPGA/vitis_projects/forward_subst'
+...
