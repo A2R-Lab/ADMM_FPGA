@@ -94,6 +94,26 @@ def forward_substitution(L_row, b):
     
     return x
 
+def backward_substitution(L_row, b):
+    n, max_bandwidth = L_row.shape
+    x = np.zeros(n, dtype=np.float32)
+
+    for i in range(n - 1, -1, -1):
+        sum_val = 0.0
+
+        # Traverse superdiagonals of Lᵀ, which correspond to subdiagonals of L
+        for k in range(1, max_bandwidth):
+            j = i + k
+            if j < n:
+                # In compact storage, L(j, i+k)'s transpose Lᵀ(i, j)
+                # corresponds to L(j, i), located at this column:
+                col = (max_bandwidth - 1) - k
+                sum_val += L_row[j, col] * x[j]
+
+        # diagonal of Lᵀ is same as diagonal of L
+        x[i] = (b[i] - sum_val) * L_row[i, -1]
+
+    return x
 
 def print_matrix(mat, name):
     print(f"{name}:")
