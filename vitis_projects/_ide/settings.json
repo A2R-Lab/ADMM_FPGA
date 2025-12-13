@@ -1,7 +1,0 @@
-{
-    "clangd.fallbackFlags": [
-        "-I/home/agrillo/amdfpga/2025.2/Vitis/include",
-        "-I/home/agrillo/amdfpga/2025.2/Vitis/include/etc",
-        "-I/home/agrillo/amdfpga/2025.2/Vitis/lnx64/tools/auto_cc/include"
-    ]
-}
