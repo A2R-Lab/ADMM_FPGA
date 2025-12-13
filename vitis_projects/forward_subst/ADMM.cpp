@@ -3,8 +3,7 @@
 #include "data_types.h"
 #include <ap_fixed.h>
 
-const fp_t rho = 256;
-const fp_t rho_mult = 1024;
+const fp_t rho = 8;
 
 void forward_substitution(
     const fp_t b[L_BANDED_ROWS],
@@ -37,34 +36,49 @@ void forward_substitution(
         window[L_BANDED_COLS - 2] = new_x;
     }
 }
-
 void backward_substitution(
     const fp_t b[LT_BANDED_ROWS],
     fp_t x[LT_BANDED_ROWS]
-) { 
-    fp_t window[LT_BANDED_COLS-1] = {0};
+) {
+    #pragma HLS INLINE off
+    
+    fp_t window[LT_BANDED_COLS-1];
+    #pragma HLS ARRAY_PARTITION variable=window complete dim=1
+    
+    // Initialize window
+    INIT_WINDOW:
+    for (int j = 0; j < LT_BANDED_COLS-1; j++) {
+        window[j] = 0;
+    }
     
     BACK_SUBST_EXTERN_LOOP:
     for (int i = LT_BANDED_ROWS - 1; i >= 0; i--) {
-        fp_t sum_val = 0;
+        #pragma HLS DEPENDENCE variable=window inter false
         
-        BACK_SUBST_DOT_PRODUCT_LOOP:
-        // dot product with window
-        for (int j = 1; j < LT_BANDED_COLS; j++) {
-            sum_val += LT_banded[i][j] * window[j-1];
+        // Compute dot product with current window state
+        fp_t sum_val = 0;
+        // #pragma HLS BIND_OP variable=sum_val op=add impl=fabric
+        
+        DOT_PRODUCT:
+        for (int j = 0; j < LT_BANDED_COLS-1; j++) {
+            // #pragma HLS UNROLL
+            sum_val += LT_banded[i][j+1] * window[j];
         }
         
+        // Compute new x value
         fp_t new_x = (b[i] - sum_val) * LT_banded[i][0];
         x[i] = new_x;
         
-        BACK_SUBST_SHIFT_REGISTER_LOOP:
-        // shift register window - shift RIGHT to make room at position 0
+        // Shift window - this happens in parallel with next iteration setup
+        SHIFT_WINDOW:
         for (int k = LT_BANDED_COLS - 2; k > 0; k--) {
+            // #pragma HLS UNROLL
             window[k] = window[k-1];
         }
-        window[0] = new_x;  // Insert newest value at front
+        window[0] = new_x;
     }
 }
+
 void A_mul(
     const fp_t x[A_SPARSE_DATA_ROWS],
     fp_t Ax[A_SPARSE_DATA_ROWS]
