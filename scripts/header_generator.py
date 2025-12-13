@@ -253,16 +253,18 @@ def generate_vector_header(v, name, type="fp_t"):
     lines.append(f"}};\n// end Vector {name}\n")
     return "".join(lines)
 
-def generate_full_header(data, filename="data.h"):
+def generate_full_header(data, filename="data.h", guard="DATA_H"):
     with open(filename, "w") as f:
-        f.write("#ifndef DATA_H\n")
-        f.write("#define DATA_H\n\n")
+        f.write(f"#ifndef {guard}\n")
+        f.write(f"#define {guard}\n\n")
+
+        f.write('#include "data_types.h"\n\n')
         
         for d in data:
             f.write(d)
             f.write("// ===================== \n\n")
         
-        f.write("#endif // DATA_H\n")
+        f.write(f"#endif // {guard}\n")
 
 L_banded = convert_chol_to_banded_storage(L)
 LT_banded = convert_chol_transposed_to_banded_storage(L.T)
@@ -279,3 +281,24 @@ data.append(generate_matrix_header(AT_sparse_data, "AT_sparse_data"))
 data.append(generate_matrix_header(AT_sparse_indexes, "AT_sparse_indexes", type=f"ap_uint<{AT_n_bits_idx}>"))
 
 generate_full_header(data, filename="../vitis_projects/forward_subst/data.h")
+
+# Test header generation
+# Test header generation: generate a random vector and write/print its header
+np.random.seed(0)
+rand_vec = np.random.randn(L_banded.shape[0])
+test_data = []
+test_data.append(generate_vector_header(rand_vec, "random_vector"))
+
+forw_subst_out = np.linalg.solve(L, rand_vec)
+test_data.append(generate_vector_header(forw_subst_out, "forw_subst_out"))
+
+back_subst_out = np.linalg.solve(L.T, rand_vec)
+test_data.append(generate_vector_header(back_subst_out, "back_subst_out"))
+
+A_mul_out = A @ rand_vec
+test_data.append(generate_vector_header(A_mul_out, "A_mul_out"))
+
+AT_mul_out = A.T @ rand_vec
+test_data.append(generate_vector_header(AT_mul_out, "AT_mul_out"))
+
+generate_full_header(test_data, filename="../vitis_projects/forward_subst/test_data.h", guard="TEST_DATA_H")

@@ -1,7 +1,6 @@
-
-// #include "forward_300_20.h"
 #include "data.h"
 #include "ADMM.h"
+#include "data_types.h"
 #include <ap_fixed.h>
 
 const fp_t rho = 256;
@@ -13,11 +12,13 @@ void forward_substitution(
 ) { 
     fp_t window[L_BANDED_COLS-1] = {0};
     
+    FORW_SUBST_EXTERN_LOOP:
     for (int i = 0; i < L_BANDED_ROWS; i++) {
         #pragma HLS PIPELINE II=11
 
         fp_t sum_val = 0;
 
+        FORW_SUBST_DOT_PRODUCT_LOOP:
         // dot product with window
         for (int j = 0; j < L_BANDED_COLS - 1; j++) {
             // #pragma HLS UNROLL
@@ -27,6 +28,7 @@ void forward_substitution(
         fp_t new_x = (b[i] - sum_val) * L_banded[i][L_BANDED_COLS-1];
         x[i] = new_x;
 
+        FORW_SUBST_SHIFT_REGISTER_LOOP:
         // shift register window
         for (int k = 0; k < L_BANDED_COLS - 2; k++) {
             // #pragma HLS UNROLL
@@ -42,33 +44,35 @@ void backward_substitution(
 ) { 
     fp_t window[LT_BANDED_COLS-1] = {0};
     
+    BACK_SUBST_EXTERN_LOOP:
     for (int i = LT_BANDED_ROWS - 1; i >= 0; i--) {
         fp_t sum_val = 0;
-
+        
+        BACK_SUBST_DOT_PRODUCT_LOOP:
         // dot product with window
-        for (int j = 0; j < LT_BANDED_COLS - 1; j++) {
-            // #pragma HLS UNROLL
-            sum_val += LT_banded[i][j] * window[j];
+        for (int j = 1; j < LT_BANDED_COLS; j++) {
+            sum_val += LT_banded[i][j] * window[j-1];
         }
-
-        fp_t new_x = (b[i] - sum_val) * LT_banded[i][LT_BANDED_COLS-1];
+        
+        fp_t new_x = (b[i] - sum_val) * LT_banded[i][0];
         x[i] = new_x;
-
-        // shift register window
-        for (int k = 0; k < LT_BANDED_COLS - 2; k++) {
-            // #pragma HLS UNROLL
-            window[k] = window[k+1];
+        
+        BACK_SUBST_SHIFT_REGISTER_LOOP:
+        // shift register window - shift RIGHT to make room at position 0
+        for (int k = LT_BANDED_COLS - 2; k > 0; k--) {
+            window[k] = window[k-1];
         }
-        window[LT_BANDED_COLS - 2] = new_x;
+        window[0] = new_x;  // Insert newest value at front
     }
 }
-
 void A_mul(
     const fp_t x[A_SPARSE_DATA_ROWS],
     fp_t Ax[A_SPARSE_DATA_ROWS]
 ) {
+    A_MUL_EXTERN_LOOP:
     for (int i = 0; i < A_SPARSE_DATA_ROWS; i++) {
         fp_t sum_val = 0;
+        A_MUL_DOT_PRODUCT_LOOP:
         for (int j = 0; j < A_SPARSE_DATA_COLS; j++) {
             sum_val += A_sparse_data[i][j] * x[A_sparse_indexes[i][j]];
         }
@@ -80,8 +84,10 @@ void AT_mul(
     const fp_t x[AT_SPARSE_DATA_ROWS],
     fp_t ATx[AT_SPARSE_DATA_ROWS]
 ) {
+    AT_MUL_EXTERN_LOOP:
     for (int i = 0; i < AT_SPARSE_DATA_ROWS; i++) {
         fp_t sum_val = 0;
+        AT_MUL_DOT_PRODUCT_LOOP:
         for (int j = 0; j < AT_SPARSE_DATA_COLS; j++) {
             sum_val += AT_sparse_data[i][j] * x[AT_sparse_indexes[i][j]];
         }
@@ -93,6 +99,7 @@ void AT_mul(
 void clamp(
     fp_t x[L_SIZE]
 ) {
+    CLAMP_LOOP:
     for (int i = 0; i < L_SIZE; i++) {
         if (x[i] < l[i]) {
             x[i] = l[i];
@@ -115,6 +122,7 @@ void ADMM_iteration(
     // x-update
 
     // b computation
+    ADMM_IT_B_COMPUTE_LOOP:
     for( int i = 0; i < L_SIZE; i++) {
         tmp[i] = (z[i] << rho) - y[i];
     }
@@ -124,26 +132,29 @@ void ADMM_iteration(
 
     // z update
     A_mul(x, Ax);
+    ADMM_IT_Z_UPDATE_LOOP:
     for (int i = 0; i < L_SIZE; i++) {
         z[i] = Ax[i] + (y[i] >> rho);
     }
     clamp(z);
 
     // y-update
+    ADMM_IT_Y_UPDATE_LOOP:
     for (int i = 0; i < L_SIZE; i++) {
         y[i] += (Ax[i] - z[i]) << rho;
     }
 }
 
+const int iters = 10;
 void ADMM_solver(
     fp_t x[L_SIZE],
-    int iters,
     bool reset
 ) {
     static fp_t z[L_SIZE];
     static fp_t y[L_SIZE];
 
     if (reset) {
+        ADMM_RESET_LOOP:
         for (int i = 0; i < L_SIZE; i++) {
             x[i] = 0;
             z[i] = 0;
@@ -151,6 +162,7 @@ void ADMM_solver(
         }
     }
 
+    ADMM_MAIN_LOOP:
     for (int iter = 0; iter < iters; iter++) {
         ADMM_iteration(x, z, y);
     }

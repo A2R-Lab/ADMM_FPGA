@@ -1,9 +1,7 @@
 #ifndef DATA_H
 #define DATA_H
 
-#include <ap_fixed.h>
-
-typedef ap_fixed<32,16> fp_t;
+#include "data_types.h"
 
 // Matrix L_banded of size 92 x 21
 #define L_BANDED_ROWS 92
