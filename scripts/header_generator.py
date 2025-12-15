@@ -5,7 +5,7 @@ from crazyloihimodel import CrazyLoihiModel
 timer_period = 0.02  # seconds
 
 # Horizon length
-N = 10
+N = 20
 
 rho = 256
 rho_mult = 1
