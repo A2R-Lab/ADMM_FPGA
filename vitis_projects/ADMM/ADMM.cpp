@@ -149,20 +149,22 @@ void ADMM_iteration(
 
 const int iters = 10;
 void ADMM_solver(
-    fp_t x[L_SIZE],
+    const fp_t obs[12],
+    fp_t motor_controls[4],
     bool reset
 ) {
+    static fp_t x[L_SIZE];
     static fp_t z[L_SIZE];
     static fp_t y[L_SIZE];
 
-    if (reset) {
-        ADMM_RESET_LOOP:
-        for (int i = 0; i < L_SIZE; i++) {
-            x[i] = 0;
-            z[i] = 0;
-            y[i] = 0;
-        }
-    }
+    // if (reset) {
+    //     ADMM_RESET_LOOP:
+    //     for (int i = 0; i < L_SIZE; i++) {
+    //         x[i] = 0;
+    //         z[i] = 0;
+    //         y[i] = 0;
+    //     }
+    // }
 
     ADMM_MAIN_LOOP:
     for (int iter = 0; iter < iters; iter++) {

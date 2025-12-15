@@ -1,6 +1,6 @@
 # Makefile for Vitis HLS project
 
-PROJECT = forward_subst
+PROJECT = ADMM
 CONFIG = hls_config.cfg
 WORK_DIR = $(PROJECT)
 
