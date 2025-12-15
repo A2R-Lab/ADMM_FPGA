@@ -1,6 +1,12 @@
 vitis_projects/ADMM/ADMM/
 vitis_projects/ADMM/.Xil/
 vitis_projects/ADMM/.cache/
+vivado_project/vivado_project.cache/
+vivado_project/vivado_project.hw/
+vivado_project/vivado_project.sim/
+vivado_project/vivado_project.ip_user_files/
+
+
 **/__pycache__/
 **/.vscode/
 vitis_projects/_ide/

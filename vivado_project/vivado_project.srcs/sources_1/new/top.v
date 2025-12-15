@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module uart_forward_substitution_top (
+module top (
     input  wire        clk,
     input  wire        resetn,
     input  wire        uart_rxd,
@@ -47,7 +47,7 @@ module uart_forward_substitution_top (
     reg [31:0] rx_word_buffer;
     
     //--------------------------------------------------------------
-    // Forward Substitution Module Signals
+    // HLS Module Signals
     //--------------------------------------------------------------
     reg ap_start;
     wire ap_done;
@@ -167,7 +167,7 @@ module uart_forward_substitution_top (
                 end
                 
                 //----------------------------------------------
-                // COMPUTE: Run forward substitution
+                // COMPUTE: Run HLS module
                 //----------------------------------------------
                 COMPUTE: begin
                     // Keep ap_start high until ready or done
@@ -222,7 +222,7 @@ module uart_forward_substitution_top (
     end
     
     //--------------------------------------------------------------
-    // Forward Substitution Module Instantiation
+    // HLS Module Instantiation
     //--------------------------------------------------------------
     forward_substitution dut (
         .ap_clk(clk),
