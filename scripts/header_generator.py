@@ -5,10 +5,10 @@ from crazyloihimodel import CrazyLoihiModel
 timer_period = 0.02  # seconds
 
 # Horizon length
-N = 5
+N = 10
 
 rho = 256
-rho_mult = 1024
+rho_mult = 1
 
 # Initialize goal state
 xg = np.zeros(13)
