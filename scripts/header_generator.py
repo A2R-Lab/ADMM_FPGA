@@ -1,8 +1,8 @@
 import numpy as np
 from crazyloihimodel import CrazyLoihiModel
 
-# Run controller at 50 Hz
-timer_period = 0.02  # seconds
+# Run controller at 500 Hz
+timer_period = 0.002  # seconds
 
 # Horizon length
 N = 20
@@ -137,7 +137,6 @@ rho_vect = rho * np.ones(P.shape[0])
 rho_vect[np.where(l == u)[0]] *= rho_mult
 rho_diag = np.diag(rho_vect)
 
-# actually yes
 eq_indices = np.arange(n * (N + 1))
 
 KKT = P + A.T @ rho_diag @ A
@@ -280,7 +279,7 @@ data.append(generate_matrix_header(A_sparse_indexes, "A_sparse_indexes", type=f"
 data.append(generate_matrix_header(AT_sparse_data, "AT_sparse_data"))
 data.append(generate_matrix_header(AT_sparse_indexes, "AT_sparse_indexes", type=f"ap_uint<{AT_n_bits_idx}>"))
 
-generate_full_header(data, filename="../vitis_projects/forward_subst/data.h")
+generate_full_header(data, filename="../vitis_projects/ADMM/data.h")
 
 # Test header generation
 # Test header generation: generate a random vector and write/print its header
@@ -301,4 +300,4 @@ test_data.append(generate_vector_header(A_mul_out, "A_mul_out"))
 AT_mul_out = A.T @ rand_vec
 test_data.append(generate_vector_header(AT_mul_out, "AT_mul_out"))
 
-generate_full_header(test_data, filename="../vitis_projects/forward_subst/test_data.h", guard="TEST_DATA_H")
+generate_full_header(test_data, filename="../vitis_projects/ADMM/test_data.h", guard="TEST_DATA_H")
