@@ -16,6 +16,8 @@ module uart_forward_substitution_top (
     localparam CLK_HZ = 100_000_000;
     localparam BIT_RATE = 115200;
     localparam PAYLOAD_BITS = 8;
+
+    localparam NLOG = $clog2(N);
     
     // State machine states
     localparam IDLE         = 3'd0;
@@ -39,9 +41,9 @@ module uart_forward_substitution_top (
     //--------------------------------------------------------------
     reg [2:0] state;
     reg [3:0] rx_byte_count;  // Counts bytes within current word (0-3)
-    reg [3:0] rx_word_count;  // Counts words (0-9 for N=10)
+    reg [NLOG-1:0] rx_word_count;  // Counts words (0 to N-1)
     reg [3:0] tx_byte_count;
-    reg [3:0] tx_word_count;
+    reg [NLOG-1:0] tx_word_count;
     reg [31:0] rx_word_buffer;
     
     //--------------------------------------------------------------
@@ -55,12 +57,12 @@ module uart_forward_substitution_top (
     // Memory arrays
     reg [DATA_WIDTH-1:0] b_mem [0:N-1];
     reg [DATA_WIDTH-1:0] x_mem [0:N-1];
-    
-    wire [3:0] b_address0;
+
+    wire [NLOG-1:0] b_address0;
     wire b_ce0;
     reg [DATA_WIDTH-1:0] b_q0;
     
-    wire [3:0] x_address0;
+    wire [NLOG-1:0] x_address0;
     wire x_ce0;
     wire x_we0;
     wire [DATA_WIDTH-1:0] x_d0;
