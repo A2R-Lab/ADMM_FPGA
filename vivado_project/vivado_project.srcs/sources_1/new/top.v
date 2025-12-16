@@ -11,13 +11,16 @@ module top (
     //--------------------------------------------------------------
     // Parameters
     //--------------------------------------------------------------
-    localparam N = 10;
+    localparam N_STATE = 12;        // Size of current_state array
+    localparam N_VAR = 332;         // Size of x array
     localparam DATA_WIDTH = 32;
     localparam CLK_HZ = 100_000_000;
     localparam BIT_RATE = 115200;
     localparam PAYLOAD_BITS = 8;
-
-    localparam NLOG = $clog2(N);
+    localparam FIXED_ITERS = 32'd10;  // Fixed iteration count
+    
+    localparam STATE_LOG = $clog2(N_STATE);
+    localparam VAR_LOG = $clog2(N_VAR);
     
     // State machine states
     localparam IDLE         = 3'd0;
@@ -40,10 +43,10 @@ module top (
     // FSM and Control Signals
     //--------------------------------------------------------------
     reg [2:0] state;
-    reg [3:0] rx_byte_count;  // Counts bytes within current word (0-3)
-    reg [NLOG-1:0] rx_word_count;  // Counts words (0 to N-1)
+    reg [3:0] rx_byte_count;      // Counts bytes within current word (0-3)
+    reg [5:0] rx_word_count;      // Counts words (0 to N_STATE-1), needs to count up to 12
     reg [3:0] tx_byte_count;
-    reg [NLOG-1:0] tx_word_count;
+    reg [9:0] tx_word_count;      // Counts words (0 to N_VAR-1), needs to count up to 332
     reg [31:0] rx_word_buffer;
     
     //--------------------------------------------------------------
@@ -55,17 +58,27 @@ module top (
     wire ap_ready;
     
     // Memory arrays
-    reg [DATA_WIDTH-1:0] b_mem [0:N-1];
-    reg [DATA_WIDTH-1:0] x_mem [0:N-1];
+    reg [DATA_WIDTH-1:0] current_state_mem [0:N_STATE-1];
+    reg [DATA_WIDTH-1:0] x_mem [0:N_VAR-1];
 
-    wire [NLOG-1:0] b_address0;
-    wire b_ce0;
-    reg [DATA_WIDTH-1:0] b_q0;
+    // current_state memory interface (read-only from HLS perspective)
+    wire [STATE_LOG-1:0] current_state_address0;
+    wire current_state_ce0;
+    reg [DATA_WIDTH-1:0] current_state_q0;
     
-    wire [NLOG-1:0] x_address0;
+    // x memory interface (read/write dual-port)
+    wire [VAR_LOG-1:0] x_address0;
     wire x_ce0;
     wire x_we0;
     wire [DATA_WIDTH-1:0] x_d0;
+    reg [DATA_WIDTH-1:0] x_q0;
+    
+    wire [VAR_LOG-1:0] x_address1;
+    wire x_ce1;
+    reg [DATA_WIDTH-1:0] x_q1;
+    
+    wire [31:0] iters;
+    assign iters = FIXED_ITERS;
     
     //--------------------------------------------------------------
     // LED Status
@@ -112,8 +125,8 @@ module top (
             uart_tx_en <= 0;
             uart_tx_data <= 0;
             
-            for (i = 0; i < N; i = i + 1) begin
-                b_mem[i] <= 0;
+            for (i = 0; i < N_STATE; i = i + 1) begin
+                current_state_mem[i] <= 0;
             end
             
         end else begin
@@ -135,7 +148,7 @@ module top (
                 end
                 
                 //----------------------------------------------
-                // RX_DATA: Receive N words (4 bytes each, little-endian)
+                // RX_DATA: Receive N_STATE words (4 bytes each, little-endian)
                 //----------------------------------------------
                 RX_DATA: begin
                     if (uart_rx_valid) begin
@@ -147,14 +160,14 @@ module top (
                             3: begin
                                 rx_word_buffer[31:24] <= uart_rx_data;
                                 // Store complete word
-                                b_mem[rx_word_count] <= {uart_rx_data, rx_word_buffer[23:0]};
+                                current_state_mem[rx_word_count] <= {uart_rx_data, rx_word_buffer[23:0]};
                             end
                         endcase
                         
                         if (rx_byte_count == 3) begin
                             // Word complete
                             rx_byte_count <= 0;
-                            if (rx_word_count == N-1) begin
+                            if (rx_word_count == N_STATE-1) begin
                                 // All words received
                                 state <= COMPUTE;
                             end else begin
@@ -183,7 +196,7 @@ module top (
                 end
                 
                 //----------------------------------------------
-                // TX_DATA: Send N words back (4 bytes each, little-endian)
+                // TX_DATA: Send N_VAR words back (4 bytes each, little-endian)
                 //----------------------------------------------
                 TX_DATA: begin
                     if (!uart_tx_busy && !uart_tx_en) begin
@@ -198,7 +211,7 @@ module top (
                         
                         if (tx_byte_count == 3) begin
                             tx_byte_count <= 0;
-                            if (tx_word_count == N-1) begin
+                            if (tx_word_count == N_VAR-1) begin
                                 state <= DONE;
                             end else begin
                                 tx_word_count <= tx_word_count + 1;
@@ -224,36 +237,50 @@ module top (
     //--------------------------------------------------------------
     // HLS Module Instantiation
     //--------------------------------------------------------------
-    forward_substitution dut (
+    ADMM_solver_0 dut (
         .ap_clk(clk),
         .ap_rst(!resetn),
         .ap_start(ap_start),
         .ap_done(ap_done),
         .ap_idle(ap_idle),
         .ap_ready(ap_ready),
-        .b_address0(b_address0),
-        .b_ce0(b_ce0),
-        .b_q0(b_q0),
+        .current_state_address0(current_state_address0),
+        .current_state_ce0(current_state_ce0),
+        .current_state_q0(current_state_q0),
         .x_address0(x_address0),
         .x_ce0(x_ce0),
         .x_we0(x_we0),
-        .x_d0(x_d0)
+        .x_d0(x_d0),
+        .x_q0(x_q0),
+        .x_address1(x_address1),
+        .x_ce1(x_ce1),
+        .x_q1(x_q1),
+        .iters(iters)
     );
     
     //--------------------------------------------------------------
     // Memory Models
     //--------------------------------------------------------------
-    // Input memory (b) - registered read
+    // current_state memory - registered read
     always @(posedge clk) begin
-        if (b_ce0)
-            b_q0 <= b_mem[b_address0];
+        if (current_state_ce0)
+            current_state_q0 <= current_state_mem[current_state_address0];
     end
     
-    // Output memory (x) - synchronous write
+    // x memory - dual-port with synchronous write on port 0
     always @(posedge clk) begin
-        if (x_ce0 && x_we0) begin
-            x_mem[x_address0] <= x_d0;
+        if (x_ce0) begin
+            if (x_we0) begin
+                x_mem[x_address0] <= x_d0;
+            end
+            x_q0 <= x_mem[x_address0];
         end
+    end
+    
+    // x memory - port 1 (read-only)
+    always @(posedge clk) begin
+        if (x_ce1)
+            x_q1 <= x_mem[x_address1];
     end
     
     //--------------------------------------------------------------
