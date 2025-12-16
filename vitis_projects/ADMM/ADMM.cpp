@@ -3,8 +3,6 @@
 #include "data_types.h"
 #include <ap_fixed.h>
 
-const fp_t rho = 8;
-
 void forward_substitution(
     const fp_t b[L_BANDED_ROWS],
     fp_t x[L_BANDED_ROWS]
@@ -12,7 +10,7 @@ void forward_substitution(
     fp_t window[L_BANDED_COLS-1] = {0};
 
     FORW_SUBST_EXTERN_LOOP:
-    for (int i = 0; i < L_BANDED_ROWS; i++) {
+    for (int i = 0; i < N_VAR; i++) {
         fp_t sum_val = 0;
 
         FORW_SUBST_DOT_PRODUCT_LOOP:
@@ -67,21 +65,6 @@ void backward_substitution(
     }
 }
 
-void A_mul(
-    const fp_t x[A_SPARSE_DATA_ROWS],
-    fp_t Ax[A_SPARSE_DATA_ROWS]
-) {
-    A_MUL_EXTERN_LOOP:
-    for (int i = 0; i < A_SPARSE_DATA_ROWS; i++) {
-        fp_t sum_val = 0;
-        A_MUL_DOT_PRODUCT_LOOP:
-        for (int j = 0; j < A_SPARSE_DATA_COLS; j++) {
-            sum_val += A_sparse_data[i][j] * x[A_sparse_indexes[i][j]];
-        }
-        Ax[i] = sum_val;
-    }
-}
-
 void AT_mul(
     const fp_t x[AT_SPARSE_DATA_ROWS],
     fp_t ATx[AT_SPARSE_DATA_ROWS]
@@ -97,77 +80,57 @@ void AT_mul(
     }
 }
 
-
-void clamp(
-    fp_t x[L_SIZE]
-) {
-    CLAMP_LOOP:
-    for (int i = 0; i < L_SIZE; i++) {
-        if (x[i] < l[i]) {
-            x[i] = l[i];
-        } else if (x[i] > u[i]) {
-            x[i] = u[i];
-        }
-    }
-}
-
 void ADMM_iteration(
-    fp_t x[L_SIZE], 
-    fp_t z[L_SIZE], 
-    fp_t y[L_SIZE]
+    fp_t x[N_VAR], 
+    fp_t current_state[12]
 ) {
-    fp_t b[L_SIZE];
-    fp_t tmp[L_SIZE];
-    fp_t tmp2[L_SIZE];
-    fp_t Ax[L_SIZE];
+    static fp_t b[N_VAR] = {0};
+    static fp_t y[N_VAR] = {0};
+    fp_t tmp[N_VAR];
+    fp_t b_tmp[N_VAR];
 
-    // x-update
+    // x_update
+    // first cycle b will be 0 anyway, and then it gets updated at the end of the iteration
+    forward_substitution(b, tmp);
+    backward_substitution(tmp, x);
 
-    // b computation
-    ADMM_IT_B_COMPUTE_LOOP:
-    for( int i = 0; i < L_SIZE; i++) {
-        tmp[i] = (z[i] << rho) - y[i];
+    // z - y update
+    ADMM_IT_ZY_UPDATE_LOOP:
+    for (int i = 0; i < N_VAR; i++) {
+        fp_t Axi = 0;
+        for (int j = 0; j < A_SPARSE_DATA_COLS; j++) {
+            Axi += A_sparse_data[i][j] * x[A_sparse_indexes[i][j]];
+        }
+
+        fp_t zi;
+        if(i < STATE_SIZE) {
+            zi = current_state[i];
+        } else if (i >= START_INEQ) { // This will depend on horizon length
+            zi = Axi + (y[i] >> RHO_SHIFT);
+            if (zi < U_MIN) {
+                zi = U_MIN;
+            } else if (zi > U_MAX) {
+                zi = U_MAX;
+            }
+        } else {
+            zi = 0;
+        }
+
+        fp_t yi = y[i] + ((Axi - zi) << RHO_SHIFT);
+        y[i] = yi;
+        b_tmp[i] = (zi << RHO_SHIFT) - yi;
+
     }
-    AT_mul(tmp, b);
-    forward_substitution(b, tmp2);
-    backward_substitution(tmp2, x);
-
-    // z update
-    A_mul(x, Ax);
-    ADMM_IT_Z_UPDATE_LOOP:
-    for (int i = 0; i < L_SIZE; i++) {
-        z[i] = Ax[i] + (y[i] >> rho);
-    }
-    clamp(z);
-
-    // y-update
-    ADMM_IT_Y_UPDATE_LOOP:
-    for (int i = 0; i < L_SIZE; i++) {
-        y[i] += (Ax[i] - z[i]) << rho;
-    }
+    AT_mul(b_tmp, b);
 }
 
-const int iters = 10;
 void ADMM_solver(
-    const fp_t obs[12],
-    fp_t motor_controls[4],
-    bool reset
+    fp_t current_state[12],
+    fp_t x[N_VAR],
+    int iters
 ) {
-    static fp_t x[L_SIZE];
-    static fp_t z[L_SIZE];
-    static fp_t y[L_SIZE];
-
-    // if (reset) {
-    //     ADMM_RESET_LOOP:
-    //     for (int i = 0; i < L_SIZE; i++) {
-    //         x[i] = 0;
-    //         z[i] = 0;
-    //         y[i] = 0;
-    //     }
-    // }
-
     ADMM_MAIN_LOOP:
     for (int iter = 0; iter < iters; iter++) {
-        ADMM_iteration(x, z, y);
+        ADMM_iteration(x, current_state);
     }
 }

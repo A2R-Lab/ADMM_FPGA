@@ -228,6 +228,13 @@ def convert_chol_transposed_to_banded_storage(L):
     return L_row
 
 
+def generate_constants_header(constants_dict):
+    lines = []
+    lines.append("// Constants definitions\n")
+    for name, value in constants_dict.items():
+        lines.append(f"#define {name} {value}\n")
+    lines.append("// end constants definitions\n")
+    return "".join(lines)
 
 def generate_matrix_header(M, name, type="fp_t"):
     size_0, size_1 = M.shape
@@ -261,7 +268,7 @@ def generate_full_header(data, filename="data.h", guard="DATA_H"):
         
         for d in data:
             f.write(d)
-            f.write("// ===================== \n\n")
+            f.write("\n// ===================== \n\n")
         
         f.write(f"#endif // {guard}\n")
 
@@ -294,13 +301,18 @@ L_banded = convert_chol_to_banded_storage(L)
 LT_banded = convert_chol_transposed_to_banded_storage(L.T)
 A_sparse_data, A_sparse_indexes, A_n_bits_idx = convert_matrix_to_sparse_storage(A)
 AT_sparse_data, AT_sparse_indexes, AT_n_bits_idx = convert_matrix_to_sparse_storage(A.T)
+constants = {}
+constants["STATE_SIZE"] = n
+constants["N_VAR"] = num_var
+constants["START_INEQ"] = A_eq.shape[0]
+constants["RHO_SHIFT"] = int(np.log2(rho))
+constants["U_MIN"] = u_min[0]
+constants["U_MAX"] = u_max[0]
+
 data = []
+data.append(generate_constants_header(constants))
 data.append(generate_matrix_header(L_banded, "L_banded"))
 data.append(generate_matrix_header(LT_banded, "LT_banded"))
-# l[0:12] = -1e20
-# u[0:12] =  1e20
-# data.append(generate_vector_header(l, "l"))
-# data.append(generate_vector_header(u, "u"))
 data.append(generate_matrix_header(A_sparse_data, "A_sparse_data"))
 data.append(generate_matrix_header(A_sparse_indexes, "A_sparse_indexes", type=f"ap_uint<{A_n_bits_idx}>"))
 data.append(generate_matrix_header(AT_sparse_data, "AT_sparse_data"))

@@ -4,39 +4,29 @@
 #include "data.h"
 
 void forward_substitution(
-    const fp_t b[L_BANDED_ROWS],
-    fp_t x[L_BANDED_ROWS]
+    const fp_t b[N_VAR],
+    fp_t x[N_VAR]
 );
 
 void backward_substitution(
-    const fp_t b[LT_BANDED_ROWS],
-    fp_t x[LT_BANDED_ROWS]
-);
-
-void A_mul(
-    const fp_t x[L_SIZE],
-    fp_t Ax[L_SIZE]
+    const fp_t b[N_VAR],
+    fp_t x[N_VAR]
 );
 
 void AT_mul(
-    const fp_t x[L_SIZE],
-    fp_t ATx[L_SIZE]
-);
-
-void clamp(
-    fp_t x[L_SIZE]
+    const fp_t x[N_VAR],
+    fp_t ATx[N_VAR]
 );
 
 void ADMM_iteration(
-    fp_t x[L_SIZE],
-    fp_t z[L_SIZE],
-    fp_t y[L_SIZE]
+    fp_t x[N_VAR], 
+    fp_t current_state[12]
 );
 
 void ADMM_solver(
-    fp_t x[L_SIZE],
-    int iters,
-    bool reset
+    fp_t current_state[12],
+    fp_t x[N_VAR],
+    int iters
 );
 
-#endif // ADMM_H
+#endif // ADMM_HN_VAR
