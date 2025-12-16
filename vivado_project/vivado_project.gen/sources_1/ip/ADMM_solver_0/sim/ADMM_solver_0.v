@@ -48,7 +48,7 @@
 
 
 // IP VLNV: xilinx.com:hls:ADMM_solver:1.0
-// IP Revision: 2114393145
+// IP Revision: 2114393920
 
 `timescale 1ns/1ps
 

@@ -47,7 +47,7 @@
 // DO NOT MODIFY THIS FILE.
 
 // IP VLNV: xilinx.com:hls:ADMM_solver:1.0
-// IP Revision: 2114393145
+// IP Revision: 2114393920
 
 // The following must be inserted into your Verilog file for this
 // core to be instantiated. Change the instance name and port connections

@@ -46,7 +46,7 @@
 -- 
 -- DO NOT MODIFY THIS FILE.
 -- IP VLNV: xilinx.com:hls:ADMM_solver:1.0
--- IP Revision: 2114393145
+-- IP Revision: 2114393920
 
 -- The following code must appear in the VHDL architecture header.
 

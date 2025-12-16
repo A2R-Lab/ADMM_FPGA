@@ -15,7 +15,7 @@ module top (
     localparam N_VAR = 332;         // Size of x array
     localparam DATA_WIDTH = 32;
     localparam CLK_HZ = 100_000_000;
-    localparam BIT_RATE = 115200;
+    localparam BIT_RATE = 921600;
     localparam PAYLOAD_BITS = 8;
     localparam FIXED_ITERS = 32'd10;  // Fixed iteration count
     
@@ -119,7 +119,7 @@ module top (
             rx_byte_count <= 0;
             rx_word_count <= 0;
             tx_byte_count <= 0;
-            tx_word_count <= 0;
+            tx_word_count <= 12;
             rx_word_buffer <= 0;
             ap_start <= 0;
             uart_tx_en <= 0;
@@ -191,7 +191,7 @@ module top (
                         ap_start <= 0;
                         state <= TX_DATA;
                         tx_byte_count <= 0;
-                        tx_word_count <= 0;
+                        tx_word_count <= 12;
                     end
                 end
                 
@@ -211,7 +211,7 @@ module top (
                         
                         if (tx_byte_count == 3) begin
                             tx_byte_count <= 0;
-                            if (tx_word_count == N_VAR-1) begin
+                            if (tx_word_count == 16-1) begin
                                 state <= DONE;
                             end else begin
                                 tx_word_count <= tx_word_count + 1;

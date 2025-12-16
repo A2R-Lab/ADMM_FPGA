@@ -36,7 +36,7 @@ architecture behav of ADMM_solver is
     attribute DowngradeIPIdentifiedWarnings of behav : architecture is "yes";
     attribute CORE_GENERATION_INFO : STRING;
     attribute CORE_GENERATION_INFO of behav : architecture is
-    "ADMM_solver_ADMM_solver,hls_ip_2025_2,{HLS_INPUT_TYPE=cxx,HLS_INPUT_FLOAT=0,HLS_INPUT_FIXED=0,HLS_INPUT_PART=xc7a100t-csg324-1,HLS_INPUT_CLOCK=10.000000,HLS_INPUT_ARCH=others,HLS_SYN_CLOCK=7.220000,HLS_SYN_LAT=-1,HLS_SYN_TPT=none,HLS_SYN_MEM=109,HLS_SYN_DSP=0,HLS_SYN_FF=19481,HLS_SYN_LUT=19330,HLS_VERSION=2025_2}";
+    "ADMM_solver_ADMM_solver,hls_ip_2025_2,{HLS_INPUT_TYPE=cxx,HLS_INPUT_FLOAT=0,HLS_INPUT_FIXED=0,HLS_INPUT_PART=xc7a100t-csg324-1,HLS_INPUT_CLOCK=10.000000,HLS_INPUT_ARCH=others,HLS_SYN_CLOCK=7.220000,HLS_SYN_LAT=-1,HLS_SYN_TPT=none,HLS_SYN_MEM=113,HLS_SYN_DSP=0,HLS_SYN_FF=21622,HLS_SYN_LUT=20837,HLS_VERSION=2025_2}";
     constant ap_const_logic_1 : STD_LOGIC := '1';
     constant ap_const_logic_0 : STD_LOGIC := '0';
     constant ap_ST_fsm_state1 : STD_LOGIC_VECTOR (2 downto 0) := "001";
@@ -56,28 +56,28 @@ architecture behav of ADMM_solver is
     attribute fsm_encoding of ap_CS_fsm : signal is "none";
     signal ap_CS_fsm_state1 : STD_LOGIC;
     attribute fsm_encoding of ap_CS_fsm_state1 : signal is "none";
-    signal iters_read_reg_427 : STD_LOGIC_VECTOR (31 downto 0);
-    signal grp_ADMM_iteration_fu_216_ap_start : STD_LOGIC;
-    signal grp_ADMM_iteration_fu_216_ap_done : STD_LOGIC;
-    signal grp_ADMM_iteration_fu_216_ap_idle : STD_LOGIC;
-    signal grp_ADMM_iteration_fu_216_ap_ready : STD_LOGIC;
-    signal grp_ADMM_iteration_fu_216_x_address0 : STD_LOGIC_VECTOR (8 downto 0);
-    signal grp_ADMM_iteration_fu_216_x_ce0 : STD_LOGIC;
-    signal grp_ADMM_iteration_fu_216_x_we0 : STD_LOGIC;
-    signal grp_ADMM_iteration_fu_216_x_d0 : STD_LOGIC_VECTOR (31 downto 0);
-    signal grp_ADMM_iteration_fu_216_x_address1 : STD_LOGIC_VECTOR (8 downto 0);
-    signal grp_ADMM_iteration_fu_216_x_ce1 : STD_LOGIC;
-    signal grp_ADMM_iteration_fu_216_current_state_address0 : STD_LOGIC_VECTOR (3 downto 0);
-    signal grp_ADMM_iteration_fu_216_current_state_ce0 : STD_LOGIC;
-    signal grp_ADMM_iteration_fu_216_ap_start_reg : STD_LOGIC := '0';
+    signal iters_read_reg_443 : STD_LOGIC_VECTOR (31 downto 0);
+    signal grp_ADMM_iteration_fu_224_ap_start : STD_LOGIC;
+    signal grp_ADMM_iteration_fu_224_ap_done : STD_LOGIC;
+    signal grp_ADMM_iteration_fu_224_ap_idle : STD_LOGIC;
+    signal grp_ADMM_iteration_fu_224_ap_ready : STD_LOGIC;
+    signal grp_ADMM_iteration_fu_224_x_address0 : STD_LOGIC_VECTOR (8 downto 0);
+    signal grp_ADMM_iteration_fu_224_x_ce0 : STD_LOGIC;
+    signal grp_ADMM_iteration_fu_224_x_we0 : STD_LOGIC;
+    signal grp_ADMM_iteration_fu_224_x_d0 : STD_LOGIC_VECTOR (31 downto 0);
+    signal grp_ADMM_iteration_fu_224_x_address1 : STD_LOGIC_VECTOR (8 downto 0);
+    signal grp_ADMM_iteration_fu_224_x_ce1 : STD_LOGIC;
+    signal grp_ADMM_iteration_fu_224_current_state_address0 : STD_LOGIC_VECTOR (3 downto 0);
+    signal grp_ADMM_iteration_fu_224_current_state_ce0 : STD_LOGIC;
+    signal grp_ADMM_iteration_fu_224_ap_start_reg : STD_LOGIC := '0';
     signal ap_CS_fsm_state2 : STD_LOGIC;
     attribute fsm_encoding of ap_CS_fsm_state2 : signal is "none";
-    signal icmp_ln133_fu_404_p2 : STD_LOGIC_VECTOR (0 downto 0);
+    signal icmp_ln133_fu_420_p2 : STD_LOGIC_VECTOR (0 downto 0);
     signal ap_CS_fsm_state3 : STD_LOGIC;
     attribute fsm_encoding of ap_CS_fsm_state3 : signal is "none";
-    signal iter_fu_206 : STD_LOGIC_VECTOR (30 downto 0) := "0000000000000000000000000000000";
-    signal add_ln133_fu_409_p2 : STD_LOGIC_VECTOR (30 downto 0);
-    signal zext_ln133_fu_400_p1 : STD_LOGIC_VECTOR (31 downto 0);
+    signal iter_fu_214 : STD_LOGIC_VECTOR (30 downto 0) := "0000000000000000000000000000000";
+    signal add_ln133_fu_425_p2 : STD_LOGIC_VECTOR (30 downto 0);
+    signal zext_ln133_fu_416_p1 : STD_LOGIC_VECTOR (31 downto 0);
     signal ap_NS_fsm : STD_LOGIC_VECTOR (2 downto 0);
     signal ap_ST_fsm_state1_blk : STD_LOGIC;
     signal ap_ST_fsm_state2_blk : STD_LOGIC;
@@ -108,24 +108,24 @@ architecture behav of ADMM_solver is
 
 
 begin
-    grp_ADMM_iteration_fu_216 : component ADMM_solver_ADMM_iteration
+    grp_ADMM_iteration_fu_224 : component ADMM_solver_ADMM_iteration
     port map (
         ap_clk => ap_clk,
         ap_rst => ap_rst,
-        ap_start => grp_ADMM_iteration_fu_216_ap_start,
-        ap_done => grp_ADMM_iteration_fu_216_ap_done,
-        ap_idle => grp_ADMM_iteration_fu_216_ap_idle,
-        ap_ready => grp_ADMM_iteration_fu_216_ap_ready,
-        x_address0 => grp_ADMM_iteration_fu_216_x_address0,
-        x_ce0 => grp_ADMM_iteration_fu_216_x_ce0,
-        x_we0 => grp_ADMM_iteration_fu_216_x_we0,
-        x_d0 => grp_ADMM_iteration_fu_216_x_d0,
+        ap_start => grp_ADMM_iteration_fu_224_ap_start,
+        ap_done => grp_ADMM_iteration_fu_224_ap_done,
+        ap_idle => grp_ADMM_iteration_fu_224_ap_idle,
+        ap_ready => grp_ADMM_iteration_fu_224_ap_ready,
+        x_address0 => grp_ADMM_iteration_fu_224_x_address0,
+        x_ce0 => grp_ADMM_iteration_fu_224_x_ce0,
+        x_we0 => grp_ADMM_iteration_fu_224_x_we0,
+        x_d0 => grp_ADMM_iteration_fu_224_x_d0,
         x_q0 => x_q0,
-        x_address1 => grp_ADMM_iteration_fu_216_x_address1,
-        x_ce1 => grp_ADMM_iteration_fu_216_x_ce1,
+        x_address1 => grp_ADMM_iteration_fu_224_x_address1,
+        x_ce1 => grp_ADMM_iteration_fu_224_x_ce1,
         x_q1 => x_q1,
-        current_state_address0 => grp_ADMM_iteration_fu_216_current_state_address0,
-        current_state_ce0 => grp_ADMM_iteration_fu_216_current_state_ce0,
+        current_state_address0 => grp_ADMM_iteration_fu_224_current_state_address0,
+        current_state_ce0 => grp_ADMM_iteration_fu_224_current_state_ce0,
         current_state_q0 => current_state_q0);
 
 
@@ -144,29 +144,29 @@ begin
     end process;
 
 
-    grp_ADMM_iteration_fu_216_ap_start_reg_assign_proc : process(ap_clk)
+    grp_ADMM_iteration_fu_224_ap_start_reg_assign_proc : process(ap_clk)
     begin
         if (ap_clk'event and ap_clk =  '1') then
             if (ap_rst = '1') then
-                grp_ADMM_iteration_fu_216_ap_start_reg <= ap_const_logic_0;
+                grp_ADMM_iteration_fu_224_ap_start_reg <= ap_const_logic_0;
             else
-                if (((icmp_ln133_fu_404_p2 = ap_const_lv1_1) and (ap_const_logic_1 = ap_CS_fsm_state2))) then 
-                    grp_ADMM_iteration_fu_216_ap_start_reg <= ap_const_logic_1;
-                elsif ((grp_ADMM_iteration_fu_216_ap_ready = ap_const_logic_1)) then 
-                    grp_ADMM_iteration_fu_216_ap_start_reg <= ap_const_logic_0;
+                if (((icmp_ln133_fu_420_p2 = ap_const_lv1_1) and (ap_const_logic_1 = ap_CS_fsm_state2))) then 
+                    grp_ADMM_iteration_fu_224_ap_start_reg <= ap_const_logic_1;
+                elsif ((grp_ADMM_iteration_fu_224_ap_ready = ap_const_logic_1)) then 
+                    grp_ADMM_iteration_fu_224_ap_start_reg <= ap_const_logic_0;
                 end if; 
             end if;
         end if;
     end process;
 
 
-    iter_fu_206_assign_proc : process (ap_clk)
+    iter_fu_214_assign_proc : process (ap_clk)
     begin
         if (ap_clk'event and ap_clk = '1') then
             if (((ap_start = ap_const_logic_1) and (ap_const_logic_1 = ap_CS_fsm_state1))) then 
-                iter_fu_206 <= ap_const_lv31_0;
-            elsif (((icmp_ln133_fu_404_p2 = ap_const_lv1_1) and (ap_const_logic_1 = ap_CS_fsm_state2))) then 
-                iter_fu_206 <= add_ln133_fu_409_p2;
+                iter_fu_214 <= ap_const_lv31_0;
+            elsif (((icmp_ln133_fu_420_p2 = ap_const_lv1_1) and (ap_const_logic_1 = ap_CS_fsm_state2))) then 
+                iter_fu_214 <= add_ln133_fu_425_p2;
             end if; 
         end if;
     end process;
@@ -174,12 +174,12 @@ begin
     begin
         if (ap_clk'event and ap_clk = '1') then
             if ((ap_const_logic_1 = ap_CS_fsm_state1)) then
-                iters_read_reg_427 <= iters;
+                iters_read_reg_443 <= iters;
             end if;
         end if;
     end process;
 
-    ap_NS_fsm_assign_proc : process (ap_start, ap_CS_fsm, ap_CS_fsm_state1, grp_ADMM_iteration_fu_216_ap_done, ap_CS_fsm_state2, icmp_ln133_fu_404_p2, ap_CS_fsm_state3)
+    ap_NS_fsm_assign_proc : process (ap_start, ap_CS_fsm, ap_CS_fsm_state1, grp_ADMM_iteration_fu_224_ap_done, ap_CS_fsm_state2, icmp_ln133_fu_420_p2, ap_CS_fsm_state3)
     begin
         case ap_CS_fsm is
             when ap_ST_fsm_state1 => 
@@ -189,13 +189,13 @@ begin
                     ap_NS_fsm <= ap_ST_fsm_state1;
                 end if;
             when ap_ST_fsm_state2 => 
-                if (((icmp_ln133_fu_404_p2 = ap_const_lv1_0) and (ap_const_logic_1 = ap_CS_fsm_state2))) then
+                if (((icmp_ln133_fu_420_p2 = ap_const_lv1_0) and (ap_const_logic_1 = ap_CS_fsm_state2))) then
                     ap_NS_fsm <= ap_ST_fsm_state1;
                 else
                     ap_NS_fsm <= ap_ST_fsm_state3;
                 end if;
             when ap_ST_fsm_state3 => 
-                if (((grp_ADMM_iteration_fu_216_ap_done = ap_const_logic_1) and (ap_const_logic_1 = ap_CS_fsm_state3))) then
+                if (((grp_ADMM_iteration_fu_224_ap_done = ap_const_logic_1) and (ap_const_logic_1 = ap_CS_fsm_state3))) then
                     ap_NS_fsm <= ap_ST_fsm_state2;
                 else
                     ap_NS_fsm <= ap_ST_fsm_state3;
@@ -204,7 +204,7 @@ begin
                 ap_NS_fsm <= "XXX";
         end case;
     end process;
-    add_ln133_fu_409_p2 <= std_logic_vector(unsigned(iter_fu_206) + unsigned(ap_const_lv31_1));
+    add_ln133_fu_425_p2 <= std_logic_vector(unsigned(iter_fu_214) + unsigned(ap_const_lv31_1));
     ap_CS_fsm_state1 <= ap_CS_fsm(0);
     ap_CS_fsm_state2 <= ap_CS_fsm(1);
     ap_CS_fsm_state3 <= ap_CS_fsm(2);
@@ -220,9 +220,9 @@ begin
 
     ap_ST_fsm_state2_blk <= ap_const_logic_0;
 
-    ap_ST_fsm_state3_blk_assign_proc : process(grp_ADMM_iteration_fu_216_ap_done)
+    ap_ST_fsm_state3_blk_assign_proc : process(grp_ADMM_iteration_fu_224_ap_done)
     begin
-        if ((grp_ADMM_iteration_fu_216_ap_done = ap_const_logic_0)) then 
+        if ((grp_ADMM_iteration_fu_224_ap_done = ap_const_logic_0)) then 
             ap_ST_fsm_state3_blk <= ap_const_logic_1;
         else 
             ap_ST_fsm_state3_blk <= ap_const_logic_0;
@@ -230,9 +230,9 @@ begin
     end process;
 
 
-    ap_done_assign_proc : process(ap_CS_fsm_state2, icmp_ln133_fu_404_p2)
+    ap_done_assign_proc : process(ap_CS_fsm_state2, icmp_ln133_fu_420_p2)
     begin
-        if (((icmp_ln133_fu_404_p2 = ap_const_lv1_0) and (ap_const_logic_1 = ap_CS_fsm_state2))) then 
+        if (((icmp_ln133_fu_420_p2 = ap_const_lv1_0) and (ap_const_logic_1 = ap_CS_fsm_state2))) then 
             ap_done <= ap_const_logic_1;
         else 
             ap_done <= ap_const_logic_0;
@@ -250,24 +250,24 @@ begin
     end process;
 
 
-    ap_ready_assign_proc : process(ap_CS_fsm_state2, icmp_ln133_fu_404_p2)
+    ap_ready_assign_proc : process(ap_CS_fsm_state2, icmp_ln133_fu_420_p2)
     begin
-        if (((icmp_ln133_fu_404_p2 = ap_const_lv1_0) and (ap_const_logic_1 = ap_CS_fsm_state2))) then 
+        if (((icmp_ln133_fu_420_p2 = ap_const_lv1_0) and (ap_const_logic_1 = ap_CS_fsm_state2))) then 
             ap_ready <= ap_const_logic_1;
         else 
             ap_ready <= ap_const_logic_0;
         end if; 
     end process;
 
-    current_state_address0 <= grp_ADMM_iteration_fu_216_current_state_address0;
-    current_state_ce0 <= grp_ADMM_iteration_fu_216_current_state_ce0;
-    grp_ADMM_iteration_fu_216_ap_start <= grp_ADMM_iteration_fu_216_ap_start_reg;
-    icmp_ln133_fu_404_p2 <= "1" when (signed(zext_ln133_fu_400_p1) < signed(iters_read_reg_427)) else "0";
-    x_address0 <= grp_ADMM_iteration_fu_216_x_address0;
-    x_address1 <= grp_ADMM_iteration_fu_216_x_address1;
-    x_ce0 <= grp_ADMM_iteration_fu_216_x_ce0;
-    x_ce1 <= grp_ADMM_iteration_fu_216_x_ce1;
-    x_d0 <= grp_ADMM_iteration_fu_216_x_d0;
-    x_we0 <= grp_ADMM_iteration_fu_216_x_we0;
-    zext_ln133_fu_400_p1 <= std_logic_vector(IEEE.numeric_std.resize(unsigned(iter_fu_206),32));
+    current_state_address0 <= grp_ADMM_iteration_fu_224_current_state_address0;
+    current_state_ce0 <= grp_ADMM_iteration_fu_224_current_state_ce0;
+    grp_ADMM_iteration_fu_224_ap_start <= grp_ADMM_iteration_fu_224_ap_start_reg;
+    icmp_ln133_fu_420_p2 <= "1" when (signed(zext_ln133_fu_416_p1) < signed(iters_read_reg_443)) else "0";
+    x_address0 <= grp_ADMM_iteration_fu_224_x_address0;
+    x_address1 <= grp_ADMM_iteration_fu_224_x_address1;
+    x_ce0 <= grp_ADMM_iteration_fu_224_x_ce0;
+    x_ce1 <= grp_ADMM_iteration_fu_224_x_ce1;
+    x_d0 <= grp_ADMM_iteration_fu_224_x_d0;
+    x_we0 <= grp_ADMM_iteration_fu_224_x_we0;
+    zext_ln133_fu_416_p1 <= std_logic_vector(IEEE.numeric_std.resize(unsigned(iter_fu_214),32));
 end behav;

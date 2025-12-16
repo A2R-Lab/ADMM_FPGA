@@ -21,34 +21,10 @@ module ADMM_solver_backward_substitution (
         x_ce0,
         x_we0,
         x_d0,
-        grp_fu_445_p_din0,
-        grp_fu_445_p_din1,
-        grp_fu_445_p_dout0,
-        grp_fu_445_p_ce,
-        grp_fu_449_p_din0,
-        grp_fu_449_p_din1,
-        grp_fu_449_p_dout0,
-        grp_fu_449_p_ce,
-        grp_fu_453_p_din0,
-        grp_fu_453_p_din1,
-        grp_fu_453_p_dout0,
-        grp_fu_453_p_ce,
-        grp_fu_397_p_din0,
-        grp_fu_397_p_din1,
-        grp_fu_397_p_dout0,
-        grp_fu_397_p_ce,
-        grp_fu_401_p_din0,
-        grp_fu_401_p_din1,
-        grp_fu_401_p_dout0,
-        grp_fu_401_p_ce,
-        grp_fu_405_p_din0,
-        grp_fu_405_p_din1,
-        grp_fu_405_p_dout0,
-        grp_fu_405_p_ce,
-        grp_fu_409_p_din0,
-        grp_fu_409_p_din1,
-        grp_fu_409_p_dout0,
-        grp_fu_409_p_ce,
+        grp_fu_477_p_din0,
+        grp_fu_477_p_din1,
+        grp_fu_477_p_dout0,
+        grp_fu_477_p_ce,
         grp_fu_413_p_din0,
         grp_fu_413_p_din1,
         grp_fu_413_p_dout0,
@@ -80,7 +56,39 @@ module ADMM_solver_backward_substitution (
         grp_fu_441_p_din0,
         grp_fu_441_p_din1,
         grp_fu_441_p_dout0,
-        grp_fu_441_p_ce
+        grp_fu_441_p_ce,
+        grp_fu_445_p_din0,
+        grp_fu_445_p_din1,
+        grp_fu_445_p_dout0,
+        grp_fu_445_p_ce,
+        grp_fu_449_p_din0,
+        grp_fu_449_p_din1,
+        grp_fu_449_p_dout0,
+        grp_fu_449_p_ce,
+        grp_fu_453_p_din0,
+        grp_fu_453_p_din1,
+        grp_fu_453_p_dout0,
+        grp_fu_453_p_ce,
+        grp_fu_457_p_din0,
+        grp_fu_457_p_din1,
+        grp_fu_457_p_dout0,
+        grp_fu_457_p_ce,
+        grp_fu_461_p_din0,
+        grp_fu_461_p_din1,
+        grp_fu_461_p_dout0,
+        grp_fu_461_p_ce,
+        grp_fu_465_p_din0,
+        grp_fu_465_p_din1,
+        grp_fu_465_p_dout0,
+        grp_fu_465_p_ce,
+        grp_fu_469_p_din0,
+        grp_fu_469_p_din1,
+        grp_fu_469_p_dout0,
+        grp_fu_469_p_ce,
+        grp_fu_473_p_din0,
+        grp_fu_473_p_din1,
+        grp_fu_473_p_dout0,
+        grp_fu_473_p_ce
 );
 
 parameter    ap_ST_fsm_state1 = 2'd1;
@@ -99,66 +107,74 @@ output  [8:0] x_address0;
 output   x_ce0;
 output   x_we0;
 output  [31:0] x_d0;
-output  [15:0] grp_fu_445_p_din0;
-output  [31:0] grp_fu_445_p_din1;
-input  [47:0] grp_fu_445_p_dout0;
-output   grp_fu_445_p_ce;
-output  [19:0] grp_fu_449_p_din0;
-output  [31:0] grp_fu_449_p_din1;
-input  [50:0] grp_fu_449_p_dout0;
-output   grp_fu_449_p_ce;
-output  [20:0] grp_fu_453_p_din0;
-output  [31:0] grp_fu_453_p_din1;
-input  [51:0] grp_fu_453_p_dout0;
-output   grp_fu_453_p_ce;
-output  [21:0] grp_fu_397_p_din0;
-output  [31:0] grp_fu_397_p_din1;
-input  [53:0] grp_fu_397_p_dout0;
-output   grp_fu_397_p_ce;
-output  [21:0] grp_fu_401_p_din0;
-output  [31:0] grp_fu_401_p_din1;
-input  [52:0] grp_fu_401_p_dout0;
-output   grp_fu_401_p_ce;
-output  [22:0] grp_fu_405_p_din0;
-output  [31:0] grp_fu_405_p_din1;
-input  [53:0] grp_fu_405_p_dout0;
-output   grp_fu_405_p_ce;
-output  [24:0] grp_fu_409_p_din0;
-output  [31:0] grp_fu_409_p_din1;
-input  [55:0] grp_fu_409_p_dout0;
-output   grp_fu_409_p_ce;
-output  [24:0] grp_fu_413_p_din0;
+output  [9:0] grp_fu_477_p_din0;
+output  [31:0] grp_fu_477_p_din1;
+input  [41:0] grp_fu_477_p_dout0;
+output   grp_fu_477_p_ce;
+output  [10:0] grp_fu_413_p_din0;
 output  [31:0] grp_fu_413_p_din1;
-input  [55:0] grp_fu_413_p_dout0;
+input  [42:0] grp_fu_413_p_dout0;
 output   grp_fu_413_p_ce;
-output  [24:0] grp_fu_417_p_din0;
+output  [21:0] grp_fu_417_p_din0;
 output  [31:0] grp_fu_417_p_din1;
-input  [55:0] grp_fu_417_p_dout0;
+input  [52:0] grp_fu_417_p_dout0;
 output   grp_fu_417_p_ce;
-output  [25:0] grp_fu_421_p_din0;
+output  [22:0] grp_fu_421_p_din0;
 output  [31:0] grp_fu_421_p_din1;
-input  [56:0] grp_fu_421_p_dout0;
+input  [53:0] grp_fu_421_p_dout0;
 output   grp_fu_421_p_ce;
-output  [25:0] grp_fu_425_p_din0;
+output  [22:0] grp_fu_425_p_din0;
 output  [31:0] grp_fu_425_p_din1;
-input  [56:0] grp_fu_425_p_dout0;
+input  [53:0] grp_fu_425_p_dout0;
 output   grp_fu_425_p_ce;
-output  [26:0] grp_fu_429_p_din0;
+output  [23:0] grp_fu_429_p_din0;
 output  [31:0] grp_fu_429_p_din1;
-input  [57:0] grp_fu_429_p_dout0;
+input  [54:0] grp_fu_429_p_dout0;
 output   grp_fu_429_p_ce;
-output  [26:0] grp_fu_433_p_din0;
+output  [24:0] grp_fu_433_p_din0;
 output  [31:0] grp_fu_433_p_din1;
-input  [57:0] grp_fu_433_p_dout0;
+input  [56:0] grp_fu_433_p_dout0;
 output   grp_fu_433_p_ce;
-output  [26:0] grp_fu_437_p_din0;
+output  [25:0] grp_fu_437_p_din0;
 output  [31:0] grp_fu_437_p_din1;
-input  [57:0] grp_fu_437_p_dout0;
+input  [56:0] grp_fu_437_p_dout0;
 output   grp_fu_437_p_ce;
-output  [32:0] grp_fu_441_p_din0;
-output  [19:0] grp_fu_441_p_din1;
-input  [52:0] grp_fu_441_p_dout0;
+output  [25:0] grp_fu_441_p_din0;
+output  [31:0] grp_fu_441_p_din1;
+input  [56:0] grp_fu_441_p_dout0;
 output   grp_fu_441_p_ce;
+output  [25:0] grp_fu_445_p_din0;
+output  [31:0] grp_fu_445_p_din1;
+input  [56:0] grp_fu_445_p_dout0;
+output   grp_fu_445_p_ce;
+output  [25:0] grp_fu_449_p_din0;
+output  [31:0] grp_fu_449_p_din1;
+input  [56:0] grp_fu_449_p_dout0;
+output   grp_fu_449_p_ce;
+output  [26:0] grp_fu_453_p_din0;
+output  [31:0] grp_fu_453_p_din1;
+input  [57:0] grp_fu_453_p_dout0;
+output   grp_fu_453_p_ce;
+output  [29:0] grp_fu_457_p_din0;
+output  [31:0] grp_fu_457_p_din1;
+input  [60:0] grp_fu_457_p_dout0;
+output   grp_fu_457_p_ce;
+output  [29:0] grp_fu_461_p_din0;
+output  [31:0] grp_fu_461_p_din1;
+input  [60:0] grp_fu_461_p_dout0;
+output   grp_fu_461_p_ce;
+output  [29:0] grp_fu_465_p_din0;
+output  [31:0] grp_fu_465_p_din1;
+input  [60:0] grp_fu_465_p_dout0;
+output   grp_fu_465_p_ce;
+output  [29:0] grp_fu_469_p_din0;
+output  [31:0] grp_fu_469_p_din1;
+input  [60:0] grp_fu_469_p_dout0;
+output   grp_fu_469_p_ce;
+output  [32:0] grp_fu_473_p_din0;
+output  [21:0] grp_fu_473_p_din1;
+input  [54:0] grp_fu_473_p_dout0;
+output   grp_fu_473_p_ce;
 
 reg ap_done;
 reg ap_idle;
@@ -166,65 +182,69 @@ reg ap_ready;
 
 (* fsm_encoding = "none" *) reg   [1:0] ap_CS_fsm;
 wire    ap_CS_fsm_state1;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_ap_start;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_ap_done;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_ap_idle;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_ap_ready;
-wire   [8:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_b_address0;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_b_ce0;
-wire   [8:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_x_address0;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_x_ce0;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_x_we0;
-wire   [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_x_d0;
-wire  signed [15:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_100_p_din0;
-wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_100_p_din1;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_100_p_ce;
-wire  signed [19:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_104_p_din0;
-wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_104_p_din1;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_104_p_ce;
-wire  signed [20:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_108_p_din0;
-wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_108_p_din1;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_108_p_ce;
-wire   [21:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_112_p_din0;
-wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_112_p_din1;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_112_p_ce;
-wire  signed [21:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_116_p_din0;
-wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_116_p_din1;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_116_p_ce;
-wire  signed [22:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_120_p_din0;
-wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_120_p_din1;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_120_p_ce;
-wire  signed [24:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_124_p_din0;
-wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_124_p_din1;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_124_p_ce;
-wire  signed [24:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_128_p_din0;
-wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_128_p_din1;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_128_p_ce;
-wire  signed [24:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_132_p_din0;
-wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_132_p_din1;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_132_p_ce;
-wire  signed [25:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_136_p_din0;
-wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_136_p_din1;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_136_p_ce;
-wire  signed [25:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_140_p_din0;
-wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_140_p_din1;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_140_p_ce;
-wire  signed [26:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_144_p_din0;
-wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_144_p_din1;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_144_p_ce;
-wire  signed [26:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_148_p_din0;
-wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_148_p_din1;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_148_p_ce;
-wire  signed [26:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_152_p_din0;
-wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_152_p_din1;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_152_p_ce;
-wire  signed [32:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_156_p_din0;
-wire   [19:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_156_p_din1;
-wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_156_p_ce;
-reg    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_ap_start_reg;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_ap_start;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_ap_done;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_ap_idle;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_ap_ready;
+wire   [8:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_b_address0;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_b_ce0;
+wire   [8:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_x_address0;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_x_ce0;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_x_we0;
+wire   [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_x_d0;
+wire   [9:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_108_p_din0;
+wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_108_p_din1;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_108_p_ce;
+wire  signed [10:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_112_p_din0;
+wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_112_p_din1;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_112_p_ce;
+wire  signed [21:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_116_p_din0;
+wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_116_p_din1;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_116_p_ce;
+wire  signed [22:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_120_p_din0;
+wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_120_p_din1;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_120_p_ce;
+wire  signed [22:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_124_p_din0;
+wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_124_p_din1;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_124_p_ce;
+wire  signed [23:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_128_p_din0;
+wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_128_p_din1;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_128_p_ce;
+wire   [24:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_132_p_din0;
+wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_132_p_din1;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_132_p_ce;
+wire  signed [25:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_136_p_din0;
+wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_136_p_din1;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_136_p_ce;
+wire  signed [25:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_140_p_din0;
+wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_140_p_din1;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_140_p_ce;
+wire  signed [25:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_144_p_din0;
+wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_144_p_din1;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_144_p_ce;
+wire  signed [25:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_148_p_din0;
+wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_148_p_din1;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_148_p_ce;
+wire  signed [26:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_152_p_din0;
+wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_152_p_din1;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_152_p_ce;
+wire  signed [29:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_156_p_din0;
+wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_156_p_din1;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_156_p_ce;
+wire  signed [29:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_160_p_din0;
+wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_160_p_din1;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_160_p_ce;
+wire  signed [29:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_164_p_din0;
+wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_164_p_din1;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_164_p_ce;
+wire  signed [29:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_168_p_din0;
+wire  signed [31:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_168_p_din1;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_168_p_ce;
+wire  signed [32:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_172_p_din0;
+wire   [21:0] grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_172_p_din1;
+wire    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_172_p_ce;
+reg    grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_ap_start_reg;
 wire    ap_CS_fsm_state2;
-reg    grp_fu_100_ce;
-reg    grp_fu_104_ce;
 reg    grp_fu_108_ce;
 reg    grp_fu_112_ce;
 reg    grp_fu_116_ce;
@@ -238,6 +258,10 @@ reg    grp_fu_144_ce;
 reg    grp_fu_148_ce;
 reg    grp_fu_152_ce;
 reg    grp_fu_156_ce;
+reg    grp_fu_160_ce;
+reg    grp_fu_164_ce;
+reg    grp_fu_168_ce;
+reg    grp_fu_172_ce;
 reg   [1:0] ap_NS_fsm;
 reg    ap_ST_fsm_state1_blk;
 reg    ap_ST_fsm_state2_blk;
@@ -246,83 +270,91 @@ wire    ap_ce_reg;
 // power-on initialization
 initial begin
 #0 ap_CS_fsm = 2'd1;
-#0 grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_ap_start_reg = 1'b0;
+#0 grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_ap_start_reg = 1'b0;
 end
 
-ADMM_solver_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54(
+ADMM_solver_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58(
     .ap_clk(ap_clk),
     .ap_rst(ap_rst),
-    .ap_start(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_ap_start),
-    .ap_done(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_ap_done),
-    .ap_idle(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_ap_idle),
-    .ap_ready(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_ap_ready),
-    .b_address0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_b_address0),
-    .b_ce0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_b_ce0),
+    .ap_start(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_ap_start),
+    .ap_done(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_ap_done),
+    .ap_idle(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_ap_idle),
+    .ap_ready(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_ap_ready),
+    .b_address0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_b_address0),
+    .b_ce0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_b_ce0),
     .b_q0(b_q0),
-    .x_address0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_x_address0),
-    .x_ce0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_x_ce0),
-    .x_we0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_x_we0),
-    .x_d0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_x_d0),
-    .grp_fu_100_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_100_p_din0),
-    .grp_fu_100_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_100_p_din1),
-    .grp_fu_100_p_dout0(grp_fu_445_p_dout0),
-    .grp_fu_100_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_100_p_ce),
-    .grp_fu_104_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_104_p_din0),
-    .grp_fu_104_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_104_p_din1),
-    .grp_fu_104_p_dout0(grp_fu_449_p_dout0),
-    .grp_fu_104_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_104_p_ce),
-    .grp_fu_108_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_108_p_din0),
-    .grp_fu_108_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_108_p_din1),
-    .grp_fu_108_p_dout0(grp_fu_453_p_dout0),
-    .grp_fu_108_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_108_p_ce),
-    .grp_fu_112_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_112_p_din0),
-    .grp_fu_112_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_112_p_din1),
-    .grp_fu_112_p_dout0(grp_fu_397_p_dout0),
-    .grp_fu_112_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_112_p_ce),
-    .grp_fu_116_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_116_p_din0),
-    .grp_fu_116_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_116_p_din1),
-    .grp_fu_116_p_dout0(grp_fu_401_p_dout0),
-    .grp_fu_116_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_116_p_ce),
-    .grp_fu_120_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_120_p_din0),
-    .grp_fu_120_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_120_p_din1),
-    .grp_fu_120_p_dout0(grp_fu_405_p_dout0),
-    .grp_fu_120_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_120_p_ce),
-    .grp_fu_124_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_124_p_din0),
-    .grp_fu_124_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_124_p_din1),
-    .grp_fu_124_p_dout0(grp_fu_409_p_dout0),
-    .grp_fu_124_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_124_p_ce),
-    .grp_fu_128_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_128_p_din0),
-    .grp_fu_128_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_128_p_din1),
-    .grp_fu_128_p_dout0(grp_fu_413_p_dout0),
-    .grp_fu_128_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_128_p_ce),
-    .grp_fu_132_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_132_p_din0),
-    .grp_fu_132_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_132_p_din1),
-    .grp_fu_132_p_dout0(grp_fu_417_p_dout0),
-    .grp_fu_132_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_132_p_ce),
-    .grp_fu_136_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_136_p_din0),
-    .grp_fu_136_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_136_p_din1),
-    .grp_fu_136_p_dout0(grp_fu_421_p_dout0),
-    .grp_fu_136_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_136_p_ce),
-    .grp_fu_140_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_140_p_din0),
-    .grp_fu_140_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_140_p_din1),
-    .grp_fu_140_p_dout0(grp_fu_425_p_dout0),
-    .grp_fu_140_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_140_p_ce),
-    .grp_fu_144_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_144_p_din0),
-    .grp_fu_144_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_144_p_din1),
-    .grp_fu_144_p_dout0(grp_fu_429_p_dout0),
-    .grp_fu_144_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_144_p_ce),
-    .grp_fu_148_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_148_p_din0),
-    .grp_fu_148_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_148_p_din1),
-    .grp_fu_148_p_dout0(grp_fu_433_p_dout0),
-    .grp_fu_148_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_148_p_ce),
-    .grp_fu_152_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_152_p_din0),
-    .grp_fu_152_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_152_p_din1),
-    .grp_fu_152_p_dout0(grp_fu_437_p_dout0),
-    .grp_fu_152_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_152_p_ce),
-    .grp_fu_156_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_156_p_din0),
-    .grp_fu_156_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_156_p_din1),
-    .grp_fu_156_p_dout0(grp_fu_441_p_dout0),
-    .grp_fu_156_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_156_p_ce)
+    .x_address0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_x_address0),
+    .x_ce0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_x_ce0),
+    .x_we0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_x_we0),
+    .x_d0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_x_d0),
+    .grp_fu_108_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_108_p_din0),
+    .grp_fu_108_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_108_p_din1),
+    .grp_fu_108_p_dout0(grp_fu_477_p_dout0),
+    .grp_fu_108_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_108_p_ce),
+    .grp_fu_112_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_112_p_din0),
+    .grp_fu_112_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_112_p_din1),
+    .grp_fu_112_p_dout0(grp_fu_413_p_dout0),
+    .grp_fu_112_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_112_p_ce),
+    .grp_fu_116_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_116_p_din0),
+    .grp_fu_116_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_116_p_din1),
+    .grp_fu_116_p_dout0(grp_fu_417_p_dout0),
+    .grp_fu_116_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_116_p_ce),
+    .grp_fu_120_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_120_p_din0),
+    .grp_fu_120_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_120_p_din1),
+    .grp_fu_120_p_dout0(grp_fu_421_p_dout0),
+    .grp_fu_120_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_120_p_ce),
+    .grp_fu_124_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_124_p_din0),
+    .grp_fu_124_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_124_p_din1),
+    .grp_fu_124_p_dout0(grp_fu_425_p_dout0),
+    .grp_fu_124_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_124_p_ce),
+    .grp_fu_128_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_128_p_din0),
+    .grp_fu_128_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_128_p_din1),
+    .grp_fu_128_p_dout0(grp_fu_429_p_dout0),
+    .grp_fu_128_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_128_p_ce),
+    .grp_fu_132_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_132_p_din0),
+    .grp_fu_132_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_132_p_din1),
+    .grp_fu_132_p_dout0(grp_fu_433_p_dout0),
+    .grp_fu_132_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_132_p_ce),
+    .grp_fu_136_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_136_p_din0),
+    .grp_fu_136_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_136_p_din1),
+    .grp_fu_136_p_dout0(grp_fu_437_p_dout0),
+    .grp_fu_136_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_136_p_ce),
+    .grp_fu_140_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_140_p_din0),
+    .grp_fu_140_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_140_p_din1),
+    .grp_fu_140_p_dout0(grp_fu_441_p_dout0),
+    .grp_fu_140_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_140_p_ce),
+    .grp_fu_144_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_144_p_din0),
+    .grp_fu_144_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_144_p_din1),
+    .grp_fu_144_p_dout0(grp_fu_445_p_dout0),
+    .grp_fu_144_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_144_p_ce),
+    .grp_fu_148_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_148_p_din0),
+    .grp_fu_148_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_148_p_din1),
+    .grp_fu_148_p_dout0(grp_fu_449_p_dout0),
+    .grp_fu_148_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_148_p_ce),
+    .grp_fu_152_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_152_p_din0),
+    .grp_fu_152_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_152_p_din1),
+    .grp_fu_152_p_dout0(grp_fu_453_p_dout0),
+    .grp_fu_152_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_152_p_ce),
+    .grp_fu_156_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_156_p_din0),
+    .grp_fu_156_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_156_p_din1),
+    .grp_fu_156_p_dout0(grp_fu_457_p_dout0),
+    .grp_fu_156_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_156_p_ce),
+    .grp_fu_160_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_160_p_din0),
+    .grp_fu_160_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_160_p_din1),
+    .grp_fu_160_p_dout0(grp_fu_461_p_dout0),
+    .grp_fu_160_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_160_p_ce),
+    .grp_fu_164_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_164_p_din0),
+    .grp_fu_164_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_164_p_din1),
+    .grp_fu_164_p_dout0(grp_fu_465_p_dout0),
+    .grp_fu_164_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_164_p_ce),
+    .grp_fu_168_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_168_p_din0),
+    .grp_fu_168_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_168_p_din1),
+    .grp_fu_168_p_dout0(grp_fu_469_p_dout0),
+    .grp_fu_168_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_168_p_ce),
+    .grp_fu_172_p_din0(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_172_p_din0),
+    .grp_fu_172_p_din1(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_172_p_din1),
+    .grp_fu_172_p_dout0(grp_fu_473_p_dout0),
+    .grp_fu_172_p_ce(grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_172_p_ce)
 );
 
 always @ (posedge ap_clk) begin
@@ -335,12 +367,12 @@ end
 
 always @ (posedge ap_clk) begin
     if (ap_rst == 1'b1) begin
-        grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_ap_start_reg <= 1'b0;
+        grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_ap_start_reg <= 1'b0;
     end else begin
         if (((ap_start == 1'b1) & (1'b1 == ap_CS_fsm_state1))) begin
-            grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_ap_start_reg <= 1'b1;
-        end else if ((grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_ap_ready == 1'b1)) begin
-            grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_ap_start_reg <= 1'b0;
+            grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_ap_start_reg <= 1'b1;
+        end else if ((grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_ap_ready == 1'b1)) begin
+            grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_ap_start_reg <= 1'b0;
         end
     end
 end
@@ -354,7 +386,7 @@ always @ (*) begin
 end
 
 always @ (*) begin
-    if ((grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_ap_done == 1'b0)) begin
+    if ((grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_ap_done == 1'b0)) begin
         ap_ST_fsm_state2_blk = 1'b1;
     end else begin
         ap_ST_fsm_state2_blk = 1'b0;
@@ -362,7 +394,7 @@ always @ (*) begin
 end
 
 always @ (*) begin
-    if ((((ap_start == 1'b0) & (1'b1 == ap_CS_fsm_state1)) | ((grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_ap_done == 1'b1) & (1'b1 == ap_CS_fsm_state2)))) begin
+    if ((((ap_start == 1'b0) & (1'b1 == ap_CS_fsm_state1)) | ((grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_ap_done == 1'b1) & (1'b1 == ap_CS_fsm_state2)))) begin
         ap_done = 1'b1;
     end else begin
         ap_done = 1'b0;
@@ -378,7 +410,7 @@ always @ (*) begin
 end
 
 always @ (*) begin
-    if (((grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_ap_done == 1'b1) & (1'b1 == ap_CS_fsm_state2))) begin
+    if (((grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_ap_done == 1'b1) & (1'b1 == ap_CS_fsm_state2))) begin
         ap_ready = 1'b1;
     end else begin
         ap_ready = 1'b0;
@@ -387,23 +419,7 @@ end
 
 always @ (*) begin
     if ((1'b1 == ap_CS_fsm_state2)) begin
-        grp_fu_100_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_100_p_ce;
-    end else begin
-        grp_fu_100_ce = 1'b1;
-    end
-end
-
-always @ (*) begin
-    if ((1'b1 == ap_CS_fsm_state2)) begin
-        grp_fu_104_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_104_p_ce;
-    end else begin
-        grp_fu_104_ce = 1'b1;
-    end
-end
-
-always @ (*) begin
-    if ((1'b1 == ap_CS_fsm_state2)) begin
-        grp_fu_108_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_108_p_ce;
+        grp_fu_108_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_108_p_ce;
     end else begin
         grp_fu_108_ce = 1'b1;
     end
@@ -411,7 +427,7 @@ end
 
 always @ (*) begin
     if ((1'b1 == ap_CS_fsm_state2)) begin
-        grp_fu_112_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_112_p_ce;
+        grp_fu_112_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_112_p_ce;
     end else begin
         grp_fu_112_ce = 1'b1;
     end
@@ -419,7 +435,7 @@ end
 
 always @ (*) begin
     if ((1'b1 == ap_CS_fsm_state2)) begin
-        grp_fu_116_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_116_p_ce;
+        grp_fu_116_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_116_p_ce;
     end else begin
         grp_fu_116_ce = 1'b1;
     end
@@ -427,7 +443,7 @@ end
 
 always @ (*) begin
     if ((1'b1 == ap_CS_fsm_state2)) begin
-        grp_fu_120_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_120_p_ce;
+        grp_fu_120_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_120_p_ce;
     end else begin
         grp_fu_120_ce = 1'b1;
     end
@@ -435,7 +451,7 @@ end
 
 always @ (*) begin
     if ((1'b1 == ap_CS_fsm_state2)) begin
-        grp_fu_124_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_124_p_ce;
+        grp_fu_124_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_124_p_ce;
     end else begin
         grp_fu_124_ce = 1'b1;
     end
@@ -443,7 +459,7 @@ end
 
 always @ (*) begin
     if ((1'b1 == ap_CS_fsm_state2)) begin
-        grp_fu_128_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_128_p_ce;
+        grp_fu_128_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_128_p_ce;
     end else begin
         grp_fu_128_ce = 1'b1;
     end
@@ -451,7 +467,7 @@ end
 
 always @ (*) begin
     if ((1'b1 == ap_CS_fsm_state2)) begin
-        grp_fu_132_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_132_p_ce;
+        grp_fu_132_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_132_p_ce;
     end else begin
         grp_fu_132_ce = 1'b1;
     end
@@ -459,7 +475,7 @@ end
 
 always @ (*) begin
     if ((1'b1 == ap_CS_fsm_state2)) begin
-        grp_fu_136_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_136_p_ce;
+        grp_fu_136_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_136_p_ce;
     end else begin
         grp_fu_136_ce = 1'b1;
     end
@@ -467,7 +483,7 @@ end
 
 always @ (*) begin
     if ((1'b1 == ap_CS_fsm_state2)) begin
-        grp_fu_140_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_140_p_ce;
+        grp_fu_140_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_140_p_ce;
     end else begin
         grp_fu_140_ce = 1'b1;
     end
@@ -475,7 +491,7 @@ end
 
 always @ (*) begin
     if ((1'b1 == ap_CS_fsm_state2)) begin
-        grp_fu_144_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_144_p_ce;
+        grp_fu_144_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_144_p_ce;
     end else begin
         grp_fu_144_ce = 1'b1;
     end
@@ -483,7 +499,7 @@ end
 
 always @ (*) begin
     if ((1'b1 == ap_CS_fsm_state2)) begin
-        grp_fu_148_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_148_p_ce;
+        grp_fu_148_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_148_p_ce;
     end else begin
         grp_fu_148_ce = 1'b1;
     end
@@ -491,7 +507,7 @@ end
 
 always @ (*) begin
     if ((1'b1 == ap_CS_fsm_state2)) begin
-        grp_fu_152_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_152_p_ce;
+        grp_fu_152_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_152_p_ce;
     end else begin
         grp_fu_152_ce = 1'b1;
     end
@@ -499,9 +515,41 @@ end
 
 always @ (*) begin
     if ((1'b1 == ap_CS_fsm_state2)) begin
-        grp_fu_156_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_156_p_ce;
+        grp_fu_156_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_156_p_ce;
     end else begin
         grp_fu_156_ce = 1'b1;
+    end
+end
+
+always @ (*) begin
+    if ((1'b1 == ap_CS_fsm_state2)) begin
+        grp_fu_160_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_160_p_ce;
+    end else begin
+        grp_fu_160_ce = 1'b1;
+    end
+end
+
+always @ (*) begin
+    if ((1'b1 == ap_CS_fsm_state2)) begin
+        grp_fu_164_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_164_p_ce;
+    end else begin
+        grp_fu_164_ce = 1'b1;
+    end
+end
+
+always @ (*) begin
+    if ((1'b1 == ap_CS_fsm_state2)) begin
+        grp_fu_168_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_168_p_ce;
+    end else begin
+        grp_fu_168_ce = 1'b1;
+    end
+end
+
+always @ (*) begin
+    if ((1'b1 == ap_CS_fsm_state2)) begin
+        grp_fu_172_ce = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_172_p_ce;
+    end else begin
+        grp_fu_172_ce = 1'b1;
     end
 end
 
@@ -515,7 +563,7 @@ always @ (*) begin
             end
         end
         ap_ST_fsm_state2 : begin
-            if (((grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_ap_done == 1'b1) & (1'b1 == ap_CS_fsm_state2))) begin
+            if (((grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_ap_done == 1'b1) & (1'b1 == ap_CS_fsm_state2))) begin
                 ap_NS_fsm = ap_ST_fsm_state1;
             end else begin
                 ap_NS_fsm = ap_ST_fsm_state2;
@@ -531,108 +579,120 @@ assign ap_CS_fsm_state1 = ap_CS_fsm[32'd0];
 
 assign ap_CS_fsm_state2 = ap_CS_fsm[32'd1];
 
-assign b_address0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_b_address0;
+assign b_address0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_b_address0;
 
-assign b_ce0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_b_ce0;
+assign b_ce0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_b_ce0;
 
-assign grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_ap_start = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_ap_start_reg;
+assign grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_ap_start = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_ap_start_reg;
 
-assign grp_fu_397_p_ce = grp_fu_112_ce;
+assign grp_fu_413_p_ce = grp_fu_112_ce;
 
-assign grp_fu_397_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_112_p_din0;
+assign grp_fu_413_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_112_p_din0;
 
-assign grp_fu_397_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_112_p_din1;
+assign grp_fu_413_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_112_p_din1;
 
-assign grp_fu_401_p_ce = grp_fu_116_ce;
+assign grp_fu_417_p_ce = grp_fu_116_ce;
 
-assign grp_fu_401_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_116_p_din0;
+assign grp_fu_417_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_116_p_din0;
 
-assign grp_fu_401_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_116_p_din1;
+assign grp_fu_417_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_116_p_din1;
 
-assign grp_fu_405_p_ce = grp_fu_120_ce;
+assign grp_fu_421_p_ce = grp_fu_120_ce;
 
-assign grp_fu_405_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_120_p_din0;
+assign grp_fu_421_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_120_p_din0;
 
-assign grp_fu_405_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_120_p_din1;
+assign grp_fu_421_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_120_p_din1;
 
-assign grp_fu_409_p_ce = grp_fu_124_ce;
+assign grp_fu_425_p_ce = grp_fu_124_ce;
 
-assign grp_fu_409_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_124_p_din0;
+assign grp_fu_425_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_124_p_din0;
 
-assign grp_fu_409_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_124_p_din1;
+assign grp_fu_425_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_124_p_din1;
 
-assign grp_fu_413_p_ce = grp_fu_128_ce;
+assign grp_fu_429_p_ce = grp_fu_128_ce;
 
-assign grp_fu_413_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_128_p_din0;
+assign grp_fu_429_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_128_p_din0;
 
-assign grp_fu_413_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_128_p_din1;
+assign grp_fu_429_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_128_p_din1;
 
-assign grp_fu_417_p_ce = grp_fu_132_ce;
+assign grp_fu_433_p_ce = grp_fu_132_ce;
 
-assign grp_fu_417_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_132_p_din0;
+assign grp_fu_433_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_132_p_din0;
 
-assign grp_fu_417_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_132_p_din1;
+assign grp_fu_433_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_132_p_din1;
 
-assign grp_fu_421_p_ce = grp_fu_136_ce;
+assign grp_fu_437_p_ce = grp_fu_136_ce;
 
-assign grp_fu_421_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_136_p_din0;
+assign grp_fu_437_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_136_p_din0;
 
-assign grp_fu_421_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_136_p_din1;
+assign grp_fu_437_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_136_p_din1;
 
-assign grp_fu_425_p_ce = grp_fu_140_ce;
+assign grp_fu_441_p_ce = grp_fu_140_ce;
 
-assign grp_fu_425_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_140_p_din0;
+assign grp_fu_441_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_140_p_din0;
 
-assign grp_fu_425_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_140_p_din1;
+assign grp_fu_441_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_140_p_din1;
 
-assign grp_fu_429_p_ce = grp_fu_144_ce;
+assign grp_fu_445_p_ce = grp_fu_144_ce;
 
-assign grp_fu_429_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_144_p_din0;
+assign grp_fu_445_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_144_p_din0;
 
-assign grp_fu_429_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_144_p_din1;
+assign grp_fu_445_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_144_p_din1;
 
-assign grp_fu_433_p_ce = grp_fu_148_ce;
+assign grp_fu_449_p_ce = grp_fu_148_ce;
 
-assign grp_fu_433_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_148_p_din0;
+assign grp_fu_449_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_148_p_din0;
 
-assign grp_fu_433_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_148_p_din1;
+assign grp_fu_449_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_148_p_din1;
 
-assign grp_fu_437_p_ce = grp_fu_152_ce;
+assign grp_fu_453_p_ce = grp_fu_152_ce;
 
-assign grp_fu_437_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_152_p_din0;
+assign grp_fu_453_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_152_p_din0;
 
-assign grp_fu_437_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_152_p_din1;
+assign grp_fu_453_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_152_p_din1;
 
-assign grp_fu_441_p_ce = grp_fu_156_ce;
+assign grp_fu_457_p_ce = grp_fu_156_ce;
 
-assign grp_fu_441_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_156_p_din0;
+assign grp_fu_457_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_156_p_din0;
 
-assign grp_fu_441_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_156_p_din1;
+assign grp_fu_457_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_156_p_din1;
 
-assign grp_fu_445_p_ce = grp_fu_100_ce;
+assign grp_fu_461_p_ce = grp_fu_160_ce;
 
-assign grp_fu_445_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_100_p_din0;
+assign grp_fu_461_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_160_p_din0;
 
-assign grp_fu_445_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_100_p_din1;
+assign grp_fu_461_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_160_p_din1;
 
-assign grp_fu_449_p_ce = grp_fu_104_ce;
+assign grp_fu_465_p_ce = grp_fu_164_ce;
 
-assign grp_fu_449_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_104_p_din0;
+assign grp_fu_465_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_164_p_din0;
 
-assign grp_fu_449_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_104_p_din1;
+assign grp_fu_465_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_164_p_din1;
 
-assign grp_fu_453_p_ce = grp_fu_108_ce;
+assign grp_fu_469_p_ce = grp_fu_168_ce;
 
-assign grp_fu_453_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_108_p_din0;
+assign grp_fu_469_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_168_p_din0;
 
-assign grp_fu_453_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_grp_fu_108_p_din1;
+assign grp_fu_469_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_168_p_din1;
 
-assign x_address0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_x_address0;
+assign grp_fu_473_p_ce = grp_fu_172_ce;
 
-assign x_ce0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_x_ce0;
+assign grp_fu_473_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_172_p_din0;
 
-assign x_d0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_x_d0;
+assign grp_fu_473_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_172_p_din1;
 
-assign x_we0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_54_x_we0;
+assign grp_fu_477_p_ce = grp_fu_108_ce;
+
+assign grp_fu_477_p_din0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_108_p_din0;
+
+assign grp_fu_477_p_din1 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_grp_fu_108_p_din1;
+
+assign x_address0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_x_address0;
+
+assign x_ce0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_x_ce0;
+
+assign x_d0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_x_d0;
+
+assign x_we0 = grp_backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_58_x_we0;
 
 endmodule //ADMM_solver_backward_substitution

@@ -1,8 +1,8 @@
 import numpy as np
 from crazyloihimodel import CrazyLoihiModel
 
-# Run controller at 500 Hz
-timer_period = 0.002  # seconds
+# Run controller at 50 Hz
+timer_period = 0.02  # seconds
 
 # Horizon length
 N = 20

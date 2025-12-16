@@ -6,7 +6,7 @@
 
 `timescale 1 ns / 1 ps 
 
-(* CORE_GENERATION_INFO="ADMM_solver_ADMM_solver,hls_ip_2025_2,{HLS_INPUT_TYPE=cxx,HLS_INPUT_FLOAT=0,HLS_INPUT_FIXED=0,HLS_INPUT_PART=xc7a100t-csg324-1,HLS_INPUT_CLOCK=10.000000,HLS_INPUT_ARCH=others,HLS_SYN_CLOCK=7.220000,HLS_SYN_LAT=-1,HLS_SYN_TPT=none,HLS_SYN_MEM=109,HLS_SYN_DSP=0,HLS_SYN_FF=19481,HLS_SYN_LUT=19330,HLS_VERSION=2025_2}" *)
+(* CORE_GENERATION_INFO="ADMM_solver_ADMM_solver,hls_ip_2025_2,{HLS_INPUT_TYPE=cxx,HLS_INPUT_FLOAT=0,HLS_INPUT_FIXED=0,HLS_INPUT_PART=xc7a100t-csg324-1,HLS_INPUT_CLOCK=10.000000,HLS_INPUT_ARCH=others,HLS_SYN_CLOCK=7.220000,HLS_SYN_LAT=-1,HLS_SYN_TPT=none,HLS_SYN_MEM=113,HLS_SYN_DSP=0,HLS_SYN_FF=21622,HLS_SYN_LUT=20837,HLS_VERSION=2025_2}" *)
 
 (* DowngradeIPIdentifiedWarnings="yes" *)
 module ADMM_solver (
@@ -59,26 +59,26 @@ reg ap_ready;
 
 (* fsm_encoding = "none" *) reg   [2:0] ap_CS_fsm;
 wire    ap_CS_fsm_state1;
-reg   [31:0] iters_read_reg_427;
-wire    grp_ADMM_iteration_fu_216_ap_start;
-wire    grp_ADMM_iteration_fu_216_ap_done;
-wire    grp_ADMM_iteration_fu_216_ap_idle;
-wire    grp_ADMM_iteration_fu_216_ap_ready;
-wire   [8:0] grp_ADMM_iteration_fu_216_x_address0;
-wire    grp_ADMM_iteration_fu_216_x_ce0;
-wire    grp_ADMM_iteration_fu_216_x_we0;
-wire   [31:0] grp_ADMM_iteration_fu_216_x_d0;
-wire   [8:0] grp_ADMM_iteration_fu_216_x_address1;
-wire    grp_ADMM_iteration_fu_216_x_ce1;
-wire   [3:0] grp_ADMM_iteration_fu_216_current_state_address0;
-wire    grp_ADMM_iteration_fu_216_current_state_ce0;
-reg    grp_ADMM_iteration_fu_216_ap_start_reg;
+reg   [31:0] iters_read_reg_443;
+wire    grp_ADMM_iteration_fu_224_ap_start;
+wire    grp_ADMM_iteration_fu_224_ap_done;
+wire    grp_ADMM_iteration_fu_224_ap_idle;
+wire    grp_ADMM_iteration_fu_224_ap_ready;
+wire   [8:0] grp_ADMM_iteration_fu_224_x_address0;
+wire    grp_ADMM_iteration_fu_224_x_ce0;
+wire    grp_ADMM_iteration_fu_224_x_we0;
+wire   [31:0] grp_ADMM_iteration_fu_224_x_d0;
+wire   [8:0] grp_ADMM_iteration_fu_224_x_address1;
+wire    grp_ADMM_iteration_fu_224_x_ce1;
+wire   [3:0] grp_ADMM_iteration_fu_224_current_state_address0;
+wire    grp_ADMM_iteration_fu_224_current_state_ce0;
+reg    grp_ADMM_iteration_fu_224_ap_start_reg;
 wire    ap_CS_fsm_state2;
-wire   [0:0] icmp_ln133_fu_404_p2;
+wire   [0:0] icmp_ln133_fu_420_p2;
 wire    ap_CS_fsm_state3;
-reg   [30:0] iter_fu_206;
-wire   [30:0] add_ln133_fu_409_p2;
-wire   [31:0] zext_ln133_fu_400_p1;
+reg   [30:0] iter_fu_214;
+wire   [30:0] add_ln133_fu_425_p2;
+wire   [31:0] zext_ln133_fu_416_p1;
 reg   [2:0] ap_NS_fsm;
 reg    ap_ST_fsm_state1_blk;
 wire    ap_ST_fsm_state2_blk;
@@ -88,27 +88,27 @@ wire    ap_ce_reg;
 // power-on initialization
 initial begin
 #0 ap_CS_fsm = 3'd1;
-#0 grp_ADMM_iteration_fu_216_ap_start_reg = 1'b0;
-#0 iter_fu_206 = 31'd0;
+#0 grp_ADMM_iteration_fu_224_ap_start_reg = 1'b0;
+#0 iter_fu_214 = 31'd0;
 end
 
-ADMM_solver_ADMM_iteration grp_ADMM_iteration_fu_216(
+ADMM_solver_ADMM_iteration grp_ADMM_iteration_fu_224(
     .ap_clk(ap_clk),
     .ap_rst(ap_rst),
-    .ap_start(grp_ADMM_iteration_fu_216_ap_start),
-    .ap_done(grp_ADMM_iteration_fu_216_ap_done),
-    .ap_idle(grp_ADMM_iteration_fu_216_ap_idle),
-    .ap_ready(grp_ADMM_iteration_fu_216_ap_ready),
-    .x_address0(grp_ADMM_iteration_fu_216_x_address0),
-    .x_ce0(grp_ADMM_iteration_fu_216_x_ce0),
-    .x_we0(grp_ADMM_iteration_fu_216_x_we0),
-    .x_d0(grp_ADMM_iteration_fu_216_x_d0),
+    .ap_start(grp_ADMM_iteration_fu_224_ap_start),
+    .ap_done(grp_ADMM_iteration_fu_224_ap_done),
+    .ap_idle(grp_ADMM_iteration_fu_224_ap_idle),
+    .ap_ready(grp_ADMM_iteration_fu_224_ap_ready),
+    .x_address0(grp_ADMM_iteration_fu_224_x_address0),
+    .x_ce0(grp_ADMM_iteration_fu_224_x_ce0),
+    .x_we0(grp_ADMM_iteration_fu_224_x_we0),
+    .x_d0(grp_ADMM_iteration_fu_224_x_d0),
     .x_q0(x_q0),
-    .x_address1(grp_ADMM_iteration_fu_216_x_address1),
-    .x_ce1(grp_ADMM_iteration_fu_216_x_ce1),
+    .x_address1(grp_ADMM_iteration_fu_224_x_address1),
+    .x_ce1(grp_ADMM_iteration_fu_224_x_ce1),
     .x_q1(x_q1),
-    .current_state_address0(grp_ADMM_iteration_fu_216_current_state_address0),
-    .current_state_ce0(grp_ADMM_iteration_fu_216_current_state_ce0),
+    .current_state_address0(grp_ADMM_iteration_fu_224_current_state_address0),
+    .current_state_ce0(grp_ADMM_iteration_fu_224_current_state_ce0),
     .current_state_q0(current_state_q0)
 );
 
@@ -122,27 +122,27 @@ end
 
 always @ (posedge ap_clk) begin
     if (ap_rst == 1'b1) begin
-        grp_ADMM_iteration_fu_216_ap_start_reg <= 1'b0;
+        grp_ADMM_iteration_fu_224_ap_start_reg <= 1'b0;
     end else begin
-        if (((icmp_ln133_fu_404_p2 == 1'd1) & (1'b1 == ap_CS_fsm_state2))) begin
-            grp_ADMM_iteration_fu_216_ap_start_reg <= 1'b1;
-        end else if ((grp_ADMM_iteration_fu_216_ap_ready == 1'b1)) begin
-            grp_ADMM_iteration_fu_216_ap_start_reg <= 1'b0;
+        if (((icmp_ln133_fu_420_p2 == 1'd1) & (1'b1 == ap_CS_fsm_state2))) begin
+            grp_ADMM_iteration_fu_224_ap_start_reg <= 1'b1;
+        end else if ((grp_ADMM_iteration_fu_224_ap_ready == 1'b1)) begin
+            grp_ADMM_iteration_fu_224_ap_start_reg <= 1'b0;
         end
     end
 end
 
 always @ (posedge ap_clk) begin
     if (((ap_start == 1'b1) & (1'b1 == ap_CS_fsm_state1))) begin
-        iter_fu_206 <= 31'd0;
-    end else if (((icmp_ln133_fu_404_p2 == 1'd1) & (1'b1 == ap_CS_fsm_state2))) begin
-        iter_fu_206 <= add_ln133_fu_409_p2;
+        iter_fu_214 <= 31'd0;
+    end else if (((icmp_ln133_fu_420_p2 == 1'd1) & (1'b1 == ap_CS_fsm_state2))) begin
+        iter_fu_214 <= add_ln133_fu_425_p2;
     end
 end
 
 always @ (posedge ap_clk) begin
     if ((1'b1 == ap_CS_fsm_state1)) begin
-        iters_read_reg_427 <= iters;
+        iters_read_reg_443 <= iters;
     end
 end
 
@@ -157,7 +157,7 @@ end
 assign ap_ST_fsm_state2_blk = 1'b0;
 
 always @ (*) begin
-    if ((grp_ADMM_iteration_fu_216_ap_done == 1'b0)) begin
+    if ((grp_ADMM_iteration_fu_224_ap_done == 1'b0)) begin
         ap_ST_fsm_state3_blk = 1'b1;
     end else begin
         ap_ST_fsm_state3_blk = 1'b0;
@@ -165,7 +165,7 @@ always @ (*) begin
 end
 
 always @ (*) begin
-    if (((icmp_ln133_fu_404_p2 == 1'd0) & (1'b1 == ap_CS_fsm_state2))) begin
+    if (((icmp_ln133_fu_420_p2 == 1'd0) & (1'b1 == ap_CS_fsm_state2))) begin
         ap_done = 1'b1;
     end else begin
         ap_done = 1'b0;
@@ -181,7 +181,7 @@ always @ (*) begin
 end
 
 always @ (*) begin
-    if (((icmp_ln133_fu_404_p2 == 1'd0) & (1'b1 == ap_CS_fsm_state2))) begin
+    if (((icmp_ln133_fu_420_p2 == 1'd0) & (1'b1 == ap_CS_fsm_state2))) begin
         ap_ready = 1'b1;
     end else begin
         ap_ready = 1'b0;
@@ -198,14 +198,14 @@ always @ (*) begin
             end
         end
         ap_ST_fsm_state2 : begin
-            if (((icmp_ln133_fu_404_p2 == 1'd0) & (1'b1 == ap_CS_fsm_state2))) begin
+            if (((icmp_ln133_fu_420_p2 == 1'd0) & (1'b1 == ap_CS_fsm_state2))) begin
                 ap_NS_fsm = ap_ST_fsm_state1;
             end else begin
                 ap_NS_fsm = ap_ST_fsm_state3;
             end
         end
         ap_ST_fsm_state3 : begin
-            if (((grp_ADMM_iteration_fu_216_ap_done == 1'b1) & (1'b1 == ap_CS_fsm_state3))) begin
+            if (((grp_ADMM_iteration_fu_224_ap_done == 1'b1) & (1'b1 == ap_CS_fsm_state3))) begin
                 ap_NS_fsm = ap_ST_fsm_state2;
             end else begin
                 ap_NS_fsm = ap_ST_fsm_state3;
@@ -217,7 +217,7 @@ always @ (*) begin
     endcase
 end
 
-assign add_ln133_fu_409_p2 = (iter_fu_206 + 31'd1);
+assign add_ln133_fu_425_p2 = (iter_fu_214 + 31'd1);
 
 assign ap_CS_fsm_state1 = ap_CS_fsm[32'd0];
 
@@ -225,26 +225,26 @@ assign ap_CS_fsm_state2 = ap_CS_fsm[32'd1];
 
 assign ap_CS_fsm_state3 = ap_CS_fsm[32'd2];
 
-assign current_state_address0 = grp_ADMM_iteration_fu_216_current_state_address0;
+assign current_state_address0 = grp_ADMM_iteration_fu_224_current_state_address0;
 
-assign current_state_ce0 = grp_ADMM_iteration_fu_216_current_state_ce0;
+assign current_state_ce0 = grp_ADMM_iteration_fu_224_current_state_ce0;
 
-assign grp_ADMM_iteration_fu_216_ap_start = grp_ADMM_iteration_fu_216_ap_start_reg;
+assign grp_ADMM_iteration_fu_224_ap_start = grp_ADMM_iteration_fu_224_ap_start_reg;
 
-assign icmp_ln133_fu_404_p2 = (($signed(zext_ln133_fu_400_p1) < $signed(iters_read_reg_427)) ? 1'b1 : 1'b0);
+assign icmp_ln133_fu_420_p2 = (($signed(zext_ln133_fu_416_p1) < $signed(iters_read_reg_443)) ? 1'b1 : 1'b0);
 
-assign x_address0 = grp_ADMM_iteration_fu_216_x_address0;
+assign x_address0 = grp_ADMM_iteration_fu_224_x_address0;
 
-assign x_address1 = grp_ADMM_iteration_fu_216_x_address1;
+assign x_address1 = grp_ADMM_iteration_fu_224_x_address1;
 
-assign x_ce0 = grp_ADMM_iteration_fu_216_x_ce0;
+assign x_ce0 = grp_ADMM_iteration_fu_224_x_ce0;
 
-assign x_ce1 = grp_ADMM_iteration_fu_216_x_ce1;
+assign x_ce1 = grp_ADMM_iteration_fu_224_x_ce1;
 
-assign x_d0 = grp_ADMM_iteration_fu_216_x_d0;
+assign x_d0 = grp_ADMM_iteration_fu_224_x_d0;
 
-assign x_we0 = grp_ADMM_iteration_fu_216_x_we0;
+assign x_we0 = grp_ADMM_iteration_fu_224_x_we0;
 
-assign zext_ln133_fu_400_p1 = iter_fu_206;
+assign zext_ln133_fu_416_p1 = iter_fu_214;
 
 endmodule //ADMM_solver

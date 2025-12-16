@@ -2,7 +2,7 @@
 // Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2025.2 (lin64) Build 6299465 Fri Nov 14 12:34:56 MST 2025
-// Date        : Mon Dec 15 23:56:37 2025
+// Date        : Tue Dec 16 12:46:13 2025
 // Host        : ag-think running 64-bit Debian GNU/Linux 12 (bookworm)
 // Command     : write_verilog -force -mode synth_stub
 //               /home/andrea/ADMM_FPGA/vivado_project/vivado_project.gen/sources_1/ip/ADMM_solver_0/ADMM_solver_0_stub.v
@@ -14,7 +14,7 @@
 // This empty module with port declaration file causes synthesis tools to infer a black box for IP.
 // The synthesis directives are for Synopsys Synplify support to prevent IO buffer insertion.
 // Please paste the declaration into a Verilog source file or add the file as an additional source.
-(* CHECK_LICENSE_TYPE = "ADMM_solver_0,ADMM_solver,{}" *) (* CORE_GENERATION_INFO = "ADMM_solver_0,ADMM_solver,{x_ipProduct=Vivado 2025.2,x_ipVendor=xilinx.com,x_ipLibrary=hls,x_ipName=ADMM_solver,x_ipVersion=1.0,x_ipCoreRevision=2114393145,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED}" *) (* DowngradeIPIdentifiedWarnings = "yes" *) 
+(* CHECK_LICENSE_TYPE = "ADMM_solver_0,ADMM_solver,{}" *) (* CORE_GENERATION_INFO = "ADMM_solver_0,ADMM_solver,{x_ipProduct=Vivado 2025.2,x_ipVendor=xilinx.com,x_ipLibrary=hls,x_ipName=ADMM_solver,x_ipVersion=1.0,x_ipCoreRevision=2114393920,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED}" *) (* DowngradeIPIdentifiedWarnings = "yes" *) 
 (* IP_DEFINITION_SOURCE = "HLS" *) (* X_CORE_INFO = "ADMM_solver,Vivado 2025.2" *) (* hls_module = "yes" *) 
 module ADMM_solver_0(current_state_ce0, x_ce0, x_we0, x_ce1, ap_clk, 
   ap_rst, ap_done, ap_idle, ap_ready, ap_start, current_state_address0, current_state_q0, 

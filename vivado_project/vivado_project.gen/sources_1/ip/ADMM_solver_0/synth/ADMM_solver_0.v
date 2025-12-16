@@ -48,11 +48,11 @@
 
 
 // IP VLNV: xilinx.com:hls:ADMM_solver:1.0
-// IP Revision: 2114393145
+// IP Revision: 2114393920
 
 (* X_CORE_INFO = "ADMM_solver,Vivado 2025.2" *)
 (* CHECK_LICENSE_TYPE = "ADMM_solver_0,ADMM_solver,{}" *)
-(* CORE_GENERATION_INFO = "ADMM_solver_0,ADMM_solver,{x_ipProduct=Vivado 2025.2,x_ipVendor=xilinx.com,x_ipLibrary=hls,x_ipName=ADMM_solver,x_ipVersion=1.0,x_ipCoreRevision=2114393145,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED}" *)
+(* CORE_GENERATION_INFO = "ADMM_solver_0,ADMM_solver,{x_ipProduct=Vivado 2025.2,x_ipVendor=xilinx.com,x_ipLibrary=hls,x_ipName=ADMM_solver,x_ipVersion=1.0,x_ipCoreRevision=2114393920,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED}" *)
 (* IP_DEFINITION_SOURCE = "HLS" *)
 (* DowngradeIPIdentifiedWarnings = "yes" *)
 module ADMM_solver_0 (

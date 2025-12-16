@@ -12,10 +12,10 @@ import numpy as np
 
 # Configuration
 SERIAL_PORT = '/dev/ttyUSB1'  # Change to COM port on Windows (e.g., 'COM3')
-BAUD_RATE = 115200
+BAUD_RATE = 921600
 N_STATE = 12   # Number of state elements
-N_VAR = 332    # Number of output variables
-FRAC_BITS = 16  # Fixed point format 16.16
+N_VAR = 4    # Number of output variables
+FRAC_BITS = 22  # Fixed point format 16.16
 
 def float_to_fixed(f):
     """Convert float to 16.16 fixed point (signed 32-bit)"""
@@ -33,7 +33,7 @@ def send_vector(ser, vector):
     # Send start command
     ser.write(bytes([0xFF]))
     print("Sent start command: 0xFF")
-    time.sleep(0.001)
+    # time.sleep(0.001)
     
     # Send each element as 4 bytes (little-endian)
     for i, val in enumerate(vector):
@@ -43,7 +43,7 @@ def send_vector(ser, vector):
         for byte in data:
             ser.write(bytes([byte]))
             ser.flush()
-            time.sleep(0.001)  # Small delay between bytes
+            # time.sleep(0.001)  # Small delay between bytes
         print(f"Sent current_state[{i:2d}] = {val:10.6f} (0x{fixed_val:08X})")
 
 def receive_vector(ser, n):
@@ -65,8 +65,8 @@ def receive_vector(ser, n):
         results.append(float_val)
         
         # Print progress every 20 elements to avoid spam
-        if i % 20 == 0 or i == n - 1:
-            print(f"Received x[{i:3d}] = {float_val:10.6f} (0x{fixed_val:08X})")
+        # if i % 20 == 0 or i == n - 1:
+        print(f"Received x[{i:3d}] = {float_val:10.6f} (0x{fixed_val:08X})")
     
     return results
 
@@ -107,7 +107,6 @@ def main():
         )
         
         print("Port opened successfully\n")
-        # time.sleep(0.5)  # Wait for device to be ready
         
         # Clear any pending data
         ser.reset_input_buffer()
@@ -115,12 +114,12 @@ def main():
         
         # Send input vector
         print("=== Sending Current State Vector ===")
+        start_time = time.time()
         send_vector(ser, current_state)
         
         # Receive results
         print("\n=== Receiving Results ===")
         print(f"Expecting {N_VAR} values (1328 bytes)...")
-        start_time = time.time()
         
         x_received = receive_vector(ser, N_VAR)
         
@@ -136,19 +135,16 @@ def main():
         # Display summary statistics
         print("\n=== Results Summary ===")
         x_array = np.array(x_received)
-        print(f"Mean:     {np.mean(x_array):10.6f}")
-        print(f"Std Dev:  {np.std(x_array):10.6f}")
-        print(f"Min:      {np.min(x_array):10.6f}")
-        print(f"Max:      {np.max(x_array):10.6f}")
+        # print(f"Mean:     {np.mean(x_array):10.6f}")
+        # print(f"Std Dev:  {np.std(x_array):10.6f}")
+        # print(f"Min:      {np.min(x_array):10.6f}")
+        # print(f"Max:      {np.max(x_array):10.6f}")
         
         # Display first and last few values
-        print("\n=== First 10 Values ===")
+        print("\nFirst 10 results:")
         for i in range(min(10, len(x_received))):
             print(f"x[{i:3d}] = {x_received[i]:10.6f}")
         
-        print("\n=== Last 10 Values ===")
-        for i in range(max(0, len(x_received) - 10), len(x_received)):
-            print(f"x[{i:3d}] = {x_received[i]:10.6f}")
         
         # Save results to file
         output_file = "admm_results.txt"

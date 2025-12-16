@@ -3,7 +3,7 @@
   "ip_inst": {
     "xci_name": "ADMM_solver_0",
     "component_reference": "xilinx.com:hls:ADMM_solver:1.0",
-    "ip_revision": "2114393145",
+    "ip_revision": "2114393920",
     "gen_directory": "../../../../vivado_project.gen/sources_1/ip/ADMM_solver_0",
     "parameters": {
       "component_parameters": {
@@ -29,7 +29,7 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Flow" } ],
-        "IPREVISION": [ { "value": "2114393145" } ],
+        "IPREVISION": [ { "value": "2114393920" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../vivado_project.gen/sources_1/ip/ADMM_solver_0" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
@@ -192,5 +192,5 @@
       }
     }
   },
-  "checksum": "11d470bf"
+  "checksum": "721920c9"
 }

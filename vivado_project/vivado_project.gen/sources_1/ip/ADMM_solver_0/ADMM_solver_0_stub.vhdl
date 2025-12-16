@@ -2,7 +2,7 @@
 -- Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2025.2 (lin64) Build 6299465 Fri Nov 14 12:34:56 MST 2025
--- Date        : Mon Dec 15 23:56:37 2025
+-- Date        : Tue Dec 16 12:46:13 2025
 -- Host        : ag-think running 64-bit Debian GNU/Linux 12 (bookworm)
 -- Command     : write_vhdl -force -mode synth_stub
 --               /home/andrea/ADMM_FPGA/vivado_project/vivado_project.gen/sources_1/ip/ADMM_solver_0/ADMM_solver_0_stub.vhdl
@@ -38,7 +38,7 @@ entity ADMM_solver_0 is
   attribute CHECK_LICENSE_TYPE : string;
   attribute CHECK_LICENSE_TYPE of ADMM_solver_0 : entity is "ADMM_solver_0,ADMM_solver,{}";
   attribute CORE_GENERATION_INFO : string;
-  attribute CORE_GENERATION_INFO of ADMM_solver_0 : entity is "ADMM_solver_0,ADMM_solver,{x_ipProduct=Vivado 2025.2,x_ipVendor=xilinx.com,x_ipLibrary=hls,x_ipName=ADMM_solver,x_ipVersion=1.0,x_ipCoreRevision=2114393145,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED}";
+  attribute CORE_GENERATION_INFO of ADMM_solver_0 : entity is "ADMM_solver_0,ADMM_solver,{x_ipProduct=Vivado 2025.2,x_ipVendor=xilinx.com,x_ipLibrary=hls,x_ipName=ADMM_solver,x_ipVersion=1.0,x_ipCoreRevision=2114393920,x_ipLanguage=VERILOG,x_ipSimLanguage=MIXED}";
   attribute DowngradeIPIdentifiedWarnings : string;
   attribute DowngradeIPIdentifiedWarnings of ADMM_solver_0 : entity is "yes";
   attribute IP_DEFINITION_SOURCE : string;
