@@ -265,6 +265,31 @@ def generate_full_header(data, filename="data.h", guard="DATA_H"):
         
         f.write(f"#endif // {guard}\n")
 
+def ADMM_iteration(l, u, iter):
+    x = np.zeros(P.shape[0])
+    z = np.zeros(P.shape[0])
+    y = np.zeros(P.shape[0])
+
+    for i in range(iter):
+        x = np.linalg.solve(KKT, A.T @ ((rho * z) - y))
+        z = np.clip(A @ x + (y / rho), l, u)
+        y = y + rho * (A @ x - z)
+    
+    return x, z, y
+
+def testOSQP(l,u, iter):
+    import osqp
+    from scipy import sparse
+
+    P_csc = sparse.csc_matrix(P)
+    A_csc = sparse.csc_matrix(A)
+
+    prob = osqp.OSQP()
+    prob.setup(P_csc, np.zeros(P.shape[0]), A_csc, l, u, verbose=False, rho=rho, adaptive_rho = False, max_iter=iter)
+    res = prob.solve()
+
+    return res.x
+
 L_banded = convert_chol_to_banded_storage(L)
 LT_banded = convert_chol_transposed_to_banded_storage(L.T)
 A_sparse_data, A_sparse_indexes, A_n_bits_idx = convert_matrix_to_sparse_storage(A)
@@ -272,8 +297,10 @@ AT_sparse_data, AT_sparse_indexes, AT_n_bits_idx = convert_matrix_to_sparse_stor
 data = []
 data.append(generate_matrix_header(L_banded, "L_banded"))
 data.append(generate_matrix_header(LT_banded, "LT_banded"))
-data.append(generate_vector_header(l, "l"))
-data.append(generate_vector_header(u, "u"))
+# l[0:12] = -1e20
+# u[0:12] =  1e20
+# data.append(generate_vector_header(l, "l"))
+# data.append(generate_vector_header(u, "u"))
 data.append(generate_matrix_header(A_sparse_data, "A_sparse_data"))
 data.append(generate_matrix_header(A_sparse_indexes, "A_sparse_indexes", type=f"ap_uint<{A_n_bits_idx}>"))
 data.append(generate_matrix_header(AT_sparse_data, "AT_sparse_data"))
@@ -282,22 +309,57 @@ data.append(generate_matrix_header(AT_sparse_indexes, "AT_sparse_indexes", type=
 generate_full_header(data, filename="../vitis_projects/ADMM/data.h")
 
 # Test header generation
-# Test header generation: generate a random vector and write/print its header
 np.random.seed(0)
 rand_vec = np.random.randn(L_banded.shape[0])
 test_data = []
-test_data.append(generate_vector_header(rand_vec, "random_vector"))
+test_data.append(generate_vector_header(rand_vec, "random_vector", type="double"))
 
 forw_subst_out = np.linalg.solve(L, rand_vec)
-test_data.append(generate_vector_header(forw_subst_out, "forw_subst_out"))
+test_data.append(generate_vector_header(forw_subst_out, "forw_subst_out", type="double"))
 
 back_subst_out = np.linalg.solve(L.T, rand_vec)
-test_data.append(generate_vector_header(back_subst_out, "back_subst_out"))
+test_data.append(generate_vector_header(back_subst_out, "back_subst_out", type="double"))
 
 A_mul_out = A @ rand_vec
-test_data.append(generate_vector_header(A_mul_out, "A_mul_out"))
+test_data.append(generate_vector_header(A_mul_out, "A_mul_out", type="double"))
 
 AT_mul_out = A.T @ rand_vec
-test_data.append(generate_vector_header(AT_mul_out, "AT_mul_out"))
+test_data.append(generate_vector_header(AT_mul_out, "AT_mul_out", type="double"))
+
+
+l[0:3] = 0.1, 0.1, -0.1
+u[0:3] = 0.1, 0.1, -0.1
+
+x, z, y = ADMM_iteration(l, u, iter=1)
+
+test_data.append(generate_vector_header(x, "ADMM_x_after_1_iter", type="double"))
+test_data.append(generate_vector_header(z, "ADMM_z_after_1_iter", type="double"))
+test_data.append(generate_vector_header(y, "ADMM_y_after_1_iter", type="double"))
+
+x, z, y = ADMM_iteration(l, u, iter=10)
+
+test_data.append(generate_vector_header(x, "ADMM_x_after_10_iter", type="double"))
+test_data.append(generate_vector_header(z, "ADMM_z_after_10_iter", type="double"))
+test_data.append(generate_vector_header(y, "ADMM_y_after_10_iter", type="double"))
+
+x, z, y = ADMM_iteration(l, u, iter=100)
+
+test_data.append(generate_vector_header(x, "ADMM_x_after_100_iter", type="double"))
+test_data.append(generate_vector_header(z, "ADMM_z_after_100_iter", type="double"))
+test_data.append(generate_vector_header(y, "ADMM_y_after_100_iter", type="double"))
+
+x, z, y = ADMM_iteration(l, u, iter=50)
+
+test_data.append(generate_vector_header(x, "ADMM_x_after_50_iter", type="double"))
+test_data.append(generate_vector_header(z, "ADMM_z_after_50_iter", type="double"))
+test_data.append(generate_vector_header(y, "ADMM_y_after_50_iter", type="double"))
 
 generate_full_header(test_data, filename="../vitis_projects/ADMM/test_data.h", guard="TEST_DATA_H")
+
+# OSQP_x = testOSQP(l, u, iter=1000)
+
+# print("Comparing OSQP and ADMM results after 100 iterations:")
+# print(x[-16:])
+# print(OSQP_x[-16:])
+# x_diff = np.linalg.norm(OSQP_x - x) / np.linalg.norm(OSQP_x)
+# print(f"OSQP vs ADMM differences after 100 iterations: norm rel error : {x_diff}")
