@@ -302,6 +302,7 @@ LT_banded = convert_chol_transposed_to_banded_storage(L.T)
 A_sparse_data, A_sparse_indexes, A_n_bits_idx = convert_matrix_to_sparse_storage(A)
 AT_sparse_data, AT_sparse_indexes, AT_n_bits_idx = convert_matrix_to_sparse_storage(A.T)
 constants = {}
+constants["HORIZON_LENGTH"] = N
 constants["STATE_SIZE"] = n
 constants["N_VAR"] = num_var
 constants["START_INEQ"] = A_eq.shape[0]
