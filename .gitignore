@@ -1,4 +1,6 @@
 vitis_projects/ADMM/ADMM/
+vitis_projects/ADMM/data.h
+vitis_projects/ADMM/test_data.h
 vitis_projects/ADMM/.Xil/
 vitis_projects/ADMM/.cache/
 vivado_project/vivado_project.cache/
