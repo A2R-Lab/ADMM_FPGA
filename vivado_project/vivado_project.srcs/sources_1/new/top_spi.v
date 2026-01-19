@@ -1,0 +1,236 @@
+`timescale 1ns/1ps
+
+module top_spi (
+    input  wire        clk,
+    input  wire        resetn,
+    input  wire        spi_sck,
+    input  wire        spi_mosi,
+    output wire        spi_miso,
+    input  wire        spi_cs_n,
+    output wire [3:0]  led
+);
+
+    //--------------------------------------------------------------
+    // Parameters
+    //--------------------------------------------------------------
+    localparam N_STATE = 12;
+    localparam N_VAR = 4;
+    localparam DATA_WIDTH = 24;
+    localparam FIXED_ITERS = 32'd10;
+    
+    // Packet Headers
+    localparam RX_HEADER = 24'h0000AA; // Master must send 0xAA as first byte
+    localparam TX_HEADER = 24'hFFFFFF; // FPGA sends 0xFF as Ready signal
+    
+    localparam STATE_LOG = $clog2(N_STATE);
+    localparam VAR_LOG = $clog2(332);  
+    
+    // States
+    localparam IDLE         = 3'd0;
+    localparam CHECK_HEADER = 3'd1; // New State: Verify 0xAA
+    localparam RX_DATA      = 3'd2;
+    localparam COMPUTE      = 3'd3;
+    localparam WAIT_RAM     = 3'd4;
+    localparam TX_DATA      = 3'd5;
+    localparam DONE         = 3'd6;
+    
+    //--------------------------------------------------------------
+    // SPI Signals
+    //--------------------------------------------------------------
+    wire [DATA_WIDTH-1:0] spi_rx_data;
+    wire spi_rx_valid;
+    wire spi_tx_ready;
+    reg  [DATA_WIDTH-1:0] spi_tx_data;
+    reg  spi_tx_load;
+    wire slave_miso_out;
+
+    // HANDSHAKE: MISO=0 during COMPUTE/WAIT to indicate Busy
+    assign spi_miso = ((state == COMPUTE) || (state == WAIT_RAM)) ? 1'b0 : slave_miso_out;
+
+    //--------------------------------------------------------------
+    // Internal Signals
+    //--------------------------------------------------------------
+    reg [2:0] state;
+    reg [5:0] rx_word_count;      
+    reg [9:0] tx_word_count;      
+    
+    // HLS Signals
+    reg ap_start;
+    wire ap_done;
+    wire ap_idle;
+    wire ap_ready;
+    wire [VAR_LOG-1:0] hls_x_address1;
+    wire hls_x_ce1;
+    
+    // Memory
+    reg [31:0] current_state_mem [0:N_STATE-1];  
+    reg [31:0] x_mem [0:331];                    
+    
+    // Memory Ports
+    wire [STATE_LOG-1:0] current_state_address0;
+    wire current_state_ce0;
+    reg [31:0] current_state_q0;
+    
+    wire [VAR_LOG-1:0] x_address0;
+    wire x_ce0;
+    wire x_we0;
+    wire [31:0] x_d0;
+    reg [31:0] x_q0;
+    
+    wire [VAR_LOG-1:0] x_address1;
+    wire x_ce1;
+    reg [31:0] x_q1;
+    
+    // Address Muxing for RAM Readback
+    wire [VAR_LOG-1:0] fsm_read_addr;
+    assign fsm_read_addr = 12 + tx_word_count; 
+    assign x_address1 = (state == TX_DATA || state == WAIT_RAM) ? fsm_read_addr : hls_x_address1;
+    assign x_ce1      = (state == TX_DATA || state == WAIT_RAM) ? 1'b1 : hls_x_ce1;
+
+    wire [31:0] iters;
+    assign iters = FIXED_ITERS;
+    
+    //--------------------------------------------------------------
+    // LEDs
+    //--------------------------------------------------------------
+    reg [3:0] led_reg;
+    assign led = led_reg;
+    always @(posedge clk) begin
+        if (!resetn) led_reg <= 4'b0001;
+        else case (state)
+            IDLE:         led_reg <= 4'b0001;
+            CHECK_HEADER: led_reg <= 4'b0010;
+            RX_DATA:      led_reg <= 4'b0011;
+            COMPUTE:      led_reg <= 4'b0111; 
+            TX_DATA:      led_reg <= 4'b1111; 
+            default:      led_reg <= 4'b1000;
+        endcase
+    end
+    
+    //--------------------------------------------------------------
+    // Main FSM
+    //--------------------------------------------------------------
+    integer i;
+    
+    always @(posedge clk) begin
+        if (!resetn) begin
+            state <= IDLE;
+            rx_word_count <= 0;
+            tx_word_count <= 0;
+            ap_start <= 0;
+            spi_tx_load <= 0;
+            spi_tx_data <= 0;
+            for (i = 0; i < N_STATE; i = i + 1) current_state_mem[i] <= 0;
+        end else begin
+            spi_tx_load <= 0; // Default
+            
+            // GLOBAL RESET on CS_N HIGH
+            // This is crucial for reliability. If CS goes high, we reset to IDLE.
+            if (spi_cs_n && state != IDLE) begin
+                state <= IDLE;
+                ap_start <= 0;
+            end else begin
+            
+                case (state)
+                    // 1. Wait for CS Low
+                    IDLE: begin
+                        if (!spi_cs_n) begin
+                            state <= CHECK_HEADER;
+                        end
+                        ap_start <= 0;
+                    end
+                    
+                    // 2. SAFETY CHECK: Verify first word is 0xAA
+                    CHECK_HEADER: begin
+                        if (spi_rx_valid) begin
+                            // Use mask 0xFF to check only the lowest byte (0xAA)
+                            if ((spi_rx_data & 24'h0000FF) == 24'h0000AA) begin
+                                state <= RX_DATA;
+                                rx_word_count <= 0;
+                            end else begin
+                                // Bad Header! Ignore packet.
+                                // Stay here or go to dummy state until CS high.
+                                state <= DONE; 
+                            end
+                        end
+                    end
+                    
+                    // 3. Receive Data
+                    RX_DATA: begin
+                        if (spi_rx_valid) begin
+                            current_state_mem[rx_word_count] <= {8'h00, spi_rx_data};
+                            if (rx_word_count == N_STATE-1) state <= COMPUTE;
+                            else rx_word_count <= rx_word_count + 1;
+                        end
+                    end
+                    
+                    // 4. Compute
+                    COMPUTE: begin
+                        ap_start <= 1;
+                        if (ap_ready || ap_done) begin
+                            ap_start <= 0;
+                            state <= WAIT_RAM;
+                            
+                            // LOAD HEADER (0xFFFFFF) for Polling
+                            spi_tx_data <= TX_HEADER; 
+                            spi_tx_load <= 1;
+                            tx_word_count <= 0;
+                        end
+                    end
+    
+                    // 5. RAM Latency Compensation
+                    WAIT_RAM: begin
+                        state <= TX_DATA;
+                    end
+                    
+                    // 6. Transmit Results
+                    TX_DATA: begin
+                        if (spi_tx_ready) begin
+                            // The Header (or previous word) is gone.
+                            // Load the word we just fetched from RAM.
+                            if (tx_word_count < N_VAR) begin
+                                spi_tx_data <= {8'hD0, 8'h0D, tx_word_count[7:0]};// x_q1[23:0];
+                                spi_tx_load <= 1;
+                                tx_word_count <= tx_word_count + 1;
+                            end else begin
+                                state <= DONE;
+                            end
+                        end
+                    end
+                    
+                    DONE: begin
+                        // Wait for CS to go high (handled by Global Reset logic above)
+                    end
+                    
+                    default: state <= IDLE;
+                endcase
+            end
+        end
+    end
+    
+    //--------------------------------------------------------------
+    // Instantiations
+    //--------------------------------------------------------------
+    ADMM_solver_0 dut (
+        .ap_clk(clk), .ap_rst(!resetn), .ap_start(ap_start), .ap_done(ap_done),
+        .ap_idle(ap_idle), .ap_ready(ap_ready),
+        .current_state_address0(current_state_address0), .current_state_ce0(current_state_ce0),
+        .current_state_q0(current_state_q0),
+        .x_address0(x_address0), .x_ce0(x_ce0), .x_we0(x_we0), .x_d0(x_d0), .x_q0(x_q0),
+        .x_address1(hls_x_address1), .x_ce1(hls_x_ce1), .x_q1(x_q1),
+        .iters(iters)
+    );
+    
+    // RAM Models
+    always @(posedge clk) if (current_state_ce0) current_state_q0 <= current_state_mem[current_state_address0];
+    always @(posedge clk) if (x_ce0) begin if(x_we0) x_mem[x_address0] <= x_d0; x_q0 <= x_mem[x_address0]; end
+    always @(posedge clk) if (x_ce1) x_q1 <= x_mem[x_address1];
+    
+    spi_slave_word #(.WORD_WIDTH(DATA_WIDTH)) i_spi_slave (
+        .clk(clk), .resetn(resetn),
+        .spi_sck(spi_sck), .spi_mosi(spi_mosi), .spi_miso(slave_miso_out), .spi_cs_n(spi_cs_n),
+        .rx_data(spi_rx_data), .rx_valid(spi_rx_valid),
+        .tx_data(spi_tx_data), .tx_load(spi_tx_load), .tx_ready(spi_tx_ready)
+    );
+
+endmodule
