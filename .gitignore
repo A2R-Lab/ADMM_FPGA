@@ -1,15 +1,39 @@
+# Build output
+build/
+
+# HLS project output
 vitis_projects/ADMM/ADMM/
 vitis_projects/ADMM/data.h
 vitis_projects/ADMM/test_data.h
 vitis_projects/ADMM/.Xil/
 vitis_projects/ADMM/.cache/
+
+# Vivado project artifacts
 vivado_project/vivado_project.cache/
+vivado_project/vivado_project.gen/
 vivado_project/vivado_project.hw/
 vivado_project/vivado_project.sim/
 vivado_project/vivado_project.runs/
 vivado_project/vivado_project.ip_user_files/
 
+# Stray Vivado artifacts at root (from GUI operations)
+/.gen/
+/.srcs/
+/ip/
 
+# IDE / Editor
 **/__pycache__/
 **/.vscode/
 vitis_projects/_ide/
+
+# Vivado/Vitis logs and temp files
+*.log
+*.jou
+*.backup.log
+*.backup.jou
+.Xil/
+
+# Script output files
+scripts/admm_results.txt*
+scripts/clockInfo.txt
+clockInfo.txt
