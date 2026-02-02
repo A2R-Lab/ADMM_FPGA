@@ -3,11 +3,12 @@
 module top_spi (
     input  wire        clk,
     input  wire        resetn,
-    input  wire        spi_sck,
-    input  wire        spi_mosi,
-    output wire        spi_miso,
+    input  wire        spi_cf_sck,
+    input  wire        spi_cf_mosi,
+    output wire        spi_cf_miso,
     input  wire        spi_cs_n,
-    output wire [3:0]  led
+    output wire        led1,
+    output wire        led2
 );
 
     //--------------------------------------------------------------
@@ -45,7 +46,7 @@ module top_spi (
     wire slave_miso_out;
 
     // HANDSHAKE: MISO=0 during COMPUTE/WAIT to indicate Busy
-    assign spi_miso = ((state == COMPUTE) || (state == WAIT_RAM)) ? 1'b0 : slave_miso_out;
+    assign spi_cf_miso = ((state == COMPUTE) || (state == WAIT_RAM)) ? 1'b0 : slave_miso_out;
 
     //--------------------------------------------------------------
     // Internal Signals
@@ -91,19 +92,25 @@ module top_spi (
     assign iters = FIXED_ITERS;
     
     //--------------------------------------------------------------
-    // LEDs
+    // LEDs (2 LEDs to indicate state)
+    // led1 led2 : 00=IDLE, 01=CHECK_HEADER/RX_DATA, 10=COMPUTE, 11=TX_DATA/DONE
     //--------------------------------------------------------------
-    reg [3:0] led_reg;
-    assign led = led_reg;
+    reg led1_reg, led2_reg;
+    assign led1 = led1_reg;
+    assign led2 = led2_reg;
     always @(posedge clk) begin
-        if (!resetn) led_reg <= 4'b0001;
-        else case (state)
-            IDLE:         led_reg <= 4'b0001;
-            CHECK_HEADER: led_reg <= 4'b0010;
-            RX_DATA:      led_reg <= 4'b0011;
-            COMPUTE:      led_reg <= 4'b0111; 
-            TX_DATA:      led_reg <= 4'b1111; 
-            default:      led_reg <= 4'b1000;
+        if (!resetn) begin
+            led1_reg <= 1'b0;
+            led2_reg <= 1'b0;
+        end else case (state)
+            IDLE:         begin led1_reg <= 1'b0; led2_reg <= 1'b0; end
+            CHECK_HEADER: begin led1_reg <= 1'b0; led2_reg <= 1'b1; end
+            RX_DATA:      begin led1_reg <= 1'b0; led2_reg <= 1'b1; end
+            COMPUTE:      begin led1_reg <= 1'b1; led2_reg <= 1'b0; end
+            WAIT_RAM:     begin led1_reg <= 1'b1; led2_reg <= 1'b0; end
+            TX_DATA:      begin led1_reg <= 1'b1; led2_reg <= 1'b1; end
+            DONE:         begin led1_reg <= 1'b1; led2_reg <= 1'b1; end
+            default:      begin led1_reg <= 1'b0; led2_reg <= 1'b0; end
         endcase
     end
     
@@ -175,6 +182,7 @@ module top_spi (
                             spi_tx_data <= TX_HEADER; 
                             spi_tx_load <= 1;
                             tx_word_count <= 0;
+                            
                         end
                     end
     
@@ -189,7 +197,8 @@ module top_spi (
                             // The Header (or previous word) is gone.
                             // Load the word we just fetched from RAM.
                             if (tx_word_count < N_VAR) begin
-                                spi_tx_data <= {8'hD0, 8'h0D, tx_word_count[7:0]};// x_q1[23:0];
+                                // spi_tx_data <= {8'hD0, 8'h0D, tx_word_count[7:0]};
+                                spi_tx_data <= x_q1[23:0];
                                 spi_tx_load <= 1;
                                 tx_word_count <= tx_word_count + 1;
                             end else begin
@@ -211,7 +220,7 @@ module top_spi (
     //--------------------------------------------------------------
     // Instantiations
     //--------------------------------------------------------------
-    ADMM_solver_0 dut (
+    ADMM_solver dut (
         .ap_clk(clk), .ap_rst(!resetn), .ap_start(ap_start), .ap_done(ap_done),
         .ap_idle(ap_idle), .ap_ready(ap_ready),
         .current_state_address0(current_state_address0), .current_state_ce0(current_state_ce0),
@@ -228,7 +237,7 @@ module top_spi (
     
     spi_slave_word #(.WORD_WIDTH(DATA_WIDTH)) i_spi_slave (
         .clk(clk), .resetn(resetn),
-        .spi_sck(spi_sck), .spi_mosi(spi_mosi), .spi_miso(slave_miso_out), .spi_cs_n(spi_cs_n),
+        .spi_sck(spi_cf_sck), .spi_mosi(spi_cf_mosi), .spi_miso(slave_miso_out), .spi_cs_n(spi_cs_n),
         .rx_data(spi_rx_data), .rx_valid(spi_rx_valid),
         .tx_data(spi_tx_data), .tx_load(spi_tx_load), .tx_ready(spi_tx_ready)
     );

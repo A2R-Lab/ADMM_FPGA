@@ -1,24 +1,77 @@
-## Clock (100 MHz typical)
-set_property -dict { PACKAGE_PIN E3    IOSTANDARD LVCMOS33 } [get_ports { clk }];
-create_clock -add -name sys_clk_pin -period 10.00 -waveform {0 5} [get_ports { clk }];
+## Use SPI X4 for flash programming
+set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4 [current_design]
 
-## Reset switch
-#set_property -dict { PACKAGE_PIN C11    IOSTANDARD LVCMOS33 } [get_ports { sw_0 }]; #IO_L12N_T1_MRCC_16 Sch=sw[0]
+#------------------------------------------------------------------------------
+# Clock input (100 MHz)
+#------------------------------------------------------------------------------
+set_property -dict { PACKAGE_PIN P17   IOSTANDARD LVCMOS33 } [get_ports { clk }];
+create_clock -period 10.000 -name sys_clk -waveform {0 5} [get_ports clk]
 
-set_property -dict { PACKAGE_PIN C2    IOSTANDARD LVCMOS33 } [get_ports { resetn }]; #IO_L16P_T2_35 Sch=ck_rst
+#------------------------------------------------------------------------------
+# LEDs
+#------------------------------------------------------------------------------
+set_property -dict { PACKAGE_PIN L16   IOSTANDARD LVCMOS33 } [get_ports { led1 }]; # blue
+set_property -dict { PACKAGE_PIN M16   IOSTANDARD LVCMOS33 } [get_ports { led2 }]; # yellow
 
-## UART Pins
-#set_property -dict { PACKAGE_PIN D10   IOSTANDARD LVCMOS33 } [get_ports { uart_txd }];
-#set_property -dict { PACKAGE_PIN A9    IOSTANDARD LVCMOS33 } [get_ports { uart_rxd }];
+#------------------------------------------------------------------------------
+# Push button (active low reset)
+#------------------------------------------------------------------------------
+set_property -dict { PACKAGE_PIN U18   IOSTANDARD LVCMOS33 } [get_ports { resetn }];
 
-# SPI pins
-set_property -dict { PACKAGE_PIN V15   IOSTANDARD LVCMOS33 } [get_ports { spi_sck  }]; #IO_L16P_T2_CSI_B_14 Sch=ck_io[0]
-set_property -dict { PACKAGE_PIN U16   IOSTANDARD LVCMOS33 } [get_ports { spi_mosi  }]; #IO_L18P_T2_A12_D28_14 Sch=ck_io[1]
-set_property -dict { PACKAGE_PIN P14   IOSTANDARD LVCMOS33 } [get_ports { spi_miso  }]; #IO_L8N_T1_D12_14 Sch=ck_io[2]
-set_property -dict { PACKAGE_PIN T11   IOSTANDARD LVCMOS33 } [get_ports { spi_cs_n  }]; #IO_L19P_T3_A10_D26_14 Sch=ck_io[3]
+#------------------------------------------------------------------------------
+# SPI Interface
+#------------------------------------------------------------------------------
+set_property -dict { PACKAGE_PIN R18   IOSTANDARD LVCMOS33 } [get_ports { spi_cf_miso }];
+set_property -dict { PACKAGE_PIN T18   IOSTANDARD LVCMOS33 } [get_ports { spi_cf_mosi }];
+set_property -dict { PACKAGE_PIN P18   IOSTANDARD LVCMOS33 } [get_ports { spi_cf_sck  }];
+set_property -dict { PACKAGE_PIN V10   IOSTANDARD LVCMOS33 } [get_ports { spi_cs_n }];  # IO1 
 
-## LEDs
-set_property -dict { PACKAGE_PIN H5    IOSTANDARD LVCMOS33 } [get_ports { led[0] }]; #IO_L24N_T3_35 Sch=led[4]
-set_property -dict { PACKAGE_PIN J5    IOSTANDARD LVCMOS33 } [get_ports { led[1] }]; #IO_25_35 Sch=led[5]
-set_property -dict { PACKAGE_PIN T9    IOSTANDARD LVCMOS33 } [get_ports { led[2] }]; #IO_L24P_T3_A01_D17_14 Sch=led[6]
-set_property -dict { PACKAGE_PIN T10   IOSTANDARD LVCMOS33 } [get_ports { led[3] }]; #IO_L24N_T3_A00_D16_14 Sch=led[7]
+#------------------------------------------------------------------------------
+# UART 1
+#------------------------------------------------------------------------------
+set_property -dict { PACKAGE_PIN N14   IOSTANDARD LVCMOS33 } [get_ports { uart1_tx }];
+set_property -dict { PACKAGE_PIN M13   IOSTANDARD LVCMOS33 } [get_ports { uart1_rx }];
+
+#------------------------------------------------------------------------------
+# UART 2
+#------------------------------------------------------------------------------
+set_property -dict { PACKAGE_PIN L18   IOSTANDARD LVCMOS33 } [get_ports { uart2_tx }];
+set_property -dict { PACKAGE_PIN M18   IOSTANDARD LVCMOS33 } [get_ports { uart2_rx }];
+
+#------------------------------------------------------------------------------
+# I2C (Crazyflie connector)
+#------------------------------------------------------------------------------
+set_property -dict { PACKAGE_PIN R11   IOSTANDARD LVCMOS33 } [get_ports { i2c_cf_sda }];
+set_property -dict { PACKAGE_PIN R10   IOSTANDARD LVCMOS33 } [get_ports { i2c_cf_scl }];
+
+#------------------------------------------------------------------------------
+# GPIO
+#------------------------------------------------------------------------------
+set_property -dict { PACKAGE_PIN U11   IOSTANDARD LVCMOS33 } [get_ports { io2 }];
+
+#------------------------------------------------------------------------------
+# I2C Power Chip
+#------------------------------------------------------------------------------
+set_property -dict { PACKAGE_PIN V16   IOSTANDARD LVCMOS33 } [get_ports { i2c_pwr_sda }];
+set_property -dict { PACKAGE_PIN V17   IOSTANDARD LVCMOS33 } [get_ports { i2c_pwr_scl }];
+
+#------------------------------------------------------------------------------
+# SPI Clock Constraint (adjust frequency as needed)
+# Assuming SPI clock up to 10 MHz from external master
+#------------------------------------------------------------------------------
+create_clock -period 100.000 -name spi_sck -waveform {0 50} [get_ports spi_cf_sck]
+set_clock_groups -asynchronous -group [get_clocks sys_clk] -group [get_clocks spi_sck]
+
+#------------------------------------------------------------------------------
+# Input Delay Constraints for SPI
+#------------------------------------------------------------------------------
+set_input_delay -clock spi_sck -max 10.0 [get_ports spi_cf_mosi]
+set_input_delay -clock spi_sck -min 0.0  [get_ports spi_cf_mosi]
+set_input_delay -clock spi_sck -max 10.0 [get_ports spi_cs_n]
+set_input_delay -clock spi_sck -min 0.0  [get_ports spi_cs_n]
+
+#------------------------------------------------------------------------------
+# Output Delay Constraints for SPI
+#------------------------------------------------------------------------------
+set_output_delay -clock spi_sck -max 10.0 [get_ports spi_cf_miso]
+set_output_delay -clock spi_sck -min 0.0  [get_ports spi_cf_miso]
