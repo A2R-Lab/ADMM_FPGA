@@ -107,10 +107,11 @@ void ADMM_iteration(
             zi = current_state[i];
         } else if (i >= START_INEQ) { // This will depend on horizon length
             zi = Axi + (y[i] >> RHO_SHIFT);
-            if (zi < U_MIN) {
-                zi = U_MIN;
-            } else if (zi > U_MAX) {
-                zi = U_MAX;
+            // Cast to fp_t to avoid floating-point comparison hardware
+            if (zi < (fp_t)U_MIN) {
+                zi = (fp_t)U_MIN;
+            } else if (zi > (fp_t)U_MAX) {
+                zi = (fp_t)U_MAX;
             }
         } else {
             zi = 0;
