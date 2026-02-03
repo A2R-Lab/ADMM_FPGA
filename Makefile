@@ -9,6 +9,7 @@
 #   bit       - Generate bitstream only (assumes impl done)
 #   program   - Program FPGA via JTAG
 #   flash     - Write to SPI flash
+#   sync      - Rsync build/ from remote (for build-on-server, program-local workflow)
 #   clean     - Clean Vivado build artifacts
 #   clean-hls - Clean HLS build artifacts
 #   clean-all - Clean everything
@@ -17,6 +18,11 @@
 # Configuration
 PART          := xc7a100tcsg324-1
 TOP_MODULE    := top_spi
+# For sync: remote repo path, e.g. user@host:~/ADMM_FPGA (path must exist on server)
+REMOTE       ?=
+# Optional SSH port for sync (default 22): make sync REMOTE=... SSH_PORT=2222
+SSH_PORT     ?=
+RSYNC_SSH    := $(if $(SSH_PORT),-e "ssh -p $(SSH_PORT)",)
 VIVADO        := vivado
 VITIS_HLS     := v++
 PYTHON        := python3
@@ -49,7 +55,7 @@ FLASH_BIN     := $(BUILD_DIR)/$(TOP_MODULE).bin
 # Main Targets
 # =============================================================================
 
-.PHONY: all headers hls vivado bit program flash clean clean-hls clean-all help
+.PHONY: all headers hls vivado bit program flash sync clean clean-hls clean-all help
 
 all: $(BITSTREAM)
 	@echo "========================================="
@@ -69,6 +75,7 @@ help:
 	@echo "  bit       - Generate bitstream"
 	@echo "  program   - Program FPGA via JTAG"
 	@echo "  flash     - Write to SPI flash"
+	@echo "  sync      - Rsync build/ from remote (e.g. make sync REMOTE=user@host:~/ADMM_FPGA [SSH_PORT=2222])"
 	@echo "  clean     - Clean Vivado build"
 	@echo "  clean-hls - Clean HLS build"
 	@echo "  clean-all - Clean everything"
@@ -78,6 +85,7 @@ help:
 	@echo "  make hls          # Rebuild HLS only"
 	@echo "  make vivado       # Rebuild Vivado only"
 	@echo "  make program      # Program FPGA"
+	@echo "  make sync REMOTE=user@host:~/ADMM_FPGA [SSH_PORT=2222]  # Fetch build from server"
 
 # =============================================================================
 # Header Generation
@@ -153,10 +161,13 @@ $(BITSTREAM): $(ROUTE_DCP)
 		-notrace
 
 # =============================================================================
-# Programming
+# Programming (no build dependency: use existing bitstream, e.g. after 'make sync')
 # =============================================================================
 
-program: $(BITSTREAM)
+program:
+	@if [ ! -f $(BITSTREAM) ]; then \
+		echo "Error: $(BITSTREAM) not found. Run 'make' or 'make sync' first."; exit 1; \
+	fi
 	@echo "========================================="
 	@echo "Programming FPGA..."
 	@echo "========================================="
@@ -164,7 +175,10 @@ program: $(BITSTREAM)
 		-source $(SCRIPTS_DIR)/program.tcl \
 		-notrace
 
-flash: $(FLASH_BIN)
+flash:
+	@if [ ! -f $(FLASH_BIN) ]; then \
+		echo "Error: $(FLASH_BIN) not found. Run 'make' or 'make sync' first."; exit 1; \
+	fi
 	@echo "========================================="
 	@echo "Writing to SPI Flash..."
 	@echo "========================================="
@@ -174,6 +188,22 @@ flash: $(FLASH_BIN)
 
 $(FLASH_BIN): $(BITSTREAM)
 	@echo "Flash binary already generated: $(FLASH_BIN)"
+
+# =============================================================================
+# Sync from remote (build on server, program locally)
+# =============================================================================
+
+sync:
+	@if [ -z "$(REMOTE)" ]; then \
+		echo "Usage: make sync REMOTE=user@hostname:path/to/ADMM_FPGA"; \
+		echo "Example: make sync REMOTE=me@buildserver:~/ADMM_FPGA"; \
+		exit 1; \
+	fi
+	@echo "========================================="
+	@echo "Syncing build/ from $(REMOTE)..."
+	@echo "========================================="
+	@mkdir -p $(BUILD_DIR)
+	rsync -avz --progress $(RSYNC_SSH) $(REMOTE)/build/ $(BUILD_DIR)/
 
 # =============================================================================
 # Clean Targets
