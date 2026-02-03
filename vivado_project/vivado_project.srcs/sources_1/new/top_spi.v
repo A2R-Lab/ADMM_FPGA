@@ -7,6 +7,7 @@ module top_spi (
     input  wire        spi_cf_mosi,
     output wire        spi_cf_miso,
     input  wire        spi_cs_n,
+    output wire        io2,          // IRQ: assert when results ready (Crazyflie IO2)
     output wire        led1,
     output wire        led2
 );
@@ -48,6 +49,10 @@ module top_spi (
     // HANDSHAKE: MISO=0 during COMPUTE/WAIT to indicate Busy
     assign spi_cf_miso = ((state == COMPUTE) || (state == WAIT_RAM)) ? 1'b0 : slave_miso_out;
 
+    // IRQ: assert when results ready (rising edge triggers Crazyflie); clear when CS high
+    reg irq_reg;
+    assign io2 = irq_reg;
+
     //--------------------------------------------------------------
     // Internal Signals
     //--------------------------------------------------------------
@@ -84,7 +89,7 @@ module top_spi (
     
     // Address Muxing for RAM Readback
     wire [VAR_LOG-1:0] fsm_read_addr;
-    assign fsm_read_addr = 12 + tx_word_count; 
+    assign fsm_read_addr = 12 + tx_word_count;
     assign x_address1 = (state == TX_DATA || state == WAIT_RAM) ? fsm_read_addr : hls_x_address1;
     assign x_ce1      = (state == TX_DATA || state == WAIT_RAM) ? 1'b1 : hls_x_ce1;
 
@@ -127,9 +132,13 @@ module top_spi (
             ap_start <= 0;
             spi_tx_load <= 0;
             spi_tx_data <= 0;
+            irq_reg <= 0;
             for (i = 0; i < N_STATE; i = i + 1) current_state_mem[i] <= 0;
         end else begin
             spi_tx_load <= 0; // Default
+            
+            // Clear IRQ when CS goes high (so next completion can generate rising edge)
+            if (spi_cs_n) irq_reg <= 0;
             
             // GLOBAL RESET on CS_N HIGH
             // This is crucial for reliability. If CS goes high, we reset to IDLE.
@@ -188,6 +197,7 @@ module top_spi (
     
                     // 5. RAM Latency Compensation
                     WAIT_RAM: begin
+                        irq_reg <= 1;  // IRQ: result ready (Crazyflie IO2)
                         state <= TX_DATA;
                     end
                     

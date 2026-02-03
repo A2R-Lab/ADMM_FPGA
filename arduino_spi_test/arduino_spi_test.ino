@@ -18,11 +18,23 @@ uint32_t result_data[N_RESULT];
 //--------------------------------------------------------------
 // Setup
 //--------------------------------------------------------------
+
+volatile bool isr_called;
+void ISR() {
+  isr_called = true;
+}
+
 void setup() {
+
+  
     Serial.begin(115200);
     while (!Serial) {
         ; // Wait for serial port
     }
+
+    pinMode(2, INPUT_PULLUP);   
+    attachInterrupt(digitalPinToInterrupt(2), ISR, RISING);
+  
     
     pinMode(CS_PIN, OUTPUT);
     digitalWrite(CS_PIN, HIGH);
@@ -46,6 +58,10 @@ void setup() {
 // Main Loop
 //--------------------------------------------------------------
 void loop() {
+   if(isr_called){
+    isr_called = false;
+    Serial.println("isr loop");
+   }
     if (Serial.available() > 0) {
         char cmd = Serial.read();
         
@@ -134,6 +150,10 @@ bool transactWithFPGA(uint32_t* send_vals, uint32_t* recv_vals) {
 
     send_done_time = micros();
 
+    // Wait for isr but then leave polling as it was
+    while(!isr_called) {}
+    isr_called = false;
+
     //----------------------------------------------------------
     // 2. POLLING (UNCHANGED, BYTE-BY-BYTE)
     //----------------------------------------------------------
@@ -171,7 +191,7 @@ bool transactWithFPGA(uint32_t* send_vals, uint32_t* recv_vals) {
     const uint32_t RX_LEN = 3 * N_RESULT;
     uint8_t rx_buf[RX_LEN];
     memset(rx_buf, 0x00, RX_LEN); // clock SPI by sending 0x00
-SPI.transfer(rx_buf, RX_LEN); // rx_buf now contains FPGA response
+    SPI.transfer(rx_buf, RX_LEN); // rx_buf now contains FPGA response
     
     digitalWrite(CS_PIN, HIGH);
     SPI.endTransaction();
