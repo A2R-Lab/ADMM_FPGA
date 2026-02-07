@@ -65,8 +65,6 @@ module top_spi (
     wire ap_done;
     wire ap_idle;
     wire ap_ready;
-    wire [VAR_LOG-1:0] hls_x_address1;
-    wire hls_x_ce1;
     
     // Memory
     reg [31:0] current_state_mem [0:N_STATE-1];  
@@ -86,12 +84,6 @@ module top_spi (
     wire [VAR_LOG-1:0] x_address1;
     wire x_ce1;
     reg [31:0] x_q1;
-    
-    // Address Muxing for RAM Readback
-    wire [VAR_LOG-1:0] fsm_read_addr;
-    assign fsm_read_addr = 12 + tx_word_count;
-    assign x_address1 = (state == TX_DATA || state == WAIT_RAM) ? fsm_read_addr : hls_x_address1;
-    assign x_ce1      = (state == TX_DATA || state == WAIT_RAM) ? 1'b1 : hls_x_ce1;
 
     wire [31:0] iters;
     assign iters = FIXED_ITERS;
@@ -205,10 +197,9 @@ module top_spi (
                     TX_DATA: begin
                         if (spi_tx_ready) begin
                             // The Header (or previous word) is gone.
-                            // Load the word we just fetched from RAM.
                             if (tx_word_count < N_VAR) begin
                                 // spi_tx_data <= {8'hD0, 8'h0D, tx_word_count[7:0]};
-                                spi_tx_data <= x_q1[23:0];
+                                spi_tx_data <= x_mem[12 + tx_word_count][23:0];
                                 spi_tx_load <= 1;
                                 tx_word_count <= tx_word_count + 1;
                             end else begin
@@ -236,7 +227,7 @@ module top_spi (
         .current_state_address0(current_state_address0), .current_state_ce0(current_state_ce0),
         .current_state_q0(current_state_q0),
         .x_address0(x_address0), .x_ce0(x_ce0), .x_we0(x_we0), .x_d0(x_d0), .x_q0(x_q0),
-        .x_address1(hls_x_address1), .x_ce1(hls_x_ce1), .x_q1(x_q1),
+        .x_address1(x_address1), .x_ce1(x_ce1), .x_q1(x_q1),
         .iters(iters)
     );
     
