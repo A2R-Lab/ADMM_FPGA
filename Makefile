@@ -10,6 +10,9 @@
 #   program   - Program FPGA via JTAG
 #   flash     - Write to SPI flash
 #   sync      - Rsync build/ from remote (for build-on-server, program-local workflow)
+#   sim       - Run Vitis HLS C simulation (quick)
+#   sim-csim  - Run Vitis HLS C simulation
+#   sim-cosim - Run Vitis HLS C/RTL co-simulation
 #   clean     - Clean Vivado build artifacts
 #   clean-hls - Clean HLS build artifacts
 #   clean-all - Clean everything
@@ -55,7 +58,7 @@ FLASH_BIN     := $(BUILD_DIR)/$(TOP_MODULE).bin
 # Main Targets
 # =============================================================================
 
-.PHONY: all headers hls vivado bit program flash sync clean clean-hls clean-all help
+.PHONY: all headers hls vivado bit program flash sync sim sim-csim sim-cosim clean clean-hls clean-all help
 
 all: $(BITSTREAM)
 	@echo "========================================="
@@ -75,6 +78,9 @@ help:
 	@echo "  bit       - Generate bitstream"
 	@echo "  program   - Program FPGA via JTAG"
 	@echo "  flash     - Write to SPI flash"
+	@echo "  sim       - Vitis HLS C simulation (quick)"
+	@echo "  sim-csim  - Vitis HLS C simulation"
+	@echo "  sim-cosim - Vitis HLS C/RTL co-simulation (requires HLS build)"
 	@echo "  sync      - Rsync build/ from remote (e.g. make sync REMOTE=user@host:~/ADMM_FPGA [SSH_PORT=2222])"
 	@echo "  clean     - Clean Vivado build"
 	@echo "  clean-hls - Clean HLS build"
@@ -84,6 +90,8 @@ help:
 	@echo "  make              # Full build"
 	@echo "  make hls          # Rebuild HLS only"
 	@echo "  make vivado       # Rebuild Vivado only"
+	@echo "  make sim          # Vitis HLS C simulation"
+	@echo "  make sim-cosim    # Vitis HLS C/RTL co-simulation"
 	@echo "  make program      # Program FPGA"
 	@echo "  make sync REMOTE=user@host:~/ADMM_FPGA [SSH_PORT=2222]  # Fetch build from server"
 
@@ -159,6 +167,24 @@ $(BITSTREAM): $(ROUTE_DCP)
 		-log $(BUILD_DIR)/logs/bitstream.log \
 		-journal $(BUILD_DIR)/logs/bitstream.jou \
 		-notrace
+
+# =============================================================================
+# Vitis HLS Simulation
+# =============================================================================
+
+sim: sim-csim
+
+sim-csim: $(DATA_HEADER)
+	@echo "========================================="
+	@echo "Running Vitis HLS C simulation..."
+	@echo "========================================="
+	cd $(HLS_DIR) && $(MAKE) csim
+
+sim-cosim: $(HLS_IP_MARKER)
+	@echo "========================================="
+	@echo "Running Vitis HLS C/RTL co-simulation..."
+	@echo "========================================="
+	cd $(HLS_DIR) && $(MAKE) cosim
 
 # =============================================================================
 # Programming (no build dependency: use existing bitstream, e.g. after 'make sync')
