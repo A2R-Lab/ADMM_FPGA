@@ -17,12 +17,12 @@ module top_spi (
     //--------------------------------------------------------------
     localparam N_STATE = 12;
     localparam N_VAR = 4;
-    localparam DATA_WIDTH = 24;
+    localparam DATA_WIDTH = 32;
     localparam FIXED_ITERS = 32'd10;
     
     // Packet Headers
-    localparam RX_HEADER = 24'h0000AA; // Master must send 0xAA as first byte
-    localparam TX_HEADER = 24'hFFFFFF; // FPGA sends 0xFF as Ready signal
+    localparam RX_HEADER = 32'h000000AA; // Master must send 0xAA as first byte
+    localparam TX_HEADER = 32'hFFFFFFFF; // FPGA sends 0xFF as Ready signal
     
     localparam STATE_LOG = $clog2(N_STATE);
     localparam VAR_LOG = $clog2(332);  
@@ -152,7 +152,7 @@ module top_spi (
                     CHECK_HEADER: begin
                         if (spi_rx_valid) begin
                             // Use mask 0xFF to check only the lowest byte (0xAA)
-                            if ((spi_rx_data & 24'h0000FF) == 24'h0000AA) begin
+                            if ((spi_rx_data & 32'h000000FF) == 32'h000000AA) begin
                                 state <= RX_DATA;
                                 rx_word_count <= 0;
                             end else begin
@@ -166,7 +166,7 @@ module top_spi (
                     // 3. Receive Data
                     RX_DATA: begin
                         if (spi_rx_valid) begin
-                            current_state_mem[rx_word_count] <= {8'h00, spi_rx_data};
+                            current_state_mem[rx_word_count] <= spi_rx_data;
                             if (rx_word_count == N_STATE-1) state <= COMPUTE;
                             else rx_word_count <= rx_word_count + 1;
                         end
@@ -199,7 +199,7 @@ module top_spi (
                             // The Header (or previous word) is gone.
                             if (tx_word_count < N_VAR) begin
                                 // spi_tx_data <= {8'hD0, 8'h0D, tx_word_count[7:0]};
-                                spi_tx_data <= x_mem[12 + tx_word_count][23:0];
+                                spi_tx_data <= x_mem[12 + tx_word_count][31:0];
                                 spi_tx_load <= 1;
                                 tx_word_count <= tx_word_count + 1;
                             end else begin
