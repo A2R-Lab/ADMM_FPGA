@@ -122,7 +122,7 @@ module top_spi (
             rx_word_count <= 0;
             tx_word_count <= 0;
             ap_start <= 0;
-            spi_tx_load <= 0;
+            spi_tx_load <= 1;  // Load zero on reset
             spi_tx_data <= 0;
             irq_reg <= 0;
             for (i = 0; i < N_STATE; i = i + 1) current_state_mem[i] <= 0;
@@ -137,6 +137,9 @@ module top_spi (
             if (spi_cs_n && state != IDLE) begin
                 state <= IDLE;
                 ap_start <= 0;
+                // Clear SPI transmit buffer to zero when entering IDLE
+                spi_tx_data <= 0;
+                spi_tx_load <= 1;
             end else begin
             
                 case (state)
@@ -144,6 +147,11 @@ module top_spi (
                     IDLE: begin
                         if (!spi_cs_n) begin
                             state <= CHECK_HEADER;
+                        end
+                        // Ensure SPI transmit buffer is zero while in IDLE
+                        if (spi_cs_n) begin
+                            spi_tx_data <= 0;
+                            spi_tx_load <= 1;
                         end
                         ap_start <= 0;
                     end
