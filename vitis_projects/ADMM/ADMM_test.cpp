@@ -55,11 +55,9 @@ int main() {
     // res &= compare_vectors(res_dut, AT_mul_out, RANDOM_VECTOR_SIZE, REL_ERROR);
 
     fp_t x[LT_BANDED_ROWS];
-    fp_t current_state[12] = {0};
-    
-    current_state[0] = (fp_t)0.1; current_state[1] = (fp_t)0.1; current_state[2] = (fp_t)-0.1;
-    
+    state_t current_state = {{0}};
 
+    current_state.s[0] = (fp_t)0.1; current_state.s[1] = (fp_t)0.1; current_state.s[2] = (fp_t)-0.1;
 
     printf("================= ADMM SOLVER 100 iterations =================\n");
 

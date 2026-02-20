@@ -70,11 +70,15 @@ module top_spi (
     reg [31:0] current_state_mem [0:N_STATE-1];  
     reg [31:0] x_mem [0:331];                    
     
-    // Memory Ports
-    wire [STATE_LOG-1:0] current_state_address0;
-    wire current_state_ce0;
-    reg [31:0] current_state_q0;
+    // current_state: 12 x 32 bits as one struct input (no memory interface)
+    wire [383:0] current_state_bus;
+    assign current_state_bus = {
+        current_state_mem[11], current_state_mem[10], current_state_mem[9], current_state_mem[8],
+        current_state_mem[7], current_state_mem[6], current_state_mem[5], current_state_mem[4],
+        current_state_mem[3], current_state_mem[2], current_state_mem[1], current_state_mem[0]
+    };
     
+    // x memory ports
     wire [VAR_LOG-1:0] x_address0;
     wire x_ce0;
     wire x_we0;
@@ -232,15 +236,13 @@ module top_spi (
     ADMM_solver dut (
         .ap_clk(clk), .ap_rst(!resetn), .ap_start(ap_start), .ap_done(ap_done),
         .ap_idle(ap_idle), .ap_ready(ap_ready),
-        .current_state_address0(current_state_address0), .current_state_ce0(current_state_ce0),
-        .current_state_q0(current_state_q0),
+        .current_state(current_state_bus),
         .x_address0(x_address0), .x_ce0(x_ce0), .x_we0(x_we0), .x_d0(x_d0), .x_q0(x_q0),
         .x_address1(x_address1), .x_ce1(x_ce1), .x_q1(x_q1),
         .iters(iters)
     );
     
-    // RAM Models
-    always @(posedge clk) if (current_state_ce0) current_state_q0 <= current_state_mem[current_state_address0];
+    // x RAM model
     always @(posedge clk) if (x_ce0) begin if(x_we0) x_mem[x_address0] <= x_d0; x_q0 <= x_mem[x_address0]; end
     always @(posedge clk) if (x_ce1) x_q1 <= x_mem[x_address1];
     

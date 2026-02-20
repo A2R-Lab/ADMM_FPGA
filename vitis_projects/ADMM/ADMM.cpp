@@ -97,13 +97,13 @@ void AT_mul(
 }
 
 void ADMM_iteration(
-    fp_t x[N_VAR], 
-    fp_t current_state[12]
+    fp_t x[N_VAR],
+    state_t current_state
 ) {
 #pragma HLS INLINE off
 #pragma HLS ARRAY_PARTITION variable=A_sparse_data dim=2 complete
 #pragma HLS ARRAY_PARTITION variable=A_sparse_indexes dim=2 complete
-    // current_state kept as single port for top-level interface
+#pragma HLS ARRAY_PARTITION variable=current_state.s complete
 
     static fp_t b[N_VAR] = {0};
 #pragma HLS ARRAY_PARTITION variable=b cyclic factor=16 dim=1
@@ -131,7 +131,7 @@ void ADMM_iteration(
 
         fp_t zi;
         if(i < STATE_SIZE) {
-            zi = current_state[i];
+            zi = current_state.s[i];
         } else if (i >= START_INEQ) { // This will depend on horizon length
             zi = Axi + (y[i] >> RHO_SHIFT);
             // Cast to fp_t to avoid floating-point comparison hardware
@@ -153,10 +153,11 @@ void ADMM_iteration(
 }
 
 void ADMM_solver(
-    fp_t current_state[12],
+    state_t current_state,
     fp_t x[N_VAR],
     int iters
 ) {
+#pragma HLS ARRAY_PARTITION variable=current_state.s complete
     // x kept as single port so top_spi RTL interface matches
     ADMM_MAIN_LOOP:
     for (int iter = 0; iter < 10; iter++) {
