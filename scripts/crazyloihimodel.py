@@ -8,7 +8,7 @@ import math
 class CrazyLoihiModel:
     def __init__(self, freq=50.0):
         # Quadrotor parameters
-        self.mass = 0.045
+        self.mass = 0.048
         self.J = np.array([[2.3951e-5, 0.0, 0.0],
                           [0.0, 2.3951e-5, 0.0],
                           [0.0, 0.0, 3.2347e-5]])
@@ -26,6 +26,7 @@ class CrazyLoihiModel:
         self.nu = 4
         
         self.hover_thrust = (self.mass * self.g / self.kt / 4) * np.ones(4)
+        print("Hover thrust (raw):", self.hover_thrust)
     
     def step(self, x, u):
         x_next = self.dynamics_rk4(np.hstack([x[0:3], self.rptoq(x[3:6]), x[6:13]]), u, self.dt)

@@ -131,7 +131,7 @@ void ADMM_solver(
     int iters
 ) {
     ADMM_MAIN_LOOP:
-    for (int iter = 0; iter < iters; iter++) {
+    for (int iter = 0; iter < 28; iter++) {
         ADMM_iteration(x, current_state);
     }
 }

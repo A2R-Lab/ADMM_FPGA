@@ -7,7 +7,7 @@ timer_period = 0.02  # seconds
 # Horizon length
 N = 20
 
-rho = 256
+rho = 64
 rho_mult = 1
 
 # Initialize goal state
@@ -21,7 +21,7 @@ ug = quad.hover_thrust
 A, B = quad.get_linearized_dynamics(xg, ug)
 
 # Cost matrices
-max_dev_x = np.array([0.1, 0.1, 0.1, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.7, 0.7, 0.2])
+max_dev_x = np.array([0.075, 0.075, 0.075, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.7, 0.7, 0.2])
 max_dev_u = np.array([0.5, 0.5, 0.5, 0.5])
 Q = np.diag(1./max_dev_x**2)
 R = np.diag(1./max_dev_u**2)
