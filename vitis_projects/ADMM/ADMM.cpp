@@ -107,7 +107,7 @@ inline void ADMM_iteration(
         if(i < STATE_SIZE) {
             zi = current_state[i];
         } else if (i >= START_INEQ) { // This will depend on horizon length
-            zi = Axi + (y[i] >> RHO_SHIFT);
+            zi = Axi + (y[i] * RHO_INV);
             // Cast to fp_t to avoid floating-point comparison hardware
             if (zi < (fp_t)U_MIN) {
                 zi = (fp_t)U_MIN;
@@ -118,9 +118,9 @@ inline void ADMM_iteration(
             zi = 0;
         }
 
-        fp_t yi = y[i] + ((Axi - zi) << RHO_SHIFT);
-        y[i] = yi;
-        b_tmp[i] = (zi << RHO_SHIFT) - yi;
+        fp_t yi = y[i] + ((Axi - zi) * RHO);
+        y[i] = yi;  
+        b_tmp[i] = (zi * RHO) - yi;
 
     }
     AT_mul(b_tmp, b);
