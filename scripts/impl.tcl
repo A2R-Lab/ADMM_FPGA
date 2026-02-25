@@ -7,12 +7,22 @@ set proj_root [file normalize "$script_dir/.."]
 
 set build_dir "$proj_root/build"
 set reports_dir "$build_dir/reports"
+if {[llength $argv] >= 1} {
+    set synth_dcp [lindex $argv 0]
+} else {
+    set synth_dcp "post_synth.dcp"
+}
+if {[llength $argv] >= 2} {
+    set route_dcp [lindex $argv 1]
+} else {
+    set route_dcp "post_route.dcp"
+}
 
 #------------------------------------------------------------------------------
 # Open Synthesis Checkpoint
 #------------------------------------------------------------------------------
 puts "Opening synthesis checkpoint..."
-open_checkpoint "$build_dir/post_synth.dcp"
+open_checkpoint "$build_dir/$synth_dcp"
 
 #------------------------------------------------------------------------------
 # Optimization
@@ -54,6 +64,6 @@ report_drc -file "$reports_dir/post_route_drc.rpt"
 #------------------------------------------------------------------------------
 # Save Checkpoint
 #------------------------------------------------------------------------------
-write_checkpoint -force "$build_dir/post_route.dcp"
+write_checkpoint -force "$build_dir/$route_dcp"
 
-puts "Implementation complete: $build_dir/post_route.dcp"
+puts "Implementation complete: $build_dir/$route_dcp"

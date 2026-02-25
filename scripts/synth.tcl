@@ -12,7 +12,7 @@ file mkdir $build_dir
 file mkdir $reports_dir
 
 #------------------------------------------------------------------------------
-# Configuration (top_module and xdc_file can be passed via -tclargs)
+# Configuration (top_module, xdc_file, and synth checkpoint name via -tclargs)
 #------------------------------------------------------------------------------
 set part "xc7a100tcsg324-1"
 if {[llength $argv] >= 2} {
@@ -21,6 +21,11 @@ if {[llength $argv] >= 2} {
 } else {
     set top_module "top_spi"
     set xdc_file "constraints.xdc"
+}
+if {[llength $argv] >= 3} {
+    set synth_dcp [lindex $argv 2]
+} else {
+    set synth_dcp "post_synth.dcp"
 }
 
 set rtl_dir "$proj_root/vivado_project/vivado_project.srcs/sources_1/new"
@@ -80,9 +85,9 @@ report_timing_summary -file "$reports_dir/post_synth_timing.rpt"
 #------------------------------------------------------------------------------
 # Save Checkpoint
 #------------------------------------------------------------------------------
-write_checkpoint -force "$build_dir/post_synth.dcp"
+write_checkpoint -force "$build_dir/$synth_dcp"
 
 puts "========================================"
 puts "Synthesis complete!"
-puts "Checkpoint: $build_dir/post_synth.dcp"
+puts "Checkpoint: $build_dir/$synth_dcp"
 puts "========================================"
