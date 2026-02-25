@@ -40,15 +40,27 @@ puts "Top module: $top_module"
 puts "Constraints: $xdc_file"
 
 #------------------------------------------------------------------------------
-# Read RTL Sources (all tops and peripherals; synth_design -top selects which)
+# Read RTL Sources
 #------------------------------------------------------------------------------
 puts "Reading RTL sources..."
-read_verilog "$rtl_dir/top_uart.v"
-read_verilog "$rtl_dir/uart_rx.v"
-read_verilog "$rtl_dir/uart_tx.v"
-read_verilog "$rtl_dir/top_spi.v"
-read_verilog "$rtl_dir/spi_slave.v"
-read_verilog "$rtl_dir/spi_slave_word.v"
+
+set uart_tops [list top top_uart]
+
+if {[lsearch -exact $uart_tops $top_module] >= 0} {
+    puts "Selected UART top flow."
+    read_verilog "$rtl_dir/top_uart.v"
+    read_verilog "$rtl_dir/uart_rx.v"
+    read_verilog "$rtl_dir/uart_tx.v"
+} elseif {$top_module eq "top_spi"} {
+    puts "Selected SPI top flow."
+    read_verilog "$rtl_dir/top_spi.v"
+    read_verilog "$rtl_dir/spi_slave.v"
+    read_verilog "$rtl_dir/spi_slave_word.v"
+} else {
+    puts "ERROR: Unsupported top module '$top_module'"
+    puts "Valid values: top_uart, top (UART alias), top_spi"
+    exit 1
+}
 
 #------------------------------------------------------------------------------
 # Read HLS IP
