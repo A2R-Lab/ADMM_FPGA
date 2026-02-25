@@ -66,7 +66,7 @@ module top (
     assign led = led_reg;
 
     always @(posedge clk) begin
-        if (!resetn) begin
+        if (resetn) begin
             led_reg <= 4'b0001;
         end else begin
             case (state)
@@ -86,7 +86,7 @@ module top (
     integer i;
 
     always @(posedge clk) begin
-        if (!resetn) begin
+        if (resetn) begin
             state <= IDLE;
             rx_byte_count <= 0;
             rx_word_count <= 0;
@@ -186,7 +186,7 @@ module top (
     //--------------------------------------------------------------
     ADMM_solver dut (
         .ap_clk(clk),
-        .ap_rst(!resetn),
+        .ap_rst(resetn),
         .ap_start(ap_start),
         .ap_done(ap_done),
         .ap_idle(ap_idle),
@@ -205,7 +205,7 @@ module top (
         .CLK_HZ(CLK_HZ)
     ) i_uart_rx (
         .clk(clk),
-        .resetn(resetn),
+        .resetn(!resetn),
         .uart_rxd(uart_rxd),
         .uart_rx_en(1'b1),
         .uart_rx_break(uart_rx_break),
@@ -219,7 +219,7 @@ module top (
         .CLK_HZ(CLK_HZ)
     ) i_uart_tx (
         .clk(clk),
-        .resetn(resetn),
+        .resetn(!resetn),
         .uart_txd(uart_txd),
         .uart_tx_en(uart_tx_en),
         .uart_tx_busy(uart_tx_busy),
