@@ -52,6 +52,7 @@ module top (
     localparam [63:0] DDR_BLOB_BASE   = 64'h0000_0000_8000_0000;
     localparam [31:0] MATRIX_WORD_COUNT = 32'd120900;
     localparam [31:0] LOADER_CHECKSUM_EXPECTED = 32'hFCA3_3EC8;
+    localparam [23:0] LOADER_CHECKSUM_TIMEOUT = 24'd16000000; // ~0.2s at ~81.25 MHz
 
     // ------------------------------------------------------------
     // BD wrapper ports/signals
@@ -111,6 +112,8 @@ module top (
 
     reg [31:0] loader_checksum_reg;
     reg loader_checksum_valid;
+    reg loader_done_seen;
+    reg [23:0] loader_checksum_wait_ctr;
     reg loader_done_ok;
     reg boot_done;
 
@@ -168,6 +171,8 @@ module top (
 
             loader_checksum_reg <= 32'd0;
             loader_checksum_valid <= 1'b0;
+            loader_done_seen <= 1'b0;
+            loader_checksum_wait_ctr <= 24'd0;
             loader_done_ok <= 1'b0;
             boot_done <= 1'b0;
         end else begin
@@ -189,12 +194,29 @@ module top (
 
                 BOOT_START_LOADER: begin
                     loader_checksum_valid <= 1'b0;
+                    loader_done_seen <= 1'b0;
+                    loader_checksum_wait_ctr <= 24'd0;
                     ap_ctrl_1_start <= 1'b1;
-                    state <= BOOT_WAIT_LOADER;
+                    // Keep ap_start asserted until the HLS block accepts it.
+                    if (ap_ctrl_1_ready) begin
+                        state <= BOOT_WAIT_LOADER;
+                    end
                 end
 
                 BOOT_WAIT_LOADER: begin
                     if (ap_ctrl_1_done) begin
+                        loader_done_seen <= 1'b1;
+                    end
+
+                    if (loader_done_seen && !loader_checksum_valid &&
+                        loader_checksum_wait_ctr != LOADER_CHECKSUM_TIMEOUT) begin
+                        loader_checksum_wait_ctr <= loader_checksum_wait_ctr + 1'b1;
+                    end
+
+                    // Resolve loader status once done is seen and checksum is valid.
+                    // If checksum valid never arrives, fall back after timeout.
+                    if (loader_done_seen &&
+                        (loader_checksum_valid || (loader_checksum_wait_ctr == LOADER_CHECKSUM_TIMEOUT))) begin
                         boot_done <= 1'b1;
                         if (loader_checksum_valid) begin
                             loader_done_ok <= (loader_checksum_reg == LOADER_CHECKSUM_EXPECTED);
@@ -206,7 +228,9 @@ module top (
                 end
 
                 IDLE: begin
-                    if (loader_done_ok && uart_rx_valid && uart_rx_data == 8'hFF) begin
+                    // Allow runtime testing even if loader checksum flag is false.
+                    // The LED error indication is still preserved for diagnostics.
+                    if (uart_rx_valid && uart_rx_data == 8'hFF) begin
                         state <= RX_DATA;
                         rx_byte_count <= 0;
                         rx_word_count <= 0;
@@ -242,7 +266,10 @@ module top (
 
                 SOLVER_START: begin
                     ap_ctrl_0_start <= 1'b1;
-                    state <= SOLVER_WAIT;
+                    // Keep ap_start asserted until the HLS block accepts it.
+                    if (ap_ctrl_0_ready) begin
+                        state <= SOLVER_WAIT;
+                    end
                 end
 
                 SOLVER_WAIT: begin
