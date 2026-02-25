@@ -3,9 +3,9 @@
 ## Use SPI X4 for flash programming
 set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4 [current_design]
 
-## 100 MHz system clock
-set_property -dict { PACKAGE_PIN E3 IOSTANDARD LVCMOS33 } [get_ports { clk }];
-create_clock -period 10.000 -name sys_clk -waveform {0 5} [get_ports clk]
+## 100 MHz system clock into DDR clocking fabric (top-level board oscillator)
+set_property -dict { PACKAGE_PIN E3 IOSTANDARD LVCMOS33 } [get_ports { sys_clk_i }];
+create_clock -name sys_clk_i -period 10.000 [get_ports { sys_clk_i }]
 
 ## Reset (mapped to BTN0, active-high on board; logic expects active-low resetn)
 set_property -dict { PACKAGE_PIN D9 IOSTANDARD LVCMOS33 } [get_ports { resetn }];
@@ -22,3 +22,7 @@ set_property -dict { PACKAGE_PIN J5  IOSTANDARD LVCMOS33 } [get_ports { led[1] }
 set_property -dict { PACKAGE_PIN T9  IOSTANDARD LVCMOS33 } [get_ports { led[2] }];
 set_property -dict { PACKAGE_PIN T10 IOSTANDARD LVCMOS33 } [get_ports { led[3] }];
 
+## QSPI flash pins used by AXI Quad SPI (XIP)
+set_property -dict { PACKAGE_PIN K17 IOSTANDARD LVCMOS33 } [get_ports { qspi_io0_io }];
+set_property -dict { PACKAGE_PIN K18 IOSTANDARD LVCMOS33 } [get_ports { qspi_io1_io }];
+set_property -dict { PACKAGE_PIN L13 IOSTANDARD LVCMOS33 } [get_ports { qspi_ss_io[0] }];

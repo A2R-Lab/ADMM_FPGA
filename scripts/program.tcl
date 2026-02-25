@@ -5,7 +5,16 @@
 set script_dir [file dirname [info script]]
 set proj_root [file normalize "$script_dir/.."]
 set build_dir "$proj_root/build"
-set bitstream "$build_dir/top_spi.bit"
+if {[llength $argv] >= 1} {
+    set top_module [lindex $argv 0]
+} else {
+    if {[file exists "$build_dir/top.bit"]} {
+        set top_module "top"
+    } else {
+        set top_module "top_spi"
+    }
+}
+set bitstream "$build_dir/${top_module}.bit"
 
 # Check if bitstream exists
 if {![file exists $bitstream]} {

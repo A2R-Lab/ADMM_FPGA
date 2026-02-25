@@ -27,19 +27,28 @@ ADMM_FPGA/
 ├── README.md
 ├── scripts/
 │   ├── header_generator.py     # Generates ADMM matrices as C headers
+│   ├── ddr_fetch_overhead.py   # DDR traffic/latency estimator
 │   ├── crazyloihimodel.py      # Quadrotor dynamics model
 │   ├── synth.tcl               # Vivado synthesis script
 │   ├── impl.tcl                # Vivado implementation script
 │   ├── bitstream.tcl           # Bitstream generation script
+│   ├── create_arty_ddr_bd.tcl  # DDR block-design bootstrap (MIG + AXI + HLS IP)
 │   ├── program.tcl             # JTAG programming script
 │   └── program_flash.tcl       # SPI flash programming script
 ├── vitis_projects/
 │   └── ADMM/
 │       ├── ADMM.cpp            # HLS ADMM solver implementation
+│       ├── ADMM_ddr.cpp        # DDR-backed HLS ADMM solver
 │       ├── ADMM.h              # Solver header
+│       ├── ADMM_ddr.h          # DDR solver header
 │       ├── ADMM_test.cpp       # HLS testbench
+│       ├── ADMM_ddr_test.cpp   # DDR solver testbench
+│       ├── matrix_loader.cpp   # Flash->DDR preload kernel
+│       ├── matrix_loader.h     # Loader kernel header
 │       ├── data_types.h        # Fixed-point type definitions
 │       ├── hls_config.cfg      # Vitis HLS configuration
+│       ├── hls_config_ddr.cfg  # DDR solver HLS config
+│       ├── hls_config_loader.cfg # Loader HLS config
 │       └── Makefile            # HLS build makefile
 ├── vivado_project/
 │   └── vivado_project.srcs/
@@ -106,7 +115,11 @@ make
 |--------|-------------|
 | `make` or `make all` | Full build from scratch |
 | `make headers` | Generate `data.h` from Python |
+| `make matrix-blob` | Generate packed `build/matrices.bin` + layout headers |
 | `make hls` | Build HLS IP only |
+| `make hls-ddr` | Build DDR-backed solver HLS IP (`ADMM_solver_ddr`) |
+| `make hls-loader` | Build matrix loader HLS IP (`matrix_loader`) |
+| `make estimate-ddr` | Estimate DDR fetch overhead from generated layout/constants |
 | `make vivado` | Vivado synthesis + implementation |
 | `make bit` | Generate bitstream (requires impl) |
 | `make program` | Program FPGA via JTAG |
@@ -164,6 +177,12 @@ make flash
 
 The FPGA will boot from flash on power-up. Power cycle the board after programming.
 
+When `build/matrices.bin` exists, flash images now include both:
+- bitstream at `0x00000000`
+- matrix payload at `0x00600000`
+
+This enables hardware boot preload flows (QSPI -> DDR) without host matrix upload.
+
 ## SPI Protocol
 
 ### Communication Format
@@ -205,6 +224,78 @@ cd vitis_projects/ADMM
 make cosim
 ```
 
+### DDR Solver / Loader HLS Flow
+
+```bash
+# Generate data.h + DDR matrix blob artifacts
+make headers
+
+# Build/export DDR-based solver kernel
+make hls-ddr
+
+# Build/export matrix preload kernel (QSPI->DDR copy path)
+make hls-loader
+
+# Optional C simulations
+make sim-ddr
+make sim-loader
+
+# Estimate external-memory overhead from generated dimensions
+make estimate-ddr
+```
+
+Vivado DDR block-design bootstrap script:
+
+```bash
+vivado -mode batch -source scripts/create_arty_ddr_bd.tcl
+```
+
+This script expects a board-specific MIG config file at `scripts/mig_arty_a7.prj`.
+An example placeholder is provided at `scripts/mig_arty_a7.prj.example`.
+
+### Generating `scripts/mig_arty_a7.prj` (Arty A7)
+
+If Digilent board files are installed locally, copy the reference file directly:
+
+```bash
+cp /home/agrillo/amdfpga/vivado-boards/new/board_files/arty-a7-100/E.0/1.1/mig.prj \
+   scripts/mig_arty_a7.prj
+```
+
+Then run the full DDR BD bootstrap:
+
+```bash
+source ~/venv/bin/activate
+make headers
+make hls-ddr
+make hls-loader
+vivado -mode batch -source scripts/create_arty_ddr_bd.tcl
+```
+
+Generated block design:
+- `build/ddr_bd/ddr_bd.srcs/sources_1/bd/admm_ddr_system/admm_ddr_system.bd`
+
+If you must generate `mig.prj` manually in Vivado:
+1. Create/configure a `mig_7series` IP for Arty A7 DDR3.
+2. In MIG customization, export/save the MIG project file (`.prj`).
+3. Place it at `scripts/mig_arty_a7.prj`.
+
+### Additional Hardware Integration Needed
+
+- Add Arty A7 board constraints (XDC) for:
+  - DDR3 interface pins from MIG (`DDR3` interface)
+  - MIG clocks/resets (`ddr_ref_clk`, `ddr_sys_rst`)
+  - QSPI pins (`ext_spi_clk` + `SPI_0` I/O)
+  - Runtime control/status pins for `matrix_loader` and `ADMM_solver_ddr`
+- Create top-level control logic/FSM:
+  - wait `init_calib_complete`
+  - assert loader `ap_start` once with `flash_blob`, `ddr_blob`, `word_count`
+  - wait loader `ap_done`
+  - run solver on each runtime command
+- Flash layout:
+  - bitstream at `0x00000000`
+  - matrix blob at `0x00600000` (`build/matrices.bin`)
+
 ### Viewing HLS Reports
 
 ```bash
@@ -230,6 +321,12 @@ Then rebuild:
 make clean-all
 make
 ```
+
+Additional generated DDR artifacts:
+- `vitis_projects/ADMM/solver_constants.h`
+- `vitis_projects/ADMM/matrix_layout.h`
+- `vitis_projects/ADMM/matrix_blob_sim.h`
+- `build/matrices.bin`
 
 ### Changing Fixed-Point Format
 

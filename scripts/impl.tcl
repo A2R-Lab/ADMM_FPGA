@@ -14,6 +14,14 @@ set reports_dir "$build_dir/reports"
 puts "Opening synthesis checkpoint..."
 open_checkpoint "$build_dir/post_synth.dcp"
 
+# MIG may restore sys_clk_i IOSTANDARD as LVCMOS25 via implementation-only
+# constraints. Arty A7 oscillator on E3 is 3.3V and shares Bank 35 with LVCMOS33 IO.
+if {[llength [get_ports -quiet sys_clk_i]] > 0} {
+    puts "Overriding sys_clk_i IOSTANDARD to LVCMOS33 for Arty A7..."
+    set_property IOSTANDARD LVCMOS33 [get_ports sys_clk_i]
+    set_property PACKAGE_PIN E3 [get_ports sys_clk_i]
+}
+
 #------------------------------------------------------------------------------
 # Optimization
 #------------------------------------------------------------------------------

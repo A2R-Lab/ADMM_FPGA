@@ -1,10 +1,16 @@
 # Build output
 build/
+!build/.gitkeep
 
 # HLS project output
 vitis_projects/ADMM/ADMM/
+vitis_projects/ADMM/ADMM_ddr/
+vitis_projects/ADMM/matrix_loader/
 vitis_projects/ADMM/data.h
 vitis_projects/ADMM/test_data.h
+vitis_projects/ADMM/solver_constants.h
+vitis_projects/ADMM/matrix_layout.h
+vitis_projects/ADMM/matrix_blob_sim.h
 vitis_projects/ADMM/.Xil/
 vitis_projects/ADMM/.cache/
 

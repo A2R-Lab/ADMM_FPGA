@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Placeholder for Arty A7 MIG project XML.
+
+  Generate this file with Vivado MIG GUI for the Arty A7 DDR3 device and save as:
+    scripts/mig_arty_a7.prj
+
+  Then run:
+    vivado -mode batch -source scripts/create_arty_ddr_bd.tcl
+
+  This example file is not functional; it only documents where the real MIG
+  project XML should be placed.
+-->
+<Project>
+  <Controller/>
+</Project>
