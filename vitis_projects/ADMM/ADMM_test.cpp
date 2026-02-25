@@ -54,22 +54,35 @@ int main() {
     // AT_mul(random_vector, res_dut);
     // res &= compare_vectors(res_dut, AT_mul_out, RANDOM_VECTOR_SIZE, REL_ERROR);
 
-    fp_t x[LT_BANDED_ROWS];
-    fp_t current_state[12] = {0};
+    command_out_t cmd_out;
+    current_state_t current;
     
-    current_state[0] = (fp_t)0.1; current_state[1] = (fp_t)0.1; current_state[2] = (fp_t)-0.1;
+    current.state[0] = (fp_t)0.1; current.state[1] = (fp_t)0.1; current.state[2] = (fp_t)-0.1;
     
 
 
-    printf("================= ADMM SOLVER 100 iterations =================\n");
+    printf("================= ADMM SOLVER %d iterations =================\n", ADMM_ITERS);
 
     ADMM_solver(
-        current_state,
-        x,
-        50
+        current,
+        cmd_out
     );
-    printf("================= Comparing X =================\n");
-    compare_vectors(x, ADMM_x_after_50_iter, LT_BANDED_ROWS, REL_ERROR);
+
+    // Compare only the four control components against reference
+    fp_t dut_controls[4];
+    double ref_controls[4];
+
+    dut_controls[0] = cmd_out.u0 - (fp_t)U_HOVER;
+    dut_controls[1] = cmd_out.u1 - (fp_t)U_HOVER;
+    dut_controls[2] = cmd_out.u2 - (fp_t)U_HOVER;
+    dut_controls[3] = cmd_out.u3 - (fp_t)U_HOVER;
+
+    for (int i = 0; i < 4; ++i) {
+        ref_controls[i] = ADMM_x_after_50_iter[12 + i];
+    }
+
+    printf("================= Comparing control outputs =================\n");
+    compare_vectors(dut_controls, ref_controls, 4, REL_ERROR);
     
     return 0; // res ? 0 : 1;
 }

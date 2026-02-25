@@ -17,7 +17,7 @@ This project implements a real-time convex optimization solver using ADMM, targe
 
 - **FPGA:** Xilinx Artix-7 XC7A100T-CSG324
 - **Clock:** 100 MHz
-- **Interface:** SPI slave (directly from crazyflie)
+- **Interface:** SPI slave (custom PCB) or UART (Arty A7)
 
 ## Project Structure
 
@@ -78,6 +78,20 @@ pip install numpy
 ```
 
 ## Building
+
+### Board Selection
+
+Builds can target either the **custom PCB** (SPI) or the **Arty A7** (UART):
+
+```bash
+# Custom PCB: top_spi, constraints.xdc (default)
+make BOARD=custom
+
+# Arty A7: top (UART), constraints_arty_a7.xdc
+make BOARD=arty
+```
+
+If `BOARD` is omitted, `BOARD=custom` is used. The bitstream is named after the top module (`top_spi.bit` or `top.bit`).
 
 ### Quick Start
 
@@ -228,13 +242,14 @@ typedef ap_fixed<32, 10, AP_RND, AP_SAT> fp_t;
 //              └────── Total bits
 ```
 
-### Changing Iteration Count
+### Changing Iteration Count and Hover Thrust
 
-In `vivado_project/vivado_project.srcs/sources_1/new/top_spi.v`:
+Iteration count and hover thrust are generated into `data.h` by `scripts/header_generator.py`:
 
-```verilog
-localparam FIXED_ITERS = 32'd10;  // Change this value
-```
+- **ADMM_ITERS:** number of ADMM iterations (e.g. `50`)
+- **U_HOVER:** hover thrust added to the four command outputs
+
+Edit `header_generator.py` (e.g. set `ADMM_ITERS = 50`, and `U_HOVER` comes from `ug[0]`), then run `make headers` and rebuild.
 
 ## Troubleshooting
 

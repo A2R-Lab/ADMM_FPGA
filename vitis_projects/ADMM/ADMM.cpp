@@ -80,10 +80,11 @@ void AT_mul(
     }
 }
 
-void ADMM_iteration(
-    fp_t x[N_VAR], 
+inline void ADMM_iteration(
+    fp_t x[N_VAR],
     fp_t current_state[12]
 ) {
+    #pragma HLS INLINE
     static fp_t b[N_VAR] = {0};
     static fp_t y[N_VAR] = {0};
     fp_t tmp[N_VAR];
@@ -126,12 +127,25 @@ void ADMM_iteration(
 }
 
 void ADMM_solver(
-    fp_t current_state[12],
-    fp_t x[N_VAR],
-    int iters
+    current_state_t current_in,
+    command_out_t &command_out
 ) {
-    ADMM_MAIN_LOOP:
-    for (int iter = 0; iter < 28; iter++) {
-        ADMM_iteration(x, current_state);
+
+    static fp_t x[N_VAR] = {0};
+    fp_t current_state_vec[12];
+
+    for (int i = 0; i < 12; i++) {
+        current_state_vec[i] = current_in.state[i];
     }
+
+ADMM_MAIN_LOOP:
+    for (int iter = 0; iter < ADMM_ITERS; iter++) {
+        ADMM_iteration(x, current_state_vec);
+    }
+
+    // Add hover thrust offset before returning commands
+    command_out.u0 = x[12] + (fp_t)U_HOVER;
+    command_out.u1 = x[13] + (fp_t)U_HOVER;
+    command_out.u2 = x[14] + (fp_t)U_HOVER;
+    command_out.u3 = x[15] + (fp_t)U_HOVER;
 }

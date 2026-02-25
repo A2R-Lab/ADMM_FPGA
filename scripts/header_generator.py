@@ -1,6 +1,10 @@
 import numpy as np
 from crazyloihimodel import CrazyLoihiModel
 
+
+# Number of ADMM iterations to run in hardware
+ADMM_ITERS = 28
+
 # Run controller at 50 Hz
 timer_period = 0.02  # seconds
 
@@ -309,6 +313,8 @@ constants["START_INEQ"] = A_eq.shape[0]
 constants["RHO_SHIFT"] = int(np.log2(rho))
 constants["U_MIN"] = u_min[0]
 constants["U_MAX"] = u_max[0]
+constants["ADMM_ITERS"] = ADMM_ITERS
+constants["U_HOVER"] = ug[0]
 
 data = []
 data.append(generate_constants_header(constants))

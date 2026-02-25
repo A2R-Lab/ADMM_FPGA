@@ -6,7 +6,12 @@ set script_dir [file dirname [info script]]
 set proj_root [file normalize "$script_dir/.."]
 
 set build_dir "$proj_root/build"
-set top_module "top_spi"
+if {[llength $argv] >= 1} {
+    set top_module [lindex $argv 0]
+} else {
+    set top_module "top_spi"
+}
+puts "Bitstream top module: $top_module"
 
 #------------------------------------------------------------------------------
 # Open Routed Checkpoint
