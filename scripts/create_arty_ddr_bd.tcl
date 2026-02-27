@@ -108,6 +108,8 @@ set_property -dict [list \
     CONFIG.C_TYPE_OF_AXI4_INTERFACE {1} \
     CONFIG.C_USE_STARTUP {1} \
     CONFIG.C_SPI_MEM_ADDR_BITS {24} \
+    CONFIG.C_S_AXI4_BASEADDR {0x44000000} \
+    CONFIG.C_S_AXI4_HIGHADDR {0x44FFFFFF} \
 ] [get_bd_cells axi_quad_spi_0]
 
 create_bd_cell -type ip -vlnv xilinx.com:hls:ADMM_solver_ddr:1.0 ADMM_solver_ddr_0
@@ -221,9 +223,19 @@ assign_bd_address
 # AXI Quad SPI exposes MEM0 as register space; force-include for XIP data reads.
 set flash_addr_space [get_bd_addr_spaces -quiet "matrix_loader_0/Data_m_axi_flash"]
 if {[llength $flash_addr_space] > 0} {
-    foreach seg [get_bd_addr_segs -quiet -of_objects $flash_addr_space] {
-        if {[string first "axi_quad_spi_0" [get_property NAME $seg]] >= 0} {
-            include_bd_addr_seg $seg
+    set flash_seg [get_bd_addr_segs -quiet -of_objects $flash_addr_space "SEG_axi_quad_spi_0_MEM0"]
+    if {[llength $flash_seg] > 0} {
+        # Expand loader-visible SPI XIP aperture so flash offset 0x0060_0000 is reachable.
+        # AXI Quad SPI XIP uses 24-bit address phase, so map a contiguous 16 MiB window.
+        assign_bd_address -offset 0x44000000 -range 16M \
+            -target_address_space $flash_addr_space \
+            [lindex $flash_seg 0]
+        include_bd_addr_seg [lindex $flash_seg 0]
+    } else {
+        foreach seg [get_bd_addr_segs -quiet -of_objects $flash_addr_space] {
+            if {[string first "axi_quad_spi_0" [get_property NAME $seg]] >= 0} {
+                include_bd_addr_seg $seg
+            }
         }
     }
 }

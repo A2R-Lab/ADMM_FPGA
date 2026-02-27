@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+`include "matrix_blob_meta.vh"
 
 module top (
     input  wire        sys_clk_i,
@@ -48,10 +49,22 @@ module top (
     localparam [3:0] TX_DATA          = 4'd7;
     localparam [3:0] DONE             = 4'd8;
 
-    localparam [63:0] FLASH_BLOB_BASE = 64'h0000_0000_0060_0000;
+    // AXI Quad SPI XIP aperture base (configured in scripts/create_arty_ddr_bd.tcl),
+    // plus flash image offset where matrices.bin is packed by write_cfgmem.
+    localparam [63:0] FLASH_XIP_AXI_BASE = 64'h0000_0000_4400_0000;
+    localparam [63:0] FLASH_BLOB_OFFSET  = 64'h0000_0000_0060_0000;
+    localparam [63:0] FLASH_BLOB_BASE = FLASH_XIP_AXI_BASE + FLASH_BLOB_OFFSET;
     localparam [63:0] DDR_BLOB_BASE   = 64'h0000_0000_8000_0000;
+`ifdef MATRIX_BLOB_TOTAL_WORDS_V
+    localparam [31:0] MATRIX_WORD_COUNT = `MATRIX_BLOB_TOTAL_WORDS_V;
+`else
     localparam [31:0] MATRIX_WORD_COUNT = 32'd120900;
+`endif
+`ifdef MATRIX_BLOB_CHECKSUM_V
+    localparam [31:0] LOADER_CHECKSUM_EXPECTED = `MATRIX_BLOB_CHECKSUM_V;
+`else
     localparam [31:0] LOADER_CHECKSUM_EXPECTED = 32'hFCA3_3EC8;
+`endif
     localparam [23:0] LOADER_CHECKSUM_TIMEOUT = 24'd16000000; // ~0.2s at ~81.25 MHz
 
     // ------------------------------------------------------------
