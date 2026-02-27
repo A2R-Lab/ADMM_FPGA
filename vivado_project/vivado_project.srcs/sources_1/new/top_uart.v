@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module top (
+module top_uart (
     input  wire        clk,
     input  wire        resetn,
     input  wire        uart_rxd,
@@ -17,6 +17,7 @@ module top (
     localparam CLK_HZ = 100_000_000;
     localparam BIT_RATE = 921600;
     localparam PAYLOAD_BITS = 8;
+    localparam BENCHMARK_TIMER_MODE = 1'b1;  // Replace u3 with compute cycle counter when enabled
 
     // State machine states
     localparam IDLE         = 3'd0;
@@ -44,6 +45,8 @@ module top (
     reg [3:0] tx_byte_count;
     reg [1:0] tx_word_count;       // 0..3 for 4 command words
     reg [31:0] rx_word_buffer;
+    reg [31:0] compute_cycle_counter;
+    reg [31:0] compute_cycle_latch;
 
     //--------------------------------------------------------------
     // HLS interface: current_in (384 = 12 x 32), command_out (128 = 4 x 32)
@@ -58,6 +61,11 @@ module top (
     wire command_out_ap_vld;
 
     reg [127:0] command_out_latch; // Capture when ap_done so we can TX after core goes idle
+    wire [31:0] tx_word_selected;
+
+    assign tx_word_selected = (BENCHMARK_TIMER_MODE && (tx_word_count == 2'd3))
+        ? compute_cycle_latch
+        : command_out_latch[tx_word_count*32 +: 32];
 
     //--------------------------------------------------------------
     // LED Status
@@ -98,6 +106,8 @@ module top (
             uart_tx_data <= 0;
             current_in_reg <= 0;
             command_out_latch <= 0;
+            compute_cycle_counter <= 0;
+            compute_cycle_latch <= 0;
         end else begin
             uart_tx_en <= 0;
 
@@ -127,6 +137,7 @@ module top (
                         if (rx_byte_count == 3) begin
                             rx_byte_count <= 0;
                             if (rx_word_count == N_STATE-1) begin
+                                compute_cycle_counter <= 0;
                                 state <= COMPUTE;
                             end else begin
                                 rx_word_count <= rx_word_count + 1;
@@ -139,8 +150,10 @@ module top (
 
                 COMPUTE: begin
                     ap_start <= 1;
+                    compute_cycle_counter <= compute_cycle_counter + 1;
                     if (ap_ready || ap_done) begin
                         ap_start <= 0;
+                        compute_cycle_latch <= compute_cycle_counter + 1;
                         if (command_out_ap_vld)
                             command_out_latch <= command_out;  // HLS drives command_out valid with ap_done
                         state <= TX_DATA;
@@ -152,10 +165,10 @@ module top (
                 TX_DATA: begin
                     if (!uart_tx_busy && !uart_tx_en) begin
                         case (tx_byte_count)
-                            0: uart_tx_data <= command_out_latch[tx_word_count*32 +: 8];
-                            1: uart_tx_data <= command_out_latch[tx_word_count*32 + 8 +: 8];
-                            2: uart_tx_data <= command_out_latch[tx_word_count*32 + 16 +: 8];
-                            3: uart_tx_data <= command_out_latch[tx_word_count*32 + 24 +: 8];
+                            0: uart_tx_data <= tx_word_selected[7:0];
+                            1: uart_tx_data <= tx_word_selected[15:8];
+                            2: uart_tx_data <= tx_word_selected[23:16];
+                            3: uart_tx_data <= tx_word_selected[31:24];
                         endcase
                         uart_tx_en <= 1;
 

@@ -1,0 +1,20 @@
+TinyMPC Benchmark Plot Summary
+
+budget_us=2000.0
+
+H=10: feasible_iters_by_avg=[1,2]
+  fit: T0=-7.540 us, k_iter=497.632 us/iter, k_step_iter=49.763259 us/(iter*step)
+H=20: feasible_iters_by_avg=[1]
+  fit: T0=58.140 us, k_iter=1024.952 us/iter, k_step_iter=51.247627 us/(iter*step)
+H=30: feasible_iters_by_avg=[1]
+  fit: T0=108.786 us, k_iter=1552.182 us/iter, k_step_iter=51.739414 us/(iter*step)
+H=40: feasible_iters_by_avg=[none]
+  fit: T0=92.447 us, k_iter=2080.402 us/iter, k_step_iter=52.010051 us/(iter*step)
+H=50: feasible_iters_by_avg=[none]
+  fit: T0=114.961 us, k_iter=2608.641 us/iter, k_step_iter=52.172836 us/(iter*step)
+H=60: feasible_iters_by_avg=[none]
+  fit: T0=116.673 us, k_iter=3134.533 us/iter, k_step_iter=52.242225 us/(iter*step)
+H=70: feasible_iters_by_avg=[none]
+  fit: T0=69.377 us, k_iter=3664.805 us/iter, k_step_iter=52.354362 us/(iter*step)
+H=80: feasible_iters_by_avg=[none]
+  fit: T0=37.924 us, k_iter=4197.943 us/iter, k_step_iter=52.474283 us/(iter*step)

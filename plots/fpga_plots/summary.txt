@@ -1,0 +1,7 @@
+TinyMPC Benchmark Plot Summary
+
+budget_us=2000.0
+
+H=10: feasible_iters_by_avg=[10]
+H=20: feasible_iters_by_avg=[10]
+H=30: feasible_iters_by_avg=[10]
