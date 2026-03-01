@@ -1,0 +1,349 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2025.2 (lin64) Build 6299465 Fri Nov 14 12:34:56 MST 2025
+| Date         : Sun Mar  1 00:52:01 2026
+| Host         : A2R-lab2 running 64-bit Ubuntu 24.04.4 LTS
+| Command      : report_timing_summary -file /home/agrillo/ADMM_FPGA/build/reports/post_synth_timing.rpt
+| Design       : top_spi
+| Device       : 7a100t-csg324
+| Speed File   : -1  PRODUCTION 1.23 2018-06-13
+| Design State : Synthesized
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Timing Summary Report
+
+------------------------------------------------------------------------------------------------
+| Timer Settings
+| --------------
+------------------------------------------------------------------------------------------------
+
+  Enable Multi Corner Analysis               :  Yes
+  Enable Pessimism Removal                   :  Yes
+  Pessimism Removal Resolution               :  Nearest Common Node
+  Enable Input Delay Default Clock           :  No
+  Enable Preset / Clear Arcs                 :  No
+  Disable Flight Delays                      :  No
+  Ignore I/O Paths                           :  No
+  Timing Early Launch at Borrowing Latches   :  No
+  Borrow Time for Max Delay Exceptions       :  Yes
+  Merge Timing Exceptions                    :  Yes
+  Inter-SLR Compensation                     :  Conservative
+
+  Corner  Analyze    Analyze    
+  Name    Max Paths  Min Paths  
+  ------  ---------  ---------  
+  Slow    Yes        Yes        
+  Fast    Yes        Yes        
+
+
+------------------------------------------------------------------------------------------------
+| Report Methodology
+| ------------------
+------------------------------------------------------------------------------------------------
+
+No report available as report_methodology has not been run prior. Run report_methodology on the current design for the summary of methodology violations.
+
+
+
+check_timing report
+
+Table of Contents
+-----------------
+1. checking no_clock (0)
+2. checking constant_clock (0)
+3. checking pulse_width_clock (0)
+4. checking unconstrained_internal_endpoints (0)
+5. checking no_input_delay (1)
+6. checking no_output_delay (3)
+7. checking multiple_clock (0)
+8. checking generated_clocks (0)
+9. checking loops (0)
+10. checking partial_input_delay (0)
+11. checking partial_output_delay (0)
+12. checking latch_loops (0)
+
+1. checking no_clock (0)
+------------------------
+ There are 0 register/latch pins with no clock.
+
+
+2. checking constant_clock (0)
+------------------------------
+ There are 0 register/latch pins with constant_clock.
+
+
+3. checking pulse_width_clock (0)
+---------------------------------
+ There are 0 register/latch pins which need pulse_width check
+
+
+4. checking unconstrained_internal_endpoints (0)
+------------------------------------------------
+ There are 0 pins that are not constrained for maximum delay.
+
+ There are 0 pins that are not constrained for maximum delay due to constant clock.
+
+
+5. checking no_input_delay (1)
+------------------------------
+ There is 1 input port with no input delay specified. (HIGH)
+
+ There are 0 input ports with no input delay but user has a false path constraint.
+
+
+6. checking no_output_delay (3)
+-------------------------------
+ There are 3 ports with no output delay specified. (HIGH)
+
+ There are 0 ports with no output delay but user has a false path constraint
+
+ There are 0 ports with no output delay but with a timing clock defined on it or propagating through it
+
+
+7. checking multiple_clock (0)
+------------------------------
+ There are 0 register/latch pins with multiple clocks.
+
+
+8. checking generated_clocks (0)
+--------------------------------
+ There are 0 generated clocks that are not connected to a clock source.
+
+
+9. checking loops (0)
+---------------------
+ There are 0 combinational loops in the design.
+
+
+10. checking partial_input_delay (0)
+------------------------------------
+ There are 0 input ports with partial input delay specified.
+
+
+11. checking partial_output_delay (0)
+-------------------------------------
+ There are 0 ports with partial output delay specified.
+
+
+12. checking latch_loops (0)
+----------------------------
+ There are 0 combinational latch loops in the design through latch input
+
+
+
+------------------------------------------------------------------------------------------------
+| Design Timing Summary
+| ---------------------
+------------------------------------------------------------------------------------------------
+
+    WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
+    -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
+      1.236        0.000                      0               159415        0.067        0.000                      0               159415        3.750        0.000                       0                 34879  
+
+
+All user specified timing constraints are met.
+
+
+------------------------------------------------------------------------------------------------
+| Clock Summary
+| -------------
+------------------------------------------------------------------------------------------------
+
+Clock    Waveform(ns)         Period(ns)      Frequency(MHz)
+-----    ------------         ----------      --------------
+spi_sck  {0.000 50.000}       100.000         10.000          
+sys_clk  {0.000 5.000}        10.000          100.000         
+
+
+------------------------------------------------------------------------------------------------
+| Intra Clock Table
+| -----------------
+------------------------------------------------------------------------------------------------
+
+Clock             WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
+-----             -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
+sys_clk             1.236        0.000                      0               159415        0.067        0.000                      0               159415        3.750        0.000                       0                 34879  
+
+
+------------------------------------------------------------------------------------------------
+| Inter Clock Table
+| -----------------
+------------------------------------------------------------------------------------------------
+
+From Clock    To Clock          WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints  
+----------    --------          -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------  
+
+
+------------------------------------------------------------------------------------------------
+| Other Path Groups Table
+| -----------------------
+------------------------------------------------------------------------------------------------
+
+Path Group    From Clock    To Clock          WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints  
+----------    ----------    --------          -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------  
+
+
+------------------------------------------------------------------------------------------------
+| Timing Details
+| --------------
+------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------
+From Clock:  sys_clk
+  To Clock:  sys_clk
+
+Setup :            0  Failing Endpoints,  Worst Slack        1.236ns,  Total Violation        0.000ns
+Hold  :            0  Failing Endpoints,  Worst Slack        0.067ns,  Total Violation        0.000ns
+PW    :            0  Failing Endpoints,  Worst Slack        3.750ns,  Total Violation        0.000ns
+---------------------------------------------------------------------------------------------------
+
+
+Max Delay Paths
+--------------------------------------------------------------------------------------
+Slack (MET) :             1.236ns  (required time - arrival time)
+  Source:                 dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/ap_CS_fsm_reg[0]/C
+                            (rising edge-triggered cell FDSE clocked by sys_clk  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Destination:            dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/A_sparse_indexes_U/q0_reg[2]/D
+                            (rising edge-triggered cell FDRE clocked by sys_clk  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Path Group:             sys_clk
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            10.000ns  (sys_clk rise@10.000ns - sys_clk rise@0.000ns)
+  Data Path Delay:        8.628ns  (logic 2.300ns (26.657%)  route 6.328ns (73.343%))
+  Logic Levels:           10  (CARRY4=1 LUT4=1 LUT5=2 LUT6=6)
+  Clock Path Skew:        -0.145ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    2.710ns = ( 12.710 - 10.000 ) 
+    Source Clock Delay      (SCD):    2.971ns
+    Clock Pessimism Removal (CPR):    0.116ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock sys_clk rise edge)    0.000     0.000 r  
+    P17                                               0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    P17                  IBUF (Prop_ibuf_I_O)         1.488     1.488 r  clk_IBUF_inst/O
+                         net (fo=1, unplaced)         0.803     2.291    clk_IBUF
+                         BUFG (Prop_bufg_I_O)         0.096     2.387 r  clk_IBUF_BUFG_inst/O
+                         net (fo=34936, unplaced)     0.584     2.971    dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/clk_IBUF_BUFG
+                         FDSE                                         r  dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/ap_CS_fsm_reg[0]/C
+  -------------------------------------------------------------------    -------------------
+                         FDSE (Prop_fdse_C_Q)         0.478     3.449 r  dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/ap_CS_fsm_reg[0]/Q
+                         net (fo=434, unplaced)       0.900     4.349    dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/flow_control_loop_pipe_sequential_init_U/ap_loop_init_int_reg_13[0]
+                         LUT4 (Prop_lut4_I1_O)        0.295     4.644 r  dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/flow_control_loop_pipe_sequential_init_U/q0[23]_i_3__1/O
+                         net (fo=103, unplaced)       0.549     5.193    dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/flow_control_loop_pipe_sequential_init_U/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883_ap_start_reg_reg_0
+                         LUT5 (Prop_lut5_I0_O)        0.124     5.317 r  dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/flow_control_loop_pipe_sequential_init_U/trunc_ln103_reg_819[5]_i_5/O
+                         net (fo=1, unplaced)         0.000     5.317    dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/flow_control_loop_pipe_sequential_init_U/trunc_ln103_reg_819[5]_i_5_n_4
+                         CARRY4 (Prop_carry4_S[2]_O[3])
+                                                      0.352     5.669 r  dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/flow_control_loop_pipe_sequential_init_U/trunc_ln103_reg_819_reg[5]_i_1/O[3]
+                         net (fo=2, unplaced)         0.432     6.101    dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/flow_control_loop_pipe_sequential_init_U/i_3_fu_112_reg[7]_1[3]
+                         LUT6 (Prop_lut6_I2_O)        0.307     6.408 r  dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/flow_control_loop_pipe_sequential_init_U/q0[10]_i_56/O
+                         net (fo=2, unplaced)         0.460     6.868    dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/flow_control_loop_pipe_sequential_init_U/q0[10]_i_56_n_4
+                         LUT6 (Prop_lut6_I0_O)        0.124     6.992 r  dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/flow_control_loop_pipe_sequential_init_U/q0[10]_i_46/O
+                         net (fo=138, unplaced)       0.773     7.765    dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/flow_control_loop_pipe_sequential_init_U_n_69
+                         LUT6 (Prop_lut6_I0_O)        0.124     7.889 r  dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/q0[10]_i_42/O
+                         net (fo=6, unplaced)         0.996     8.885    dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/q0[10]_i_42_n_4
+                         LUT6 (Prop_lut6_I0_O)        0.124     9.009 r  dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/q0[8]_i_16/O
+                         net (fo=2, unplaced)         0.743     9.752    dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/q0[8]_i_16_n_4
+                         LUT5 (Prop_lut5_I0_O)        0.124     9.876 r  dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/q0[3]_i_7/O
+                         net (fo=2, unplaced)         0.743    10.619    dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/q0[3]_i_7_n_4
+                         LUT6 (Prop_lut6_I0_O)        0.124    10.743 r  dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/q0[2]_i_2/O
+                         net (fo=1, unplaced)         0.732    11.475    dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/q0[2]_i_2_n_4
+                         LUT6 (Prop_lut6_I1_O)        0.124    11.599 r  dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/q0[2]_i_1/O
+                         net (fo=1, unplaced)         0.000    11.599    dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/A_sparse_indexes_U/D[2]
+                         FDRE                                         r  dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/A_sparse_indexes_U/q0_reg[2]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock sys_clk rise edge)   10.000    10.000 r  
+    P17                                               0.000    10.000 r  clk (IN)
+                         net (fo=0)                   0.000    10.000    clk
+    P17                  IBUF (Prop_ibuf_I_O)         1.417    11.417 r  clk_IBUF_inst/O
+                         net (fo=1, unplaced)         0.763    12.180    clk_IBUF
+                         BUFG (Prop_bufg_I_O)         0.091    12.271 r  clk_IBUF_BUFG_inst/O
+                         net (fo=34936, unplaced)     0.439    12.710    dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/A_sparse_indexes_U/clk_IBUF_BUFG
+                         FDRE                                         r  dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/A_sparse_indexes_U/q0_reg[2]/C
+                         clock pessimism              0.116    12.826    
+                         clock uncertainty           -0.035    12.790    
+                         FDRE (Setup_fdre_C_D)        0.044    12.834    dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/A_sparse_indexes_U/q0_reg[2]
+  -------------------------------------------------------------------
+                         required time                         12.834    
+                         arrival time                         -11.599    
+  -------------------------------------------------------------------
+                         slack                                  1.236    
+
+
+
+
+
+Min Delay Paths
+--------------------------------------------------------------------------------------
+Slack (MET) :             0.067ns  (arrival time - required time)
+  Source:                 dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/zext_ln100_reg_810_pp0_iter15_reg_reg[0]__0/C
+                            (rising edge-triggered cell FDRE clocked by sys_clk  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Destination:            dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/zext_ln100_reg_810_pp0_iter19_reg_reg[0]_srl4/D
+                            (rising edge-triggered cell SRL16E clocked by sys_clk  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Path Group:             sys_clk
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (sys_clk rise@0.000ns - sys_clk rise@0.000ns)
+  Data Path Delay:        0.276ns  (logic 0.131ns (47.391%)  route 0.145ns (52.609%))
+  Logic Levels:           0  
+  Clock Path Skew:        0.145ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    1.088ns
+    Source Clock Delay      (SCD):    0.734ns
+    Clock Pessimism Removal (CPR):    0.209ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock sys_clk rise edge)    0.000     0.000 r  
+    P17                                               0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    P17                  IBUF (Prop_ibuf_I_O)         0.256     0.256 r  clk_IBUF_inst/O
+                         net (fo=1, unplaced)         0.338     0.594    clk_IBUF
+                         BUFG (Prop_bufg_I_O)         0.026     0.620 r  clk_IBUF_BUFG_inst/O
+                         net (fo=34936, unplaced)     0.114     0.734    dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/clk_IBUF_BUFG
+                         FDRE                                         r  dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/zext_ln100_reg_810_pp0_iter15_reg_reg[0]__0/C
+  -------------------------------------------------------------------    -------------------
+                         FDRE (Prop_fdre_C_Q)         0.131     0.865 r  dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/zext_ln100_reg_810_pp0_iter15_reg_reg[0]__0/Q
+                         net (fo=2, unplaced)         0.145     1.011    dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883_current_state_vec_address0[0]
+                         SRL16E                                       r  dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/zext_ln100_reg_810_pp0_iter19_reg_reg[0]_srl4/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock sys_clk rise edge)    0.000     0.000 r  
+    P17                                               0.000     0.000 r  clk (IN)
+                         net (fo=0)                   0.000     0.000    clk
+    P17                  IBUF (Prop_ibuf_I_O)         0.444     0.444 r  clk_IBUF_inst/O
+                         net (fo=1, unplaced)         0.356     0.800    clk_IBUF
+                         BUFG (Prop_bufg_I_O)         0.029     0.829 r  clk_IBUF_BUFG_inst/O
+                         net (fo=34936, unplaced)     0.259     1.088    dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/clk_IBUF_BUFG
+                         SRL16E                                       r  dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/zext_ln100_reg_810_pp0_iter19_reg_reg[0]_srl4/CLK
+                         clock pessimism             -0.209     0.879    
+                         SRL16E (Hold_srl16e_CLK_D)
+                                                      0.064     0.943    dut/grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_883/zext_ln100_reg_810_pp0_iter19_reg_reg[0]_srl4
+  -------------------------------------------------------------------
+                         required time                         -0.943    
+                         arrival time                           1.011    
+  -------------------------------------------------------------------
+                         slack                                  0.067    
+
+
+
+
+
+Pulse Width Checks
+--------------------------------------------------------------------------------------
+Clock Name:         sys_clk
+Waveform(ns):       { 0.000 5.000 }
+Period(ns):         10.000
+Sources:            { clk }
+
+Check Type        Corner  Lib Pin      Reference Pin  Required(ns)  Actual(ns)  Slack(ns)  Location  Pin
+Min Period        n/a     DSP48E1/CLK  n/a            3.884         10.000      6.116                top_spi/ADMM_solver/ADMM_solver_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP/ADMM_solver_dmul_64ns_64ns_64_7_max_dsp_1/ADMM_solver_dmul_64ns_64ns_64_7_max_dsp_1_ip/<hidden>/<hidden>/<hidden>/<hidden>/<hidden>/<hidden>
+Low Pulse Width   Slow    RAMS64E/CLK  n/a            1.250         5.000       3.750                dut/b_U/ram_reg_0_255_0_0/RAMS64E_A/CLK
+High Pulse Width  Slow    RAMS64E/CLK  n/a            1.250         5.000       3.750                dut/b_U/ram_reg_0_255_0_0/RAMS64E_A/CLK
+
+
+

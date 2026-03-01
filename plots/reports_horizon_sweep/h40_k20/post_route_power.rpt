@@ -1,0 +1,196 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version     : Vivado v.2025.2 (lin64) Build 6299465 Fri Nov 14 12:34:56 MST 2025
+| Date             : Sat Feb 28 23:21:17 2026
+| Host             : A2R-lab2 running 64-bit Ubuntu 24.04.4 LTS
+| Command          : report_power -file /home/agrillo/ADMM_FPGA/build/reports/post_route_power.rpt
+| Design           : top_spi
+| Device           : xc7a100tcsg324-1
+| Design State     : routed
+| Grade            : commercial
+| Process          : typical
+| Characterization : Production
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+Power Report
+
+Table of Contents
+-----------------
+1. Summary
+1.1 On-Chip Components
+1.2 Power Supply Summary
+1.3 Confidence Level
+2. Settings
+2.1 Environment
+2.2 Clock Constraints
+3. Detailed Reports
+3.1 By Hierarchy
+
+1. Summary
+----------
+
++--------------------------+--------------+
+| Total On-Chip Power (W)  | 0.360        |
+| Design Power Budget (W)  | Unspecified* |
+| Power Budget Margin (W)  | NA           |
+| Dynamic (W)              | 0.258        |
+| Device Static (W)        | 0.102        |
+| Effective TJA (C/W)      | 4.6          |
+| Max Ambient (C)          | 83.4         |
+| Junction Temperature (C) | 26.6         |
+| Confidence Level         | Medium       |
+| Setting File             | ---          |
+| Simulation Activity File | ---          |
+| Design Nets Matched      | NA           |
++--------------------------+--------------+
+* Specify Design Power Budget using, set_operating_conditions -design_power_budget <value in Watts>
+
+
+1.1 On-Chip Components
+----------------------
+
++--------------------------+-----------+----------+-----------+-----------------+
+| On-Chip                  | Power (W) | Used     | Available | Utilization (%) |
++--------------------------+-----------+----------+-----------+-----------------+
+| Clocks                   |     0.055 |        4 |       --- |             --- |
+| Slice Logic              |     0.029 |    36108 |       --- |             --- |
+|   LUT as Logic           |     0.025 |    11600 |     63400 |           18.30 |
+|   Register               |     0.003 |    17318 |    126800 |           13.66 |
+|   LUT as Shift Register  |    <0.001 |     1073 |     19000 |            5.65 |
+|   CARRY4                 |    <0.001 |      448 |     15850 |            2.83 |
+|   LUT as Distributed RAM |    <0.001 |       32 |     19000 |            0.17 |
+|   F7/F8 Muxes            |    <0.001 |      610 |     63400 |            0.96 |
+|   Others                 |     0.000 |     2062 |       --- |             --- |
+| Signals                  |     0.056 |    32211 |       --- |             --- |
+| Block RAM                |     0.081 |       80 |       135 |           59.26 |
+| DSPs                     |     0.036 |       79 |       240 |           32.92 |
+| I/O                      |    <0.001 |        9 |       210 |            4.29 |
+| Static Power             |     0.102 |          |           |                 |
+| Total                    |     0.360 |          |           |                 |
++--------------------------+-----------+----------+-----------+-----------------+
+
+
+1.2 Power Supply Summary
+------------------------
+
++-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
+| Source    | Voltage (V) | Total (A) | Dynamic (A) | Static (A) | Powerup (A) | Budget (A)  | Margin (A) |
++-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
+| Vccint    |       1.000 |     0.269 |       0.251 |      0.018 |       NA    | Unspecified | NA         |
+| Vccaux    |       1.800 |     0.018 |       0.000 |      0.018 |       NA    | Unspecified | NA         |
+| Vcco33    |       3.300 |     0.004 |       0.000 |      0.004 |       NA    | Unspecified | NA         |
+| Vcco25    |       2.500 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vcco18    |       1.800 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vcco15    |       1.500 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vcco135   |       1.350 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vcco12    |       1.200 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vccaux_io |       1.800 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vccbram   |       1.000 |     0.009 |       0.007 |      0.002 |       NA    | Unspecified | NA         |
+| MGTAVcc   |       1.000 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| MGTAVtt   |       1.200 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vccadc    |       1.800 |     0.020 |       0.000 |      0.020 |       NA    | Unspecified | NA         |
++-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
+
+
+1.3 Confidence Level
+--------------------
+
++-----------------------------+------------+-------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+| User Input Data             | Confidence | Details                                               | Action                                                                                                     |
++-----------------------------+------------+-------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+| Design implementation state | High       | Design is routed                                      |                                                                                                            |
+| Clock nodes activity        | High       | User specified more than 95% of clocks                |                                                                                                            |
+| I/O nodes activity          | Medium     | More than 5% of inputs are missing user specification | Provide missing input activity with simulation results or by editing the "By Resource Type -> I/Os" view   |
+| Internal nodes activity     | Medium     | User specified less than 25% of internal nodes        | Provide missing internal nodes activity with simulation results or by editing the "By Resource Type" views |
+| Device models               | High       | Device models are Production                          |                                                                                                            |
+|                             |            |                                                       |                                                                                                            |
+| Overall confidence level    | Medium     |                                                       |                                                                                                            |
++-----------------------------+------------+-------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+
+
+2. Settings
+-----------
+
+2.1 Environment
+---------------
+
++-----------------------+--------------------------+
+| Ambient Temp (C)      | 25.0                     |
+| ThetaJA (C/W)         | 4.6                      |
+| Airflow (LFM)         | 250                      |
+| Heat Sink             | medium (Medium Profile)  |
+| ThetaSA (C/W)         | 4.6                      |
+| Board Selection       | medium (10"x10")         |
+| # of Board Layers     | 12to15 (12 to 15 Layers) |
+| Board Temperature (C) | 25.0                     |
++-----------------------+--------------------------+
+
+
+2.2 Clock Constraints
+---------------------
+
++---------+------------+-----------------+
+| Clock   | Domain     | Constraint (ns) |
++---------+------------+-----------------+
+| spi_sck | spi_cf_sck |           100.0 |
+| sys_clk | clk        |            10.0 |
++---------+------------+-----------------+
+
+
+3. Detailed Reports
+-------------------
+
+3.1 By Hierarchy
+----------------
+
++------------------------------------------------------------+-----------+
+| Name                                                       | Power (W) |
++------------------------------------------------------------+-----------+
+| top_spi                                                    |     0.258 |
+|   dut                                                      |     0.256 |
+|     b_tmp_U                                                |     0.013 |
+|     fadd_32ns_32ns_32_7_full_dsp_1_U171                    |     0.005 |
+|       ADMM_solver_fadd_32ns_32ns_32_7_full_dsp_1_ip_u      |     0.005 |
+|     fadd_32ns_32ns_32_7_full_dsp_1_U173                    |     0.005 |
+|       ADMM_solver_fadd_32ns_32ns_32_7_full_dsp_1_ip_u      |     0.005 |
+|     faddfsub_32ns_32ns_32_7_full_dsp_1_U170                |     0.006 |
+|       ADMM_solver_faddfsub_32ns_32ns_32_7_full_dsp_1_ip_u  |     0.006 |
+|     faddfsub_32ns_32ns_32_7_full_dsp_1_U172                |     0.005 |
+|       ADMM_solver_faddfsub_32ns_32ns_32_7_full_dsp_1_ip_u  |     0.005 |
+|     fmul_32ns_32ns_32_4_max_dsp_1_U174                     |     0.008 |
+|       ADMM_solver_fmul_32ns_32ns_32_4_max_dsp_1_ip_u       |     0.007 |
+|     fmul_32ns_32ns_32_4_max_dsp_1_U175                     |     0.006 |
+|       ADMM_solver_fmul_32ns_32ns_32_4_max_dsp_1_ip_u       |     0.006 |
+|     fmul_32ns_32ns_32_4_max_dsp_1_U176                     |     0.003 |
+|       ADMM_solver_fmul_32ns_32ns_32_4_max_dsp_1_ip_u       |     0.003 |
+|     grp_ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP_fu_885 |     0.015 |
+|       A_sparse_indexes_U                                   |     0.005 |
+|       dadd_64ns_64ns_64_8_full_dsp_1_U105                  |     0.002 |
+|       dmul_64ns_64ns_64_7_max_dsp_1_U106                   |     0.002 |
+|     grp_ADMM_solver_Pipeline_AT_MUL_EXTERN_LOOP_fu_915     |     0.157 |
+|       AT_sparse_indexes_U                                  |     0.062 |
+|       fadd_32ns_32ns_32_7_full_dsp_1_U132                  |     0.006 |
+|       fadd_32ns_32ns_32_7_full_dsp_1_U133                  |     0.005 |
+|       fadd_32ns_32ns_32_7_full_dsp_1_U134                  |     0.006 |
+|       fadd_32ns_32ns_32_7_full_dsp_1_U135                  |     0.005 |
+|       fadd_32ns_32ns_32_7_full_dsp_1_U136                  |     0.006 |
+|       fadd_32ns_32ns_32_7_full_dsp_1_U137                  |     0.005 |
+|       fadd_32ns_32ns_32_7_full_dsp_1_U138                  |     0.005 |
+|       fadd_32ns_32ns_32_7_full_dsp_1_U139                  |     0.005 |
+|       fadd_32ns_32ns_32_7_full_dsp_1_U140                  |     0.005 |
+|       flow_control_loop_pipe_sequential_init_U             |     0.004 |
+|       fmul_32ns_32ns_32_4_max_dsp_1_U144                   |     0.004 |
+|       fmul_32ns_32ns_32_4_max_dsp_1_U145                   |     0.004 |
+|       fmul_32ns_32ns_32_4_max_dsp_1_U146                   |     0.003 |
+|       fmul_32ns_32ns_32_4_max_dsp_1_U147                   |     0.003 |
+|       fmul_32ns_32ns_32_4_max_dsp_1_U148                   |     0.003 |
+|       fmul_32ns_32ns_32_4_max_dsp_1_U149                   |     0.003 |
+|       fmul_32ns_32ns_32_4_max_dsp_1_U150                   |     0.003 |
+|       fmul_32ns_32ns_32_4_max_dsp_1_U151                   |     0.003 |
+|       fmul_32ns_32ns_32_4_max_dsp_1_U152                   |     0.003 |
+|       fmul_32ns_32ns_32_4_max_dsp_1_U153                   |     0.003 |
+|     grp_ADMM_solver_Pipeline_BACK_SUBST_EXTERN_LOOP_fu_814 |     0.009 |
+|     grp_ADMM_solver_Pipeline_FORW_SUBST_EXTERN_LOOP_fu_743 |     0.013 |
++------------------------------------------------------------+-----------+
+
+
