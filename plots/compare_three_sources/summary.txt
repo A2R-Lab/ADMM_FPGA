@@ -6,5 +6,5 @@ FPGA Fixed Point: points=64, horizons=[10, 20, 30, 40, 50, 60, 70, 80], iters=[1
 
 Median normalized time avg_us/(iter*H):
   TinyMPC: 52.335000 us/(iter*step)
-  FPGA Floating Point: 3.276815 us/(iter*step)
+  FPGA Floating Point: 8.576522 us/(iter*step)
   FPGA Fixed Point: 3.276815 us/(iter*step)
