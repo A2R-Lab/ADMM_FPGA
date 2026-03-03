@@ -1,153 +1,103 @@
 #!/usr/bin/env python3
 """
-UART Communication Script for ADMM Solver Module
-Sends initial_state vector and receives x vector results
+UART hardware-in-the-loop closed-loop simulation for the ADMM controller.
 """
 
-import serial
+from __future__ import annotations
+
+import argparse
+import csv
 import struct
 import time
-import sys
-import numpy as np
+from pathlib import Path
+
 import matplotlib.pyplot as plt
+import numpy as np
+import serial
 
 from crazyloihimodel import CrazyLoihiModel
 
-# Configuration
-SERIAL_PORT = '/dev/ttyUSB1'  # Change to COM port on Windows (e.g., 'COM3')
-BAUD_RATE = 921600
-N_STATE = 12   # Number of state elements
-N_VAR = 4    # Number of output variables
-FRAC_BITS = 22  # Fixed point format 16.16
 
-def float_to_fixed(f):
-    """Convert float to 16.16 fixed point (signed 32-bit)"""
-    return int(f * (2 ** FRAC_BITS)) & 0xFFFFFFFF
+N_STATE = 12
+N_VAR = 4
+FRAC_BITS = 22
 
-def fixed_to_float(fx):
-    """Convert 16.16 fixed point to float"""
-    # Handle sign extension
-    if fx & 0x80000000:
-        fx = fx - 0x100000000
-    return float(fx) / (2 ** FRAC_BITS)
 
-def send_vector(ser, vector):
-    """Send vector of floats as fixed-point words via UART"""
-    # Send start command
+def float_to_fixed(val: float) -> int:
+    return int(val * (2**FRAC_BITS)) & 0xFFFFFFFF
+
+
+def fixed_to_float(val: int) -> float:
+    if val & 0x80000000:
+        val -= 0x100000000
+    return float(val) / (2**FRAC_BITS)
+
+
+def send_vector(ser: serial.Serial, vector: np.ndarray) -> None:
     ser.write(bytes([0xFF]))
-    
-    # Send each element as 4 bytes (little-endian)
-    for i, val in enumerate(vector):
-        fixed_val = float_to_fixed(val)
-        # Pack as little-endian unsigned int
-        data = struct.pack('<I', fixed_val)
-        for byte in data:
-            ser.write(bytes([byte]))
-            ser.flush()
-        # print(f"Sent initial_state[{i:2d}] = {val:10.6f} (0x{fixed_val:08X})")
+    for val in vector:
+        ser.write(struct.pack("<I", float_to_fixed(float(val))))
 
-def receive_vector(ser, n):
-    """Receive n fixed-point words via UART and convert to floats"""
-    results = []
-    # print("\nWaiting for results...")
-    # print("This may take a while for 332 values...")
-    
-    for i in range(n):
-        # Read 4 bytes
+
+def receive_vector(ser: serial.Serial, n_words: int) -> np.ndarray:
+    out = np.zeros(n_words, dtype=float)
+    for idx in range(n_words):
         data = ser.read(4)
-        if len(data) < 4:
-            print(f"ERROR: Timeout or incomplete data at element {i}")
-            return None
-        
-        # Unpack as little-endian unsigned int
-        fixed_val = struct.unpack('<I', data)[0]
-        float_val = fixed_to_float(fixed_val)
-        results.append(float_val)
-        
-        # Print progress every 20 elements to avoid spam
-        # if i % 20 == 0 or i == n - 1:
-        # print(f"Received x[{i:3d}] = {float_val:10.6f} (0x{fixed_val:08X})")
-    
-    return results
+        if len(data) != 4:
+            raise TimeoutError(f"UART timeout while reading output word {idx}")
+        out[idx] = fixed_to_float(struct.unpack("<I", data)[0])
+    return out
 
-def get_control(ser, state):
-    send_vector(ser, state)
-    x_received = receive_vector(ser, N_VAR)
-    
-    control = np.array(x_received)
-    print("Received control:", control)
-    return control
 
-def main():
-    # Open serial port
-    print(f"Opening serial port {SERIAL_PORT} at {BAUD_RATE} baud...")
-    ser = serial.Serial(
-        port=SERIAL_PORT,
-        baudrate=BAUD_RATE,
-        bytesize=serial.EIGHTBITS,
-        parity=serial.PARITY_NONE,
-        stopbits=serial.STOPBITS_ONE,
-        timeout=30  # 30 second timeout (increased for large data)
-    )
-    ser.reset_input_buffer()
-    ser.reset_output_buffer()
-
-    model = CrazyLoihiModel(freq=200)
-
-    state = np.zeros(model.nx)
-    state[0] = 2
-    state[1] = 0
-    state[2] = 0
+def run_closed_loop(
+    ser: serial.Serial,
+    model: CrazyLoihiModel,
+    state0: np.ndarray,
+    sim_steps: int,
+    verbose: bool,
+    max_runtime_s: float | None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    t_start = time.monotonic()
+    state = state0.copy()
     control = np.copy(model.hover_thrust)
-    print("Initial control:", control)
-    print("Initial state:", state)
 
-    state_hist = []
-    control_hist = []
+    state_hist = [state.copy()]
+    control_hist = [control.copy()]
 
-    state_hist.append(state.copy())
-    control_hist.append(control.copy())
-
-
-    dt = 1.0 / model.freq
-    T = 10 * model.freq  # total time steps
-
-    for i in range(T):
-        print(f"\n=== Time step {i+1}/{T} ===")
-        control = get_control(ser, state) + model.hover_thrust
+    for step_idx in range(sim_steps):
+        if max_runtime_s is not None and (time.monotonic() - t_start) > max_runtime_s:
+            raise TimeoutError(f"Exceeded max runtime ({max_runtime_s:.1f}s) at step {step_idx}/{sim_steps}")
+        send_vector(ser, state)
+        # Hardware output already includes hover thrust offset (U_HOVER in ADMM.cpp).
+        control = receive_vector(ser, N_VAR)
         state = model.step(state, control)
-        print("Next state:", state)
         state_hist.append(state.copy())
         control_hist.append(control.copy())
-    
-    state_hist = np.array(state_hist)      # shape: (T+1, nx)
-    control_hist = np.array(control_hist)  # shape: (T+1, nu)
-    time = np.arange(T + 1) * dt
+        if verbose:
+            print(f"step={step_idx+1}/{sim_steps} pos={state[:3]} u={control}")
 
-    # state_labels = [
-    #     "x", "y", "z",
-    #     "roll", "pitch", "yaw",
-    #     "vx", "vy", "vz",
-    #     "wx", "wy", "wz"
-    # ]
-
-    # fig, axs = plt.subplots(4, 3, figsize=(14, 10), sharex=True)
-    # axs = axs.flatten()
-
-    # for i in range(state_hist.shape[1]):
-    #     axs[i].plot(time, state_hist[:, i])
-    #     axs[i].set_title(state_labels[i])
-    #     axs[i].grid(True)
-
-    # axs[-1].set_xlabel("Time [s]")
-    # plt.tight_layout()
-    # plt.show()
+    dt = 1.0 / model.freq
+    t_axis = np.arange(sim_steps + 1) * dt
+    return t_axis, np.array(state_hist), np.array(control_hist)
 
 
+def save_results_csv(path: Path, time: np.ndarray, state_hist: np.ndarray, control_hist: np.ndarray) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(
+            ["t"]
+            + [f"x{i}" for i in range(state_hist.shape[1])]
+            + [f"u{i}" for i in range(control_hist.shape[1])]
+        )
+        for idx in range(len(time)):
+            writer.writerow([time[idx], *state_hist[idx].tolist(), *control_hist[idx].tolist()])
+
+
+def plot_results(time: np.ndarray, state_hist: np.ndarray, control_hist: np.ndarray, title: str) -> plt.Figure:
     fig = plt.figure(figsize=(14, 10))
     gs = fig.add_gridspec(3, 2, height_ratios=[1, 1, 0.7], hspace=0.3)
 
-    # --- Position ---
     ax_pos = fig.add_subplot(gs[0, 0])
     ax_pos.plot(time, state_hist[:, 0:3])
     ax_pos.set_title("Position [x y z]")
@@ -155,7 +105,6 @@ def main():
     ax_pos.legend(["x", "y", "z"])
     ax_pos.grid(True)
 
-    # --- Orientation ---
     ax_att = fig.add_subplot(gs[0, 1])
     ax_att.plot(time, state_hist[:, 3:6])
     ax_att.set_title("Orientation [roll pitch yaw]")
@@ -163,7 +112,6 @@ def main():
     ax_att.legend(["roll", "pitch", "yaw"])
     ax_att.grid(True)
 
-    # --- Linear Velocity ---
     ax_vel = fig.add_subplot(gs[1, 0])
     ax_vel.plot(time, state_hist[:, 6:9])
     ax_vel.set_title("Linear Velocity")
@@ -171,7 +119,6 @@ def main():
     ax_vel.legend(["vx", "vy", "vz"])
     ax_vel.grid(True)
 
-    # --- Angular Velocity ---
     ax_angvel = fig.add_subplot(gs[1, 1])
     ax_angvel.plot(time, state_hist[:, 9:12])
     ax_angvel.set_title("Angular Velocity")
@@ -179,7 +126,6 @@ def main():
     ax_angvel.legend(["wx", "wy", "wz"])
     ax_angvel.grid(True)
 
-    # --- Controls (full-width) ---
     ax_u = fig.add_subplot(gs[2, :])
     ax_u.plot(time, control_hist)
     ax_u.set_title("Control Inputs")
@@ -188,8 +134,89 @@ def main():
     ax_u.legend([f"u{i}" for i in range(control_hist.shape[1])])
     ax_u.grid(True)
 
-    plt.tight_layout()
-    plt.show()
+    if title:
+        fig.suptitle(title)
+        fig.tight_layout(rect=[0, 0, 1, 0.97])
+    else:
+        fig.tight_layout()
+    return fig
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Run FPGA hardware-in-the-loop simulation and plot trajectories.")
+    parser.add_argument("--port", default="/dev/ttyUSB1", help="UART serial port.")
+    parser.add_argument("--baud", type=int, default=921600, help="UART baud rate.")
+    parser.add_argument("--uart-timeout", type=float, default=30.0, help="UART timeout in seconds.")
+    parser.add_argument("--freq", type=float, default=200.0, help="Simulation frequency [Hz].")
+    parser.add_argument("--duration-s", type=float, default=10.0, help="Simulation duration [s].")
+    parser.add_argument("--step-x", type=float, default=2.0, help="Initial x displacement [m].")
+    parser.add_argument("--step-y", type=float, default=0.0, help="Initial y displacement [m].")
+    parser.add_argument("--step-z", type=float, default=0.0, help="Initial z displacement [m].")
+    parser.add_argument("--save-plot", default=None, help="Optional output path for the figure (.png).")
+    parser.add_argument("--save-csv", default=None, help="Optional output CSV path with trajectory data.")
+    parser.add_argument("--title", default="", help="Optional plot title.")
+    parser.add_argument(
+        "--max-runtime-s",
+        type=float,
+        default=120.0,
+        help="Hard wall-clock timeout for the whole HIL run [s]. Use <=0 to disable.",
+    )
+    parser.add_argument("--no-show", action="store_true", help="Do not display interactive plot window.")
+    parser.add_argument("--quiet", action="store_true", help="Suppress per-step prints.")
+    args = parser.parse_args()
+
+    if args.freq <= 0:
+        raise ValueError("--freq must be > 0")
+    if args.duration_s <= 0:
+        raise ValueError("--duration-s must be > 0")
+    if args.max_runtime_s == 0:
+        raise ValueError("--max-runtime-s must be > 0 or negative to disable")
+
+    max_runtime_s = args.max_runtime_s if args.max_runtime_s > 0 else None
+
+    model = CrazyLoihiModel(freq=args.freq)
+    state0 = np.zeros(N_STATE, dtype=float)
+    state0[0] = args.step_x
+    state0[1] = args.step_y
+    state0[2] = args.step_z
+    sim_steps = int(round(args.duration_s * args.freq))
+
+    with serial.Serial(
+        port=args.port,
+        baudrate=args.baud,
+        bytesize=serial.EIGHTBITS,
+        parity=serial.PARITY_NONE,
+        stopbits=serial.STOPBITS_ONE,
+        timeout=args.uart_timeout,
+    ) as ser:
+        ser.reset_input_buffer()
+        ser.reset_output_buffer()
+        time, state_hist, control_hist = run_closed_loop(
+            ser=ser,
+            model=model,
+            state0=state0,
+            sim_steps=sim_steps,
+            verbose=not args.quiet,
+            max_runtime_s=max_runtime_s,
+        )
+
+    fig = plot_results(time=time, state_hist=state_hist, control_hist=control_hist, title=args.title)
+
+    if args.save_plot:
+        out = Path(args.save_plot)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(out, dpi=150)
+        print(f"Saved plot: {out}")
+
+    if args.save_csv:
+        save_results_csv(Path(args.save_csv), time=time, state_hist=state_hist, control_hist=control_hist)
+        print(f"Saved csv: {args.save_csv}")
+
+    if args.no_show:
+        plt.close(fig)
+    else:
+        plt.show()
+
 
 if __name__ == "__main__":
     main()

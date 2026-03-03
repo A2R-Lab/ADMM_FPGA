@@ -17,7 +17,7 @@ module top_uart (
     localparam CLK_HZ = 100_000_000;
     localparam BIT_RATE = 921600;
     localparam PAYLOAD_BITS = 8;
-    localparam BENCHMARK_TIMER_MODE = 1'b1;  // Replace u3 with compute cycle counter when enabled
+    localparam BENCHMARK_TIMER_MODE = 1'b0;  // Replace u3 with compute cycle counter when enabled
 
     // State machine states
     localparam IDLE         = 3'd0;

@@ -1,0 +1,160 @@
+{
+    "1": {
+        "name": "ADMM_solver_Pipeline_ADMM_IT_ZY_UPDATE_LOOP",
+        "file": "ADMM.cpp",
+        "fileloc": "143",
+        "instructions": "454",
+        "total_instructions": "454",
+        "calls": "",
+        "basicblocks": "4",
+        "memory_accesses": "33",
+        "control_depth": "1",
+        "def_use_depth": "1",
+        "loads": {
+            "G": "28",
+            "L": "2"
+        },
+        "stores": {
+            "G": "1",
+            "L": "3"
+        },
+        "loops": {
+            "L": "1"
+        }
+    },
+    "2": {
+        "name": "ADMM_solver_Pipeline_VITIS_LOOP_137_1",
+        "file": "ADMM.cpp",
+        "fileloc": "137",
+        "instructions": "18",
+        "total_instructions": "18",
+        "calls": "",
+        "basicblocks": "4",
+        "memory_accesses": "4",
+        "control_depth": "1",
+        "def_use_depth": "1",
+        "loads": {
+            "L": "2"
+        },
+        "stores": {
+            "L": "3"
+        },
+        "loops": {
+            "L": "1"
+        }
+    },
+    "3": {
+        "name": "backward_substitution_Pipeline_BACK_SUBST_EXTERN_LOOP",
+        "file": "ADMM.cpp",
+        "fileloc": "46",
+        "instructions": "732",
+        "total_instructions": "732",
+        "calls": "",
+        "basicblocks": "4",
+        "memory_accesses": "63",
+        "control_depth": "1",
+        "def_use_depth": "1",
+        "loads": {
+            "G": "19",
+            "L": "22"
+        },
+        "stores": {
+            "G": "1",
+            "L": "42"
+        },
+        "loops": {
+            "L": "1"
+        }
+    },
+    "4": {
+        "name": "forward_substitution_Pipeline_FORW_SUBST_EXTERN_LOOP",
+        "file": "ADMM.cpp",
+        "fileloc": "13",
+        "instructions": "732",
+        "total_instructions": "732",
+        "calls": "",
+        "basicblocks": "4",
+        "memory_accesses": "63",
+        "control_depth": "1",
+        "def_use_depth": "1",
+        "loads": {
+            "G": "20",
+            "L": "21"
+        },
+        "stores": {
+            "L": "43"
+        },
+        "loops": {
+            "L": "1"
+        }
+    },
+    "5": {
+        "name": "forward_substitution",
+        "file": "ADMM.cpp",
+        "fileloc": "6",
+        "instructions": "2",
+        "total_instructions": "734",
+        "calls": "4",
+        "basicblocks": "1",
+        "memory_accesses": "0",
+        "control_depth": "0",
+        "def_use_depth": "0"
+    },
+    "6": {
+        "name": "backward_substitution",
+        "file": "ADMM.cpp",
+        "fileloc": "33",
+        "instructions": "2",
+        "total_instructions": "734",
+        "calls": "3",
+        "basicblocks": "1",
+        "memory_accesses": "0",
+        "control_depth": "0",
+        "def_use_depth": "0"
+    },
+    "7": {
+        "name": "ADMM_solver_Pipeline_AT_MUL_EXTERN_LOOP",
+        "file": "ADMM.cpp",
+        "fileloc": "143",
+        "instructions": "524",
+        "total_instructions": "524",
+        "calls": "",
+        "basicblocks": "4",
+        "memory_accesses": "44",
+        "control_depth": "1",
+        "def_use_depth": "1",
+        "loads": {
+            "G": "26",
+            "L": "15"
+        },
+        "stores": {
+            "G": "1",
+            "L": "4"
+        },
+        "loops": {
+            "L": "1"
+        }
+    },
+    "0": {
+        "name": "ADMM_solver",
+        "file": "ADMM.cpp",
+        "fileloc": "129",
+        "instructions": "109",
+        "total_instructions": "2573",
+        "calls": "2 5 6 1 7",
+        "basicblocks": "4",
+        "memory_accesses": "0",
+        "control_depth": "0",
+        "def_use_depth": "8",
+        "loads": {
+            "G": "4",
+            "L": "1"
+        },
+        "stores": {
+            "L": "14"
+        },
+        "loops": {
+            "L": "1"
+        }
+    }
+}

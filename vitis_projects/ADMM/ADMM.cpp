@@ -2,6 +2,40 @@
 #include "ADMM.h"
 #include "data_types.h"
 #include <ap_fixed.h>
+#include <cmath>
+#include <type_traits>
+
+template <typename T>
+static inline typename std::enable_if<std::is_floating_point<T>::value, T>::type
+rho_mul_impl(T v) {
+    return std::ldexp(v, RHO_SHIFT);
+}
+
+template <typename T>
+static inline typename std::enable_if<!std::is_floating_point<T>::value, T>::type
+rho_mul_impl(T v) {
+    return v << RHO_SHIFT;
+}
+
+template <typename T>
+static inline typename std::enable_if<std::is_floating_point<T>::value, T>::type
+rho_div_impl(T v) {
+    return std::ldexp(v, -RHO_SHIFT);
+}
+
+template <typename T>
+static inline typename std::enable_if<!std::is_floating_point<T>::value, T>::type
+rho_div_impl(T v) {
+    return v >> RHO_SHIFT;
+}
+
+static inline fp_t rho_mul(fp_t v) {
+    return rho_mul_impl<fp_t>(v);
+}
+
+static inline fp_t rho_div(fp_t v) {
+    return rho_div_impl<fp_t>(v);
+}
 
 void forward_substitution(
     const fp_t b[L_BANDED_ROWS],
@@ -107,7 +141,7 @@ inline void ADMM_iteration(
         if(i < STATE_SIZE) {
             zi = current_state[i];
         } else if (i >= START_INEQ) { // This will depend on horizon length
-            zi = Axi + (y[i] >> RHO_SHIFT);
+            zi = Axi + rho_div(y[i]);
             // Cast to fp_t to avoid floating-point comparison hardware
             if (zi < (fp_t)U_MIN) {
                 zi = (fp_t)U_MIN;
@@ -118,9 +152,9 @@ inline void ADMM_iteration(
             zi = 0;
         }
 
-        fp_t yi = y[i] + ((Axi - zi) << RHO_SHIFT);
+        fp_t yi = y[i] + rho_mul(Axi - zi);
         y[i] = yi;
-        b_tmp[i] = (zi << RHO_SHIFT) - yi;
+        b_tmp[i] = rho_mul(zi) - yi;
 
     }
     AT_mul(b_tmp, b);

@@ -1,32 +1,88 @@
-import numpy as np
 import argparse
+from pathlib import Path
+
+import numpy as np
+
 from crazyloihimodel import CrazyLoihiModel
 
 
 # Default number of ADMM iterations to run in hardware
 DEFAULT_ADMM_ITERS = 28
 
-# Run controller at 50 Hz
-timer_period = 0.02  # seconds
-
 # Default horizon length
 DEFAULT_HORIZON = 20
+DEFAULT_MODEL_FREQ = 50.0
 
 parser = argparse.ArgumentParser(description="Generate ADMM FPGA headers.")
 parser.add_argument("--horizon", type=int, default=DEFAULT_HORIZON, help="MPC horizon length.")
 parser.add_argument("--admm-iters", type=int, default=DEFAULT_ADMM_ITERS, help="Number of ADMM iterations.")
+parser.add_argument("--rho", type=int, default=64, help="ADMM rho value (must be a power of 2).")
+parser.add_argument("--qx", type=float, default=None, help="Optional override for Q[0,0] (x position weight).")
+parser.add_argument("--qy", type=float, default=None, help="Optional override for Q[1,1] (y position weight).")
+parser.add_argument(
+    "--q-diag",
+    type=str,
+    default=None,
+    help="Optional full Q diagonal override as 12 comma-separated positive values.",
+)
+parser.add_argument(
+    "--r-scale",
+    type=float,
+    default=None,
+    help="Optional scalar for R diagonal (R = r_scale * I4).",
+)
+parser.add_argument(
+    "--model-freq",
+    type=float,
+    default=DEFAULT_MODEL_FREQ,
+    help="Model frequency [Hz] used for linearization/discretization.",
+)
+parser.add_argument(
+    "--data-out",
+    type=str,
+    default="./vitis_projects/ADMM/data.h",
+    help="Output path for generated data.h.",
+)
+parser.add_argument(
+    "--test-data-out",
+    type=str,
+    default="./vitis_projects/ADMM/test_data.h",
+    help="Output path for generated test_data.h.",
+)
 args = parser.parse_args()
 
 if args.horizon <= 0:
     raise ValueError("--horizon must be > 0")
 if args.admm_iters <= 0:
     raise ValueError("--admm-iters must be > 0")
+if args.rho <= 0:
+    raise ValueError("--rho must be > 0")
+if args.rho & (args.rho - 1):
+    raise ValueError("--rho must be a power of 2")
+if args.qx is not None and args.qx <= 0:
+    raise ValueError("--qx must be > 0")
+if args.qy is not None and args.qy <= 0:
+    raise ValueError("--qy must be > 0")
+if args.r_scale is not None and args.r_scale <= 0:
+    raise ValueError("--r-scale must be > 0")
+if args.model_freq <= 0:
+    raise ValueError("--model-freq must be > 0")
+
+q_diag_override = None
+if args.q_diag is not None:
+    q_diag_override = [float(tok.strip()) for tok in args.q_diag.split(",") if tok.strip()]
+    if len(q_diag_override) != 12:
+        raise ValueError("--q-diag must contain exactly 12 comma-separated values")
+    if any(v <= 0 for v in q_diag_override):
+        raise ValueError("--q-diag values must all be > 0")
 
 N = args.horizon
 ADMM_ITERS = args.admm_iters
 
-rho = 64
+rho = args.rho
 rho_mult = 1
+
+timer_period = 1.0 / args.model_freq
 
 # Initialize goal state
 xg = np.zeros(13)
@@ -42,7 +98,18 @@ A, B = quad.get_linearized_dynamics(xg, ug)
 max_dev_x = np.array([0.075, 0.075, 0.075, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.7, 0.7, 0.2])
 max_dev_u = np.array([0.5, 0.5, 0.5, 0.5])
 Q = np.diag(1./max_dev_x**2)
-R = np.diag(1./max_dev_u**2)
+if q_diag_override is not None:
+    Q = np.diag(np.array(q_diag_override, dtype=float))
+else:
+    if args.qx is not None:
+        Q[0, 0] = args.qx
+    if args.qy is not None:
+        Q[1, 1] = args.qy
+
+if args.r_scale is not None:
+    R = args.r_scale * np.eye(4)
+else:
+    R = np.diag(1./max_dev_u**2)
 
 # Control input constraints
 u_max = np.array([1.0 - ug[0]] * 4)
@@ -339,55 +406,59 @@ data.append(generate_matrix_header(A_sparse_indexes, "A_sparse_indexes", type=f"
 data.append(generate_matrix_header(AT_sparse_data, "AT_sparse_data"))
 data.append(generate_matrix_header(AT_sparse_indexes, "AT_sparse_indexes", type=f"ap_uint<{AT_n_bits_idx}>"))
 
-generate_full_header(data, filename="./vitis_projects/ADMM/data.h")
+data_out = Path(args.data_out)
+data_out.parent.mkdir(parents=True, exist_ok=True)
+generate_full_header(data, filename=str(data_out))
 
-# Test header generation
-np.random.seed(0)
-rand_vec = np.random.randn(L_banded.shape[0])
-test_data = []
-test_data.append(generate_vector_header(rand_vec, "random_vector", type="double"))
+# # Test header generation
+# np.random.seed(0)
+# rand_vec = np.random.randn(L_banded.shape[0])
+# test_data = []
+# test_data.append(generate_vector_header(rand_vec, "random_vector", type="double"))
 
-forw_subst_out = np.linalg.solve(L, rand_vec)
-test_data.append(generate_vector_header(forw_subst_out, "forw_subst_out", type="double"))
+# forw_subst_out = np.linalg.solve(L, rand_vec)
+# test_data.append(generate_vector_header(forw_subst_out, "forw_subst_out", type="double"))
 
-back_subst_out = np.linalg.solve(L.T, rand_vec)
-test_data.append(generate_vector_header(back_subst_out, "back_subst_out", type="double"))
+# back_subst_out = np.linalg.solve(L.T, rand_vec)
+# test_data.append(generate_vector_header(back_subst_out, "back_subst_out", type="double"))
 
-A_mul_out = A @ rand_vec
-test_data.append(generate_vector_header(A_mul_out, "A_mul_out", type="double"))
+# A_mul_out = A @ rand_vec
+# test_data.append(generate_vector_header(A_mul_out, "A_mul_out", type="double"))
 
-AT_mul_out = A.T @ rand_vec
-test_data.append(generate_vector_header(AT_mul_out, "AT_mul_out", type="double"))
+# AT_mul_out = A.T @ rand_vec
+# test_data.append(generate_vector_header(AT_mul_out, "AT_mul_out", type="double"))
 
 
-l[0:3] = 0.1, 0.1, -0.1
-u[0:3] = 0.1, 0.1, -0.1
+# l[0:3] = 0.1, 0.1, -0.1
+# u[0:3] = 0.1, 0.1, -0.1
 
-x, z, y = ADMM_iteration(l, u, iter=1)
+# x, z, y = ADMM_iteration(l, u, iter=1)
 
-test_data.append(generate_vector_header(x, "ADMM_x_after_1_iter", type="double"))
-test_data.append(generate_vector_header(z, "ADMM_z_after_1_iter", type="double"))
-test_data.append(generate_vector_header(y, "ADMM_y_after_1_iter", type="double"))
+# test_data.append(generate_vector_header(x, "ADMM_x_after_1_iter", type="double"))
+# test_data.append(generate_vector_header(z, "ADMM_z_after_1_iter", type="double"))
+# test_data.append(generate_vector_header(y, "ADMM_y_after_1_iter", type="double"))
 
-x, z, y = ADMM_iteration(l, u, iter=10)
+# x, z, y = ADMM_iteration(l, u, iter=10)
 
-test_data.append(generate_vector_header(x, "ADMM_x_after_10_iter", type="double"))
-test_data.append(generate_vector_header(z, "ADMM_z_after_10_iter", type="double"))
-test_data.append(generate_vector_header(y, "ADMM_y_after_10_iter", type="double"))
+# test_data.append(generate_vector_header(x, "ADMM_x_after_10_iter", type="double"))
+# test_data.append(generate_vector_header(z, "ADMM_z_after_10_iter", type="double"))
+# test_data.append(generate_vector_header(y, "ADMM_y_after_10_iter", type="double"))
 
-x, z, y = ADMM_iteration(l, u, iter=100)
+# x, z, y = ADMM_iteration(l, u, iter=100)
 
-test_data.append(generate_vector_header(x, "ADMM_x_after_100_iter", type="double"))
-test_data.append(generate_vector_header(z, "ADMM_z_after_100_iter", type="double"))
-test_data.append(generate_vector_header(y, "ADMM_y_after_100_iter", type="double"))
+# test_data.append(generate_vector_header(x, "ADMM_x_after_100_iter", type="double"))
+# test_data.append(generate_vector_header(z, "ADMM_z_after_100_iter", type="double"))
+# test_data.append(generate_vector_header(y, "ADMM_y_after_100_iter", type="double"))
 
-x, z, y = ADMM_iteration(l, u, iter=50)
+# x, z, y = ADMM_iteration(l, u, iter=50)
 
-test_data.append(generate_vector_header(x, "ADMM_x_after_50_iter", type="double"))
-test_data.append(generate_vector_header(z, "ADMM_z_after_50_iter", type="double"))
-test_data.append(generate_vector_header(y, "ADMM_y_after_50_iter", type="double"))
+# test_data.append(generate_vector_header(x, "ADMM_x_after_50_iter", type="double"))
+# test_data.append(generate_vector_header(z, "ADMM_z_after_50_iter", type="double"))
+# test_data.append(generate_vector_header(y, "ADMM_y_after_50_iter", type="double"))
 
-generate_full_header(test_data, filename="./vitis_projects/ADMM/test_data.h", guard="TEST_DATA_H")
+# test_data_out = Path(args.test_data_out)
+# test_data_out.parent.mkdir(parents=True, exist_ok=True)
+# generate_full_header(test_data, filename=str(test_data_out), guard="TEST_DATA_H")
 
 # OSQP_x = testOSQP(l, u, iter=1000)
 
