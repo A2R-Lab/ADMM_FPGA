@@ -23,8 +23,22 @@ A, B = quad.get_linearized_dynamics(xg, ug)
 # Cost matrices
 max_dev_x = np.array([0.075, 0.075, 0.075, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.7, 0.7, 0.2])
 max_dev_u = np.array([0.5, 0.5, 0.5, 0.5])
-Q = np.diag(1./max_dev_x**2)
-R = np.diag(1./max_dev_u**2)
+q_diag = [
+    70,  # x
+    70,  # y
+    177.8,  # z
+    10.0,    # roll
+    10.0,    # pitch
+    4.0,    # yaw
+    4.0,    # vx
+    4.0,    # vy
+    4.0,    # vz
+    0.8,   # wx
+    0.8,   # wy
+    25.0,   # wz
+]
+Q = np.diag(q_diag) #1./max_dev_x**2)
+R = np.diag([20.0, 20.0, 20.0, 20.0]) #1./max_dev_u**2)
 
 # Control input constraints
 u_max = np.array([1.0 - ug[0]] * 4)
