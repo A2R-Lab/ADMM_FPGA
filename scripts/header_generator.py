@@ -7,7 +7,7 @@ timer_period = 0.02  # seconds
 # Horizon length
 N = 20
 
-rho = 64
+rho = 128
 rho_mult = 1
 
 # Initialize goal state
@@ -24,17 +24,17 @@ A, B = quad.get_linearized_dynamics(xg, ug)
 max_dev_x = np.array([0.075, 0.075, 0.075, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.7, 0.7, 0.2])
 max_dev_u = np.array([0.5, 0.5, 0.5, 0.5])
 q_diag = [
-    70,  # x
-    70,  # y
+    60,  # x
+    60,  # y
     178,  # z
     0.4,    # roll
     0.4,    # pitch
     4.0,    # yaw
-    3.5,    # vx
-    3.5,    # vy
+    4.0,    # vx
+    4.0,    # vy
     4.0,    # vz
-    0.6,   # wx
-    0.6,   # wy
+    0.2,   # wx
+    0.2,   # wy
     25.0,   # wz
 ]
 
