@@ -26,17 +26,18 @@ max_dev_u = np.array([0.5, 0.5, 0.5, 0.5])
 q_diag = [
     70,  # x
     70,  # y
-    177.8,  # z
-    10.0,    # roll
-    10.0,    # pitch
+    178,  # z
+    0.4,    # roll
+    0.4,    # pitch
     4.0,    # yaw
-    4.0,    # vx
-    4.0,    # vy
+    3.5,    # vx
+    3.5,    # vy
     4.0,    # vz
-    0.8,   # wx
-    0.8,   # wy
+    0.6,   # wx
+    0.6,   # wy
     25.0,   # wz
 ]
+
 Q = np.diag(q_diag) #1./max_dev_x**2)
 R = np.diag([20.0, 20.0, 20.0, 20.0]) #1./max_dev_u**2)
 
