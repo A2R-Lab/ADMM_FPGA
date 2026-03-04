@@ -1,3 +1,6 @@
+import os
+import subprocess
+import sys
 import numpy as np
 from crazyloihimodel import CrazyLoihiModel
 
@@ -9,7 +12,9 @@ N = 20
 
 rho = 128
 rho_mult = 1
-traj_length = 256
+traj_length = int(os.getenv("ADMM_TRAJ_LENGTH", "2048"))
+if traj_length <= 1:
+    raise ValueError("ADMM_TRAJ_LENGTH must be > 1")
 
 # Initialize goal state
 xg = np.zeros(13)
@@ -42,19 +47,64 @@ q_diag = [
 Q = np.diag(q_diag) #1./max_dev_x**2)
 R = np.diag([20.0, 20.0, 20.0, 20.0]) #1./max_dev_u**2)
 
-def build_reference_trajectory(length, n_state, n_input):
-    """
-    Build trajectory references stored in FPGA memory.
-    Edit this function to encode your mission trajectory.
-    """
-    traj_x = np.zeros((length, n_state))
-    traj_u = np.zeros((length, n_input))
 
-    # Example trajectory: move forward along +x with constant speed profile.
-    x_start = 0.0
-    x_end = 2.0
-    traj_x[:, 0] = np.linspace(x_start, x_end, length)
-    return traj_x, traj_u
+def generate_trajectory_header_from_script(length: int, horizon: int, q_diag_vals: np.ndarray, r_mat: np.ndarray) -> None:
+    dt = float(os.getenv("ADMM_TRAJ_DT", timer_period))
+    amp_x = float(os.getenv("ADMM_TRAJ_AMP_X", "0.90"))
+    amp_y = float(os.getenv("ADMM_TRAJ_AMP_Y", "1.15"))
+    z0 = float(os.getenv("ADMM_TRAJ_Z0", "0.0"))
+    cycles = float(os.getenv("ADMM_TRAJ_CYCLES", "1.0"))
+    yaw_mode = os.getenv("ADMM_TRAJ_YAW_MODE", "fixed").strip().lower()
+    state_source = os.getenv("ADMM_TRAJ_STATE_SOURCE", "rollout").strip().lower()
+    if yaw_mode not in {"fixed", "velocity"}:
+        raise ValueError("ADMM_TRAJ_YAW_MODE must be 'fixed' or 'velocity'")
+    if state_source not in {"rollout", "geometric"}:
+        raise ValueError("ADMM_TRAJ_STATE_SOURCE must be 'rollout' or 'geometric'")
+
+    script_path = os.path.join(os.path.dirname(__file__), "trajectory_generator.py")
+    q_diag_str = ",".join(f"{float(v):.12g}" for v in q_diag_vals.tolist())
+    r_diag_str = ",".join(f"{float(v):.12g}" for v in np.diag(r_mat).tolist())
+
+    cmd = [
+        sys.executable,
+        script_path,
+        "--length", str(length),
+        "--dt", f"{dt:.12g}",
+        "--amp-x", f"{amp_x:.12g}",
+        "--amp-y", f"{amp_y:.12g}",
+        "--z0", f"{z0:.12g}",
+        "--cycles", f"{cycles:.12g}",
+        "--yaw-mode", yaw_mode,
+        "--state-source", state_source,
+        "--admm-header-out", "./vitis_projects/ADMM/traj_data.h",
+        "--q-diag", q_diag_str,
+        "--r-diag", r_diag_str,
+        "--horizon", str(horizon),
+        "--csv-out", "./build/trajectory/fig8_refs.csv",
+        "--header-out", "./build/trajectory/traj_fig8_12.h",
+        "--preview-png", "./build/trajectory/fig8_preview.png",
+    ]
+    if os.getenv("ADMM_TRAJ_OPTIMIZE_SCP", "0").strip() not in {"0", "", "false", "False", "FALSE"}:
+        cmd.append("--optimize-scp")
+        if "ADMM_TRAJ_SCP_ITERS" in os.environ:
+            cmd += ["--scp-iters", os.environ["ADMM_TRAJ_SCP_ITERS"]]
+        if "ADMM_TRAJ_SCP_TRUST_X" in os.environ:
+            cmd += ["--scp-trust-x", os.environ["ADMM_TRAJ_SCP_TRUST_X"]]
+        if "ADMM_TRAJ_SCP_TRUST_U" in os.environ:
+            cmd += ["--scp-trust-u", os.environ["ADMM_TRAJ_SCP_TRUST_U"]]
+        if "ADMM_TRAJ_SCP_W_U" in os.environ:
+            cmd += ["--scp-w-u", os.environ["ADMM_TRAJ_SCP_W_U"]]
+        if "ADMM_TRAJ_SCP_W_DU" in os.environ:
+            cmd += ["--scp-w-du", os.environ["ADMM_TRAJ_SCP_W_DU"]]
+        if "ADMM_TRAJ_SCP_W_X_TRUST" in os.environ:
+            cmd += ["--scp-w-x-trust", os.environ["ADMM_TRAJ_SCP_W_X_TRUST"]]
+        if "ADMM_TRAJ_SCP_W_U_TRUST" in os.environ:
+            cmd += ["--scp-w-u-trust", os.environ["ADMM_TRAJ_SCP_W_U_TRUST"]]
+        if "ADMM_TRAJ_SCP_MIX_NEW_U" in os.environ:
+            cmd += ["--scp-mix-new-u", os.environ["ADMM_TRAJ_SCP_MIX_NEW_U"]]
+        if "ADMM_TRAJ_SCP_Q_DIAG" in os.environ:
+            cmd += ["--scp-q-diag", os.environ["ADMM_TRAJ_SCP_Q_DIAG"]]
+    subprocess.run(cmd, check=True)
 
 # Control input constraints
 u_max = np.array([1.0 - ug[0]] * 4)
@@ -342,20 +392,15 @@ constants["RHO_SHIFT"] = int(np.log2(rho))
 constants["U_MIN"] = u_min[0]
 constants["U_MAX"] = u_max[0]
 constants["TRAJ_LENGTH"] = traj_length
+constants["TRAJ_TICK_DIV"] = int(os.getenv("ADMM_TRAJ_TICK_DIV", "1"))
 
-traj_state_ref, traj_input_ref = build_reference_trajectory(traj_length, n, m)
-q_state_ref = -(traj_state_ref @ Q.T)
-q_input_ref = -(traj_input_ref @ R.T)
-
-# Packed as [q_x0, q_u0, q_x1, q_u1, ...] across rows. Runtime uses only pointer shift.
-traj_q_packed = np.zeros((traj_length + N, n + m))
-for k in range(traj_length):
-    traj_q_packed[k, 0:n] = q_state_ref[k, :]
-    traj_q_packed[k, n:n + m] = q_input_ref[k, :]
-
-# Tail extension so horizon window can safely read past trajectory end.
-for k in range(traj_length, traj_length + N):
-    traj_q_packed[k, :] = traj_q_packed[traj_length - 1, :]
+# Generate trajectory-packed reference in dedicated header via external script.
+generate_trajectory_header_from_script(
+    length=traj_length,
+    horizon=N,
+    q_diag_vals=np.asarray(q_diag, dtype=np.float64),
+    r_mat=R,
+)
 
 data = []
 data.append(generate_constants_header(constants))
@@ -365,9 +410,8 @@ data.append(generate_matrix_header(A_sparse_data, "A_sparse_data"))
 data.append(generate_matrix_header(A_sparse_indexes, "A_sparse_indexes", type=f"ap_uint<{A_n_bits_idx}>"))
 data.append(generate_matrix_header(AT_sparse_data, "AT_sparse_data"))
 data.append(generate_matrix_header(AT_sparse_indexes, "AT_sparse_indexes", type=f"ap_uint<{AT_n_bits_idx}>"))
-data.append(generate_matrix_header(traj_q_packed, "traj_q_packed"))
 
-generate_full_header(data, filename="../vitis_projects/ADMM/data.h")
+generate_full_header(data, filename="./vitis_projects/ADMM/data.h")
 
 # # Test header generation
 # np.random.seed(0)
