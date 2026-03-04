@@ -369,53 +369,53 @@ data.append(generate_matrix_header(traj_q_packed, "traj_q_packed"))
 
 generate_full_header(data, filename="../vitis_projects/ADMM/data.h")
 
-# Test header generation
-np.random.seed(0)
-rand_vec = np.random.randn(L_banded.shape[0])
-test_data = []
-test_data.append(generate_vector_header(rand_vec, "random_vector", type="double"))
+# # Test header generation
+# np.random.seed(0)
+# rand_vec = np.random.randn(L_banded.shape[0])
+# test_data = []
+# test_data.append(generate_vector_header(rand_vec, "random_vector", type="double"))
 
-forw_subst_out = np.linalg.solve(L, rand_vec)
-test_data.append(generate_vector_header(forw_subst_out, "forw_subst_out", type="double"))
+# forw_subst_out = np.linalg.solve(L, rand_vec)
+# test_data.append(generate_vector_header(forw_subst_out, "forw_subst_out", type="double"))
 
-back_subst_out = np.linalg.solve(L.T, rand_vec)
-test_data.append(generate_vector_header(back_subst_out, "back_subst_out", type="double"))
+# back_subst_out = np.linalg.solve(L.T, rand_vec)
+# test_data.append(generate_vector_header(back_subst_out, "back_subst_out", type="double"))
 
-A_mul_out = A @ rand_vec
-test_data.append(generate_vector_header(A_mul_out, "A_mul_out", type="double"))
+# A_mul_out = A @ rand_vec
+# test_data.append(generate_vector_header(A_mul_out, "A_mul_out", type="double"))
 
-AT_mul_out = A.T @ rand_vec
-test_data.append(generate_vector_header(AT_mul_out, "AT_mul_out", type="double"))
+# AT_mul_out = A.T @ rand_vec
+# test_data.append(generate_vector_header(AT_mul_out, "AT_mul_out", type="double"))
 
 
-l[0:3] = 0.1, 0.1, -0.1
-u[0:3] = 0.1, 0.1, -0.1
+# l[0:3] = 0.1, 0.1, -0.1
+# u[0:3] = 0.1, 0.1, -0.1
 
-x, z, y = ADMM_iteration(l, u, iter=1)
+# x, z, y = ADMM_iteration(l, u, iter=1)
 
-test_data.append(generate_vector_header(x, "ADMM_x_after_1_iter", type="double"))
-test_data.append(generate_vector_header(z, "ADMM_z_after_1_iter", type="double"))
-test_data.append(generate_vector_header(y, "ADMM_y_after_1_iter", type="double"))
+# test_data.append(generate_vector_header(x, "ADMM_x_after_1_iter", type="double"))
+# test_data.append(generate_vector_header(z, "ADMM_z_after_1_iter", type="double"))
+# test_data.append(generate_vector_header(y, "ADMM_y_after_1_iter", type="double"))
 
-x, z, y = ADMM_iteration(l, u, iter=10)
+# x, z, y = ADMM_iteration(l, u, iter=10)
 
-test_data.append(generate_vector_header(x, "ADMM_x_after_10_iter", type="double"))
-test_data.append(generate_vector_header(z, "ADMM_z_after_10_iter", type="double"))
-test_data.append(generate_vector_header(y, "ADMM_y_after_10_iter", type="double"))
+# test_data.append(generate_vector_header(x, "ADMM_x_after_10_iter", type="double"))
+# test_data.append(generate_vector_header(z, "ADMM_z_after_10_iter", type="double"))
+# test_data.append(generate_vector_header(y, "ADMM_y_after_10_iter", type="double"))
 
-x, z, y = ADMM_iteration(l, u, iter=100)
+# x, z, y = ADMM_iteration(l, u, iter=100)
 
-test_data.append(generate_vector_header(x, "ADMM_x_after_100_iter", type="double"))
-test_data.append(generate_vector_header(z, "ADMM_z_after_100_iter", type="double"))
-test_data.append(generate_vector_header(y, "ADMM_y_after_100_iter", type="double"))
+# test_data.append(generate_vector_header(x, "ADMM_x_after_100_iter", type="double"))
+# test_data.append(generate_vector_header(z, "ADMM_z_after_100_iter", type="double"))
+# test_data.append(generate_vector_header(y, "ADMM_y_after_100_iter", type="double"))
 
-x, z, y = ADMM_iteration(l, u, iter=50)
+# x, z, y = ADMM_iteration(l, u, iter=50)
 
-test_data.append(generate_vector_header(x, "ADMM_x_after_50_iter", type="double"))
-test_data.append(generate_vector_header(z, "ADMM_z_after_50_iter", type="double"))
-test_data.append(generate_vector_header(y, "ADMM_y_after_50_iter", type="double"))
+# test_data.append(generate_vector_header(x, "ADMM_x_after_50_iter", type="double"))
+# test_data.append(generate_vector_header(z, "ADMM_z_after_50_iter", type="double"))
+# test_data.append(generate_vector_header(y, "ADMM_y_after_50_iter", type="double"))
 
-generate_full_header(test_data, filename="../vitis_projects/ADMM/test_data.h", guard="TEST_DATA_H")
+# generate_full_header(test_data, filename="../vitis_projects/ADMM/test_data.h", guard="TEST_DATA_H")
 
 # OSQP_x = testOSQP(l, u, iter=1000)
 
