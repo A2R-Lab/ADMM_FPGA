@@ -166,6 +166,10 @@ The FPGA will boot from flash on power-up. Power cycle the board after programmi
 4. **FPGA sends header:** `0xFFFFFF` (ready signal)
 5. **FPGA sends results:** 4 words (control inputs)
 
+`start_traj` is encoded in the header word:
+- Base header: `0x000000AA` (regulator mode)
+- Start trajectory: set header bit `0x00000100` (example: `0x000001AA`)
+
 ### LED Indicators
 
 | LED1 | LED2 | State |
@@ -217,6 +221,17 @@ make clean-all
 make
 ```
 
+### Encoding Trajectory In FPGA
+
+Trajectory references are generated into `vitis_projects/ADMM/data.h` from:
+- `scripts/header_generator.py` -> `build_reference_trajectory(...)`
+
+Generated arrays:
+- `traj_q_packed[TRAJ_LENGTH + HORIZON_LENGTH][STATE_SIZE + INPUT_SIZE]`
+
+`traj_q_packed` is preweighted offline (`-Q*x_ref`, `-R*u_ref`) and packed as stage blocks.
+At runtime, `start_traj` (header bit `0x00000100`) latches trajectory mode and the solver only shifts a pointer into `traj_q_packed`.
+
 ### Changing Fixed-Point Format
 
 Edit `vitis_projects/ADMM/data_types.h`:
@@ -228,13 +243,16 @@ typedef ap_fixed<32, 10, AP_RND, AP_SAT> fp_t;
 //              └────── Total bits
 ```
 
-### Changing Iteration Count
+### Trajectory Start Command
 
 In `vivado_project/vivado_project.srcs/sources_1/new/top_spi.v`:
 
 ```verilog
-localparam FIXED_ITERS = 32'd10;  // Change this value
+// Header bit mask:
+localparam START_TRAJ_MASK = 32'h00000100;
 ```
+
+Set this bit in the header word to latch trajectory mode start.
 
 ## Troubleshooting
 

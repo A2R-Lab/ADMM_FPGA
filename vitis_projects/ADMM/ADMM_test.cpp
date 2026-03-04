@@ -39,7 +39,7 @@ int main() {
 
 
     // printf("================= FORWARD SUBSTITUTION =================\n");
-    // forward_substitution(random_vector, res_dut);
+    // forward_substitution(random_vector, random_vector, res_dut);
     // res &= compare_vectors(res_dut, forw_subst_out, RANDOM_VECTOR_SIZE, REL_ERROR * 2);
 
     // printf("================= BACKWARD SUBSTITUTION =================\n");
@@ -66,7 +66,7 @@ int main() {
     ADMM_solver(
         current_state,
         x,
-        50
+        0
     );
     printf("================= Comparing X =================\n");
     compare_vectors(x, ADMM_x_after_50_iter, LT_BANDED_ROWS, REL_ERROR);

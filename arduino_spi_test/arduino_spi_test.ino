@@ -50,6 +50,7 @@ void setup() {
     Serial.println("  t - Run test transaction with sample data");
     Serial.println("  z - Run test with zeros");
     Serial.println("  r - Run repeated tests (10x)");
+    Serial.println("  s - Send one transaction with start_traj=1");
     Serial.println("  h - Show this help");
     Serial.println("=================================");
 }
@@ -74,6 +75,9 @@ void loop() {
                 break;
             case 'r':
                 runRepeatedTests(10);
+                break;
+            case 's':
+                runStartTrajectoryCommand();
                 break;
             case 'h':
                 printHelp();
@@ -118,7 +122,7 @@ static inline uint32_t receive_val_24bit_from_buf(const uint8_t* p) {
            ((uint32_t)p[1] << 8)  |
            ((uint32_t)p[2] << 0);
 }
-bool transactWithFPGA(uint32_t* send_vals, uint32_t* recv_vals) {
+bool transactWithFPGA(uint32_t* send_vals, uint32_t* recv_vals, bool start_traj) {
     unsigned long start_time = micros();
     unsigned long send_done_time;
     unsigned long compute_done_time;
@@ -134,7 +138,7 @@ bool transactWithFPGA(uint32_t* send_vals, uint32_t* recv_vals) {
 
     // Start sequence
     tx_buf[0] = 0x00;
-    tx_buf[1] = 0x00;
+    tx_buf[1] = start_traj ? 0x01 : 0x00; // Header start_traj bit in third byte: 00 00 01 AA
     tx_buf[2] = 0xAA;
 
     // State words (24-bit, LSB first)
@@ -257,7 +261,7 @@ void runTestTransaction() {
     
     // Execute transaction
     Serial.println("\nExecuting SPI transaction...");
-    bool success = transactWithFPGA(state_data, result_data);
+    bool success = transactWithFPGA(state_data, result_data, false);
     
     if (success) {
         Serial.println("\nReceived result data:");
@@ -285,7 +289,7 @@ void runZeroTest() {
     }
     
     Serial.println("Sending all zeros...");
-    bool success = transactWithFPGA(state_data, result_data);
+    bool success = transactWithFPGA(state_data, result_data, false);
     
     if (success) {
         Serial.println("Received results:");
@@ -317,7 +321,7 @@ void runRepeatedTests(int count) {
         Serial.print("Test "); Serial.print(t + 1); Serial.print("/"); Serial.print(count); Serial.print(": ");
         
         unsigned long t_start = micros();
-        bool success = transactWithFPGA(state_data, result_data);
+        bool success = transactWithFPGA(state_data, result_data, false);
         unsigned long t_end = micros();
         
         if (success) {
@@ -341,6 +345,21 @@ void runRepeatedTests(int count) {
     Serial.println("==========================================\n");
 }
 
+void runStartTrajectoryCommand() {
+    Serial.println("\n========== START TRAJECTORY COMMAND ==========");
+
+    for (int i = 0; i < N_STATE; i++) {
+        state_data[i] = 0;
+    }
+    bool success = transactWithFPGA(state_data, result_data, true);
+    if (success) {
+        Serial.println("Sent start_traj=1");
+    } else {
+        Serial.println("Failed to send start_traj command");
+    }
+    Serial.println("==============================================\n");
+}
+
 void printHelp() {
     Serial.println("\n=================================");
     Serial.println("FPGA SPI Communication Test");
@@ -349,6 +368,7 @@ void printHelp() {
     Serial.println("  t - Run test transaction with sample data");
     Serial.println("  z - Run test with zeros");
     Serial.println("  r - Run repeated tests (10x)");
+    Serial.println("  s - Send one transaction with start_traj=1");
     Serial.println("  h - Show this help");
     Serial.println("=================================\n");
 }

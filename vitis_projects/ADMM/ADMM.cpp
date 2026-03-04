@@ -5,6 +5,7 @@
 
 void forward_substitution(
     const fp_t b[L_BANDED_ROWS],
+    const fp_t q[L_BANDED_ROWS],
     fp_t x[L_BANDED_ROWS]
 ) {
     fp_t window[L_BANDED_COLS-1] = {0};
@@ -19,7 +20,7 @@ void forward_substitution(
             sum_val += L_banded[i][j] * window[j];
         }
 
-        fp_t new_x = (b[i] - sum_val) * L_banded[i][L_BANDED_COLS-1];
+        fp_t new_x = (b[i] - q[i] - sum_val) * L_banded[i][L_BANDED_COLS-1];
         x[i] = new_x;
 
         FORW_SUBST_SHIFT_REGISTER_LOOP:
@@ -82,7 +83,8 @@ void AT_mul(
 
 void ADMM_iteration(
     fp_t x[N_VAR], 
-    fp_t current_state[12]
+    fp_t current_state[12],
+    const fp_t q_vec[N_VAR]
 ) {
     static fp_t b[N_VAR] = {0};
     static fp_t y[N_VAR] = {0};
@@ -90,8 +92,7 @@ void ADMM_iteration(
     fp_t b_tmp[N_VAR];
 
     // x_update
-    // first cycle b will be 0 anyway, and then it gets updated at the end of the iteration
-    forward_substitution(b, tmp);
+    forward_substitution(b, q_vec, tmp);
     backward_substitution(tmp, x);
 
     // z - y update
@@ -128,10 +129,32 @@ void ADMM_iteration(
 void ADMM_solver(
     fp_t current_state[12],
     fp_t x[N_VAR],
-    int iters
+    int start_traj
 ) {
+    static bool traj_started = false;
+    static int traj_idx = 0;
+    static const fp_t q_zero[N_VAR] = {0};
+
+    if (start_traj != 0) {
+        traj_started = true;
+    }
+
+    const fp_t* q_runtime = q_zero;
+    if (traj_started) {
+        int clamped_idx = traj_idx;
+        if (clamped_idx > (TRAJ_LENGTH - 1)) {
+            clamped_idx = TRAJ_LENGTH - 1;
+        }
+        // q is preweighted and packed offline; runtime only shifts pointer.
+        q_runtime = &traj_q_packed[clamped_idx][0];
+    }
+
     ADMM_MAIN_LOOP:
     for (int iter = 0; iter < 28; iter++) {
-        ADMM_iteration(x, current_state);
+        ADMM_iteration(x, current_state, q_runtime);
+    }
+
+    if (traj_started && (traj_idx < (TRAJ_LENGTH - 1))) {
+        traj_idx++;
     }
 }

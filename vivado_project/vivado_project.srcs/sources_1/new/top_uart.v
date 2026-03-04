@@ -17,7 +17,6 @@ module top (
     localparam CLK_HZ = 100_000_000;
     localparam BIT_RATE = 921600;
     localparam PAYLOAD_BITS = 8;
-    localparam FIXED_ITERS = 32'd10;  // Fixed iteration count
     
     localparam STATE_LOG = $clog2(N_STATE);
     localparam VAR_LOG = $clog2(N_VAR);
@@ -77,8 +76,8 @@ module top (
     wire x_ce1;
     reg [DATA_WIDTH-1:0] x_q1;
     
-    wire [31:0] iters;
-    assign iters = FIXED_ITERS;
+    wire [31:0] start_traj;
+    assign start_traj = 32'd0;
     
     //--------------------------------------------------------------
     // LED Status
@@ -255,7 +254,7 @@ module top (
         .x_address1(x_address1),
         .x_ce1(x_ce1),
         .x_q1(x_q1),
-        .iters(iters)
+        .start_traj(start_traj)
     );
     
     //--------------------------------------------------------------

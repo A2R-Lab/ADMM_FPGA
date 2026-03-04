@@ -18,10 +18,10 @@ module top_spi (
     localparam N_STATE = 12;
     localparam N_VAR = 4;
     localparam DATA_WIDTH = 32;
-    localparam FIXED_ITERS = 32'd10;
     
     // Packet Headers
-    localparam RX_HEADER = 32'h000000AA; // Master must send 0xAA as first byte
+    localparam RX_HEADER = 32'h000000AA;       // Master must send 0xAA in lowest byte
+    localparam START_TRAJ_MASK = 32'h00000100; // Header bit for trajectory start
     localparam TX_HEADER = 32'hFFFFFFFF; // FPGA sends 0xFF as Ready signal
     
     localparam STATE_LOG = $clog2(N_STATE);
@@ -85,8 +85,7 @@ module top_spi (
     wire x_ce1;
     reg [31:0] x_q1;
 
-    wire [31:0] iters;
-    assign iters = FIXED_ITERS;
+    reg [31:0] start_traj_reg;
     
     //--------------------------------------------------------------
     // LEDs (2 LEDs to indicate state)
@@ -125,6 +124,7 @@ module top_spi (
             spi_tx_load <= 1;  // Load zero on reset
             spi_tx_data <= 0;
             irq_reg <= 0;
+            start_traj_reg <= 32'd0;
             for (i = 0; i < N_STATE; i = i + 1) current_state_mem[i] <= 0;
         end else begin
             spi_tx_load <= 0; // Default
@@ -156,11 +156,15 @@ module top_spi (
                         ap_start <= 0;
                     end
                     
-                    // 2. SAFETY CHECK: Verify first word is 0xAA
+                    // 2. SAFETY CHECK: Verify header and decode optional start bit
                     CHECK_HEADER: begin
                         if (spi_rx_valid) begin
                             // Use mask 0xFF to check only the lowest byte (0xAA)
                             if ((spi_rx_data & 32'h000000FF) == 32'h000000AA) begin
+                                // Latch start command from header bit (stays high once set)
+                                if ((spi_rx_data & START_TRAJ_MASK) != 0) begin
+                                    start_traj_reg <= 32'd1;
+                                end
                                 state <= RX_DATA;
                                 rx_word_count <= 0;
                             end else begin
@@ -236,7 +240,7 @@ module top_spi (
         .current_state_q0(current_state_q0),
         .x_address0(x_address0), .x_ce0(x_ce0), .x_we0(x_we0), .x_d0(x_d0), .x_q0(x_q0),
         .x_address1(x_address1), .x_ce1(x_ce1), .x_q1(x_q1),
-        .iters(iters)
+        .start_traj(start_traj_reg)
     );
     
     // RAM Models

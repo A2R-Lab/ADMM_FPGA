@@ -9,6 +9,7 @@ N = 20
 
 rho = 128
 rho_mult = 1
+traj_length = 256
 
 # Initialize goal state
 xg = np.zeros(13)
@@ -40,6 +41,20 @@ q_diag = [
 
 Q = np.diag(q_diag) #1./max_dev_x**2)
 R = np.diag([20.0, 20.0, 20.0, 20.0]) #1./max_dev_u**2)
+
+def build_reference_trajectory(length, n_state, n_input):
+    """
+    Build trajectory references stored in FPGA memory.
+    Edit this function to encode your mission trajectory.
+    """
+    traj_x = np.zeros((length, n_state))
+    traj_u = np.zeros((length, n_input))
+
+    # Example trajectory: move forward along +x with constant speed profile.
+    x_start = 0.0
+    x_end = 2.0
+    traj_x[:, 0] = np.linspace(x_start, x_end, length)
+    return traj_x, traj_u
 
 # Control input constraints
 u_max = np.array([1.0 - ug[0]] * 4)
@@ -319,11 +334,28 @@ AT_sparse_data, AT_sparse_indexes, AT_n_bits_idx = convert_matrix_to_sparse_stor
 constants = {}
 constants["HORIZON_LENGTH"] = N
 constants["STATE_SIZE"] = n
+constants["INPUT_SIZE"] = m
+constants["STAGE_SIZE"] = n + m
 constants["N_VAR"] = num_var
 constants["START_INEQ"] = A_eq.shape[0]
 constants["RHO_SHIFT"] = int(np.log2(rho))
 constants["U_MIN"] = u_min[0]
 constants["U_MAX"] = u_max[0]
+constants["TRAJ_LENGTH"] = traj_length
+
+traj_state_ref, traj_input_ref = build_reference_trajectory(traj_length, n, m)
+q_state_ref = -(traj_state_ref @ Q.T)
+q_input_ref = -(traj_input_ref @ R.T)
+
+# Packed as [q_x0, q_u0, q_x1, q_u1, ...] across rows. Runtime uses only pointer shift.
+traj_q_packed = np.zeros((traj_length + N, n + m))
+for k in range(traj_length):
+    traj_q_packed[k, 0:n] = q_state_ref[k, :]
+    traj_q_packed[k, n:n + m] = q_input_ref[k, :]
+
+# Tail extension so horizon window can safely read past trajectory end.
+for k in range(traj_length, traj_length + N):
+    traj_q_packed[k, :] = traj_q_packed[traj_length - 1, :]
 
 data = []
 data.append(generate_constants_header(constants))
@@ -333,6 +365,7 @@ data.append(generate_matrix_header(A_sparse_data, "A_sparse_data"))
 data.append(generate_matrix_header(A_sparse_indexes, "A_sparse_indexes", type=f"ap_uint<{A_n_bits_idx}>"))
 data.append(generate_matrix_header(AT_sparse_data, "AT_sparse_data"))
 data.append(generate_matrix_header(AT_sparse_indexes, "AT_sparse_indexes", type=f"ap_uint<{AT_n_bits_idx}>"))
+data.append(generate_matrix_header(traj_q_packed, "traj_q_packed"))
 
 generate_full_header(data, filename="../vitis_projects/ADMM/data.h")
 
