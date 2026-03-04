@@ -88,28 +88,13 @@ module top_spi (
     reg [31:0] start_traj_reg;
     
     //--------------------------------------------------------------
-    // LEDs (2 LEDs to indicate state)
-    // led1 led2 : 00=IDLE, 01=CHECK_HEADER/RX_DATA, 10=COMPUTE, 11=TX_DATA/DONE
+    // LEDs:
+    // - led1: solver busy (COMPUTE/WAIT_RAM)
+    // - led2: trajectory mode latched
     //--------------------------------------------------------------
-    reg led1_reg, led2_reg;
-    assign led1 = led1_reg;
-    assign led2 = led2_reg;
-    always @(posedge clk) begin
-        if (!resetn) begin
-            led1_reg <= 1'b0;
-            led2_reg <= 1'b0;
-        end else case (state)
-            IDLE:         begin led1_reg <= 1'b0; led2_reg <= 1'b0; end
-            CHECK_HEADER: begin led1_reg <= 1'b0; led2_reg <= 1'b1; end
-            RX_DATA:      begin led1_reg <= 1'b0; led2_reg <= 1'b1; end
-            COMPUTE:      begin led1_reg <= 1'b1; led2_reg <= 1'b0; end
-            WAIT_RAM:     begin led1_reg <= 1'b1; led2_reg <= 1'b0; end
-            TX_DATA:      begin led1_reg <= 1'b1; led2_reg <= 1'b1; end
-            DONE:         begin led1_reg <= 1'b1; led2_reg <= 1'b1; end
-            default:      begin led1_reg <= 1'b0; led2_reg <= 1'b0; end
-        endcase
-    end
-    
+    assign led1 = ((state == COMPUTE) || (state == WAIT_RAM));
+    assign led2 = start_traj_reg[0];
+
     //--------------------------------------------------------------
     // Main FSM
     //--------------------------------------------------------------

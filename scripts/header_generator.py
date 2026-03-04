@@ -1,20 +1,22 @@
-import os
-import subprocess
-import sys
+from pathlib import Path
+import re
 import numpy as np
 from crazyloihimodel import CrazyLoihiModel
+from parameters import HORIZON_LENGTH, Q_DIAG, R_DIAG
 
 # Run controller at 50 Hz
 timer_period = 0.02  # seconds
 
 # Horizon length
-N = 20
+N = HORIZON_LENGTH
 
 rho = 128
 rho_mult = 1
-traj_length = int(os.getenv("ADMM_TRAJ_LENGTH", "2048"))
-if traj_length <= 1:
-    raise ValueError("ADMM_TRAJ_LENGTH must be > 1")
+TRAJ_TICK_DIV = 10
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = SCRIPT_DIR.parent
+TRAJ_DATA_HEADER_PATH = REPO_ROOT / "vitis_projects" / "ADMM" / "traj_data.h"
+DATA_HEADER_PATH = REPO_ROOT / "vitis_projects" / "ADMM" / "data.h"
 
 # Initialize goal state
 xg = np.zeros(13)
@@ -29,82 +31,22 @@ A, B = quad.get_linearized_dynamics(xg, ug)
 # Cost matrices
 max_dev_x = np.array([0.075, 0.075, 0.075, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.7, 0.7, 0.2])
 max_dev_u = np.array([0.5, 0.5, 0.5, 0.5])
-q_diag = [
-    60,  # x
-    60,  # y
-    178,  # z
-    0.4,    # roll
-    0.4,    # pitch
-    4.0,    # yaw
-    4.0,    # vx
-    4.0,    # vy
-    4.0,    # vz
-    0.2,   # wx
-    0.2,   # wy
-    25.0,   # wz
-]
+q_diag = Q_DIAG
 
 Q = np.diag(q_diag) #1./max_dev_x**2)
-R = np.diag([20.0, 20.0, 20.0, 20.0]) #1./max_dev_u**2)
+R = np.diag(R_DIAG) #1./max_dev_u**2)
 
 
-def generate_trajectory_header_from_script(length: int, horizon: int, q_diag_vals: np.ndarray, r_mat: np.ndarray) -> None:
-    dt = float(os.getenv("ADMM_TRAJ_DT", timer_period))
-    amp_x = float(os.getenv("ADMM_TRAJ_AMP_X", "0.90"))
-    amp_y = float(os.getenv("ADMM_TRAJ_AMP_Y", "1.15"))
-    z0 = float(os.getenv("ADMM_TRAJ_Z0", "0.0"))
-    cycles = float(os.getenv("ADMM_TRAJ_CYCLES", "1.0"))
-    yaw_mode = os.getenv("ADMM_TRAJ_YAW_MODE", "fixed").strip().lower()
-    state_source = os.getenv("ADMM_TRAJ_STATE_SOURCE", "rollout").strip().lower()
-    if yaw_mode not in {"fixed", "velocity"}:
-        raise ValueError("ADMM_TRAJ_YAW_MODE must be 'fixed' or 'velocity'")
-    if state_source not in {"rollout", "geometric"}:
-        raise ValueError("ADMM_TRAJ_STATE_SOURCE must be 'rollout' or 'geometric'")
-
-    script_path = os.path.join(os.path.dirname(__file__), "trajectory_generator.py")
-    q_diag_str = ",".join(f"{float(v):.12g}" for v in q_diag_vals.tolist())
-    r_diag_str = ",".join(f"{float(v):.12g}" for v in np.diag(r_mat).tolist())
-
-    cmd = [
-        sys.executable,
-        script_path,
-        "--length", str(length),
-        "--dt", f"{dt:.12g}",
-        "--amp-x", f"{amp_x:.12g}",
-        "--amp-y", f"{amp_y:.12g}",
-        "--z0", f"{z0:.12g}",
-        "--cycles", f"{cycles:.12g}",
-        "--yaw-mode", yaw_mode,
-        "--state-source", state_source,
-        "--admm-header-out", "./vitis_projects/ADMM/traj_data.h",
-        "--q-diag", q_diag_str,
-        "--r-diag", r_diag_str,
-        "--horizon", str(horizon),
-        "--csv-out", "./build/trajectory/fig8_refs.csv",
-        "--header-out", "./build/trajectory/traj_fig8_12.h",
-        "--preview-png", "./build/trajectory/fig8_preview.png",
-    ]
-    if os.getenv("ADMM_TRAJ_OPTIMIZE_SCP", "0").strip() not in {"0", "", "false", "False", "FALSE"}:
-        cmd.append("--optimize-scp")
-        if "ADMM_TRAJ_SCP_ITERS" in os.environ:
-            cmd += ["--scp-iters", os.environ["ADMM_TRAJ_SCP_ITERS"]]
-        if "ADMM_TRAJ_SCP_TRUST_X" in os.environ:
-            cmd += ["--scp-trust-x", os.environ["ADMM_TRAJ_SCP_TRUST_X"]]
-        if "ADMM_TRAJ_SCP_TRUST_U" in os.environ:
-            cmd += ["--scp-trust-u", os.environ["ADMM_TRAJ_SCP_TRUST_U"]]
-        if "ADMM_TRAJ_SCP_W_U" in os.environ:
-            cmd += ["--scp-w-u", os.environ["ADMM_TRAJ_SCP_W_U"]]
-        if "ADMM_TRAJ_SCP_W_DU" in os.environ:
-            cmd += ["--scp-w-du", os.environ["ADMM_TRAJ_SCP_W_DU"]]
-        if "ADMM_TRAJ_SCP_W_X_TRUST" in os.environ:
-            cmd += ["--scp-w-x-trust", os.environ["ADMM_TRAJ_SCP_W_X_TRUST"]]
-        if "ADMM_TRAJ_SCP_W_U_TRUST" in os.environ:
-            cmd += ["--scp-w-u-trust", os.environ["ADMM_TRAJ_SCP_W_U_TRUST"]]
-        if "ADMM_TRAJ_SCP_MIX_NEW_U" in os.environ:
-            cmd += ["--scp-mix-new-u", os.environ["ADMM_TRAJ_SCP_MIX_NEW_U"]]
-        if "ADMM_TRAJ_SCP_Q_DIAG" in os.environ:
-            cmd += ["--scp-q-diag", os.environ["ADMM_TRAJ_SCP_Q_DIAG"]]
-    subprocess.run(cmd, check=True)
+def load_traj_length_from_header(header_path: Path, horizon: int) -> int:
+    text = header_path.read_text()
+    m = re.search(r"#define\s+TRAJ_Q_PACKED_ROWS\s+(\d+)", text)
+    if m is None:
+        raise ValueError(f"Could not find TRAJ_Q_PACKED_ROWS in {header_path}")
+    rows = int(m.group(1))
+    traj_length = rows - horizon
+    if traj_length <= 0:
+        raise ValueError(f"Invalid TRAJ_LENGTH derived from {header_path}: {traj_length}")
+    return traj_length
 
 # Control input constraints
 u_max = np.array([1.0 - ug[0]] * 4)
@@ -391,16 +333,8 @@ constants["START_INEQ"] = A_eq.shape[0]
 constants["RHO_SHIFT"] = int(np.log2(rho))
 constants["U_MIN"] = u_min[0]
 constants["U_MAX"] = u_max[0]
-constants["TRAJ_LENGTH"] = traj_length
-constants["TRAJ_TICK_DIV"] = int(os.getenv("ADMM_TRAJ_TICK_DIV", "1"))
-
-# Generate trajectory-packed reference in dedicated header via external script.
-generate_trajectory_header_from_script(
-    length=traj_length,
-    horizon=N,
-    q_diag_vals=np.asarray(q_diag, dtype=np.float64),
-    r_mat=R,
-)
+constants["TRAJ_LENGTH"] = load_traj_length_from_header(TRAJ_DATA_HEADER_PATH, horizon=N)
+constants["TRAJ_TICK_DIV"] = TRAJ_TICK_DIV
 
 data = []
 data.append(generate_constants_header(constants))
@@ -411,7 +345,7 @@ data.append(generate_matrix_header(A_sparse_indexes, "A_sparse_indexes", type=f"
 data.append(generate_matrix_header(AT_sparse_data, "AT_sparse_data"))
 data.append(generate_matrix_header(AT_sparse_indexes, "AT_sparse_indexes", type=f"ap_uint<{AT_n_bits_idx}>"))
 
-generate_full_header(data, filename="./vitis_projects/ADMM/data.h")
+generate_full_header(data, filename=str(DATA_HEADER_PATH))
 
 # # Test header generation
 # np.random.seed(0)

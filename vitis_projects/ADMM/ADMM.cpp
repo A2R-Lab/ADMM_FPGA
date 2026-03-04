@@ -183,13 +183,9 @@ void ADMM_solver(
     }
 
     const fp_t* q_runtime = q_zero;
-    if (traj_started) {
-        int clamped_idx = traj_idx;
-        if (clamped_idx > (TRAJ_LENGTH - 1)) {
-            clamped_idx = TRAJ_LENGTH - 1;
-        }
+    if (traj_started && (traj_idx < TRAJ_LENGTH)) {
         // q is preweighted and packed offline; runtime only shifts pointer.
-        q_runtime = &traj_q_packed[clamped_idx][0];
+        q_runtime = &traj_q_packed[traj_idx][0];
     }
 
     ADMM_MAIN_LOOP:
@@ -197,7 +193,7 @@ void ADMM_solver(
         ADMM_iteration(x, current_state, q_runtime);
     }
 
-    if (traj_started && (traj_idx < (TRAJ_LENGTH - 1))) {
+    if (traj_started && (traj_idx < TRAJ_LENGTH)) {
         traj_tick_div_ctr++;
         if (traj_tick_div_ctr >= TRAJ_TICK_DIV) {
             traj_tick_div_ctr = 0;

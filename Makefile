@@ -2,7 +2,8 @@
 # ADMM FPGA - Top-Level Makefile
 # =============================================================================
 # Targets:
-#   all       - Build everything (headers -> HLS -> Vivado -> bitstream)
+#   all       - Build everything (traj -> headers -> HLS -> Vivado -> bitstream)
+#   traj      - Generate deterministic trajectory references
 #   headers   - Generate data.h from Python script
 #   hls       - Build HLS IP
 #   vivado    - Run Vivado synthesis + implementation
@@ -45,9 +46,12 @@ HLS_SOURCES   := $(HLS_DIR)/ADMM.cpp $(HLS_DIR)/ADMM.h $(HLS_DIR)/data_types.h
 RTL_SOURCES   := $(wildcard $(RTL_DIR)/*.v)
 XDC_SOURCES   := $(wildcard $(XDC_DIR)/*.xdc)
 HEADER_SCRIPT := $(SCRIPTS_DIR)/header_generator.py
+TRAJ_SCRIPT   := $(SCRIPTS_DIR)/trajectory_generator.py
 
 # Generated files
 DATA_HEADER   := $(HLS_DIR)/data.h
+TRAJ_REFS     := $(HLS_DIR)/trajectory_refs.csv
+TRAJ_HEADER   := $(HLS_DIR)/traj_data.h
 HLS_IP_MARKER := $(HLS_WORK_DIR)/.export_done
 SYNTH_DCP     := $(BUILD_DIR)/post_synth.dcp
 ROUTE_DCP     := $(BUILD_DIR)/post_route.dcp
@@ -58,7 +62,7 @@ FLASH_BIN     := $(BUILD_DIR)/$(TOP_MODULE).bin
 # Main Targets
 # =============================================================================
 
-.PHONY: all headers hls vivado bit program flash sync sim sim-csim sim-cosim clean clean-hls clean-all help
+.PHONY: all traj headers hls vivado bit program flash sync sim sim-csim sim-cosim clean clean-hls clean-all help
 
 all: $(BITSTREAM)
 	@echo "========================================="
@@ -72,6 +76,7 @@ help:
 	@echo ""
 	@echo "Targets:"
 	@echo "  all       - Build everything (default)"
+	@echo "  traj      - Generate deterministic trajectory references"
 	@echo "  headers   - Generate data.h"
 	@echo "  hls       - Build HLS IP"
 	@echo "  vivado    - Synthesis + Implementation"
@@ -96,12 +101,24 @@ help:
 	@echo "  make sync REMOTE=user@host:~/ADMM_FPGA [SSH_PORT=2222]  # Fetch build from server"
 
 # =============================================================================
+# Trajectory Generation
+# =============================================================================
+
+traj: $(TRAJ_HEADER)
+
+$(TRAJ_REFS) $(TRAJ_HEADER): $(TRAJ_SCRIPT) $(SCRIPTS_DIR)/crazyloihimodel.py
+	@echo "========================================="
+	@echo "Generating trajectory references..."
+	@echo "========================================="
+	cd $(SCRIPTS_DIR) && $(PYTHON) trajectory_generator.py
+
+# =============================================================================
 # Header Generation
 # =============================================================================
 
 headers: $(DATA_HEADER)
 
-$(DATA_HEADER): $(HEADER_SCRIPT) $(SCRIPTS_DIR)/crazyloihimodel.py
+$(DATA_HEADER): $(HEADER_SCRIPT) $(SCRIPTS_DIR)/crazyloihimodel.py $(TRAJ_HEADER)
 	@echo "========================================="
 	@echo "Generating headers..."
 	@echo "========================================="

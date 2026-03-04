@@ -154,7 +154,7 @@ The FPGA will boot from flash on power-up. Power cycle the board after programmi
 
 ### Communication Format
 
-- **Word size:** 24 bits
+- **Word size:** 32 bits
 - **Mode:** SPI Mode 0 (CPOL=0, CPHA=0)
 - **Byte order:** MSB first
 
@@ -223,8 +223,10 @@ make
 
 ### Encoding Trajectory In FPGA
 
-Trajectory references are generated into `vitis_projects/ADMM/data.h` from:
-- `scripts/header_generator.py` -> `build_reference_trajectory(...)`
+Trajectory generation and packing are split into two deterministic steps:
+- `scripts/trajectory_generator.py` writes `vitis_projects/ADMM/trajectory_refs.csv`
+- `scripts/trajectory_generator.py` also writes `vitis_projects/ADMM/traj_data.h`
+- `scripts/header_generator.py` only generates solver/model header data (`vitis_projects/ADMM/data.h`)
 
 Generated arrays:
 - `traj_q_packed[TRAJ_LENGTH + HORIZON_LENGTH][STATE_SIZE + INPUT_SIZE]`

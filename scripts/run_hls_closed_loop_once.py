@@ -20,6 +20,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+from parameters import TRAJ_DT, TRAJ_LENGTH
+
 
 def parse_u_hover_from_data_h(data_h_path: Path) -> float:
     text = data_h_path.read_text()
@@ -28,6 +30,14 @@ def parse_u_hover_from_data_h(data_h_path: Path) -> float:
         raise ValueError("U_MIN not found in data.h")
     u_min = float(m.group(1))
     return -u_min
+
+
+def parse_int_define_from_data_h(data_h_path: Path, define_name: str) -> int:
+    text = data_h_path.read_text()
+    m = re.search(rf"^\s*#define\s+{define_name}\s+([0-9]+)\s*$", text, re.MULTILINE)
+    if m is None:
+        raise ValueError(f"{define_name} not found in data.h")
+    return int(m.group(1))
 
 
 def load_reference_csv(csv_path: Path) -> tuple[list[list[float]], list[list[float]]]:
@@ -39,6 +49,22 @@ def load_reference_csv(csv_path: Path) -> tuple[list[list[float]], list[list[flo
             x_ref_rows.append([float(row[f"x{i}"]) for i in range(12)])
             u_ref_rows.append([float(row[f"u{i}"]) for i in range(4)])
     return x_ref_rows, u_ref_rows
+
+
+def parse_ref_dt_from_csv(csv_path: Path) -> float | None:
+    with csv_path.open("r", newline="") as f:
+        reader = csv.DictReader(f)
+        rows = []
+        for row in reader:
+            rows.append(float(row["t"]))
+            if len(rows) >= 2:
+                break
+    if len(rows) < 2:
+        return None
+    dt = rows[1] - rows[0]
+    if dt <= 0:
+        return None
+    return dt
 
 
 def generate_trajectory_plot(
@@ -216,15 +242,10 @@ def run_cmd_streaming(
 
 
 def parse_args() -> argparse.Namespace:
+    default_sim_duration_s = (TRAJ_LENGTH - 1) * TRAJ_DT
     parser = argparse.ArgumentParser(description="Run one ADMM HLS closed-loop csim and plot one trajectory.")
-    parser.add_argument("--sim-freq", type=float, default=100.0)
-    parser.add_argument("--sim-duration-s", type=float, default=18.0)
-    parser.add_argument(
-        "--traj-duration-s",
-        type=float,
-        default=15.0,
-        help="Desired duration of generated reference trajectory in seconds.",
-    )
+    parser.add_argument("--sim-freq", type=float, default=500.0)
+    parser.add_argument("--sim-duration-s", type=float, default=default_sim_duration_s)
     parser.add_argument("--step-x", type=float, default=0.0)
     parser.add_argument("--step-y", type=float, default=0.0)
     parser.add_argument("--step-z", type=float, default=0.0)
@@ -235,19 +256,7 @@ def parse_args() -> argparse.Namespace:
         default=0,
         help="Step index where time-varying trajectory starts in ADMM_closed_loop_tb.cpp.",
     )
-    parser.add_argument(
-        "--traj-tick-div",
-        type=int,
-        default=2,
-        help="Trajectory pointer advances every N solver calls (must match TRAJ_TICK_DIV in ADMM.cpp).",
-    )
-    parser.add_argument(
-        "--traj-state-source",
-        choices=["rollout", "geometric"],
-        default="rollout",
-        help="Trajectory state source passed to header_generator (ADMM_TRAJ_STATE_SOURCE).",
-    )
-    parser.add_argument("--timeout-s", type=float, default=400.0, help="csim timeout in seconds, <=0 disables.")
+    parser.add_argument("--timeout-s", type=float, default=1200.0, help="csim timeout in seconds, <=0 disables.")
     parser.add_argument(
         "--output-dir",
         default="plots/hls_csim_closed_loop_once",
@@ -260,10 +269,6 @@ def main() -> int:
     args = parse_args()
     if args.sim_freq <= 0 or args.sim_duration_s <= 0:
         raise ValueError("sim-freq and sim-duration-s must be > 0")
-    if args.traj_duration_s <= 0:
-        raise ValueError("traj-duration-s must be > 0")
-    if args.traj_tick_div <= 0:
-        raise ValueError("traj-tick-div must be > 0")
 
     repo_root = Path(__file__).resolve().parents[1]
     out_root = (repo_root / args.output_dir).resolve()
@@ -278,25 +283,35 @@ def main() -> int:
     # Run in-place in the ADMM project directory.
     src_dir = (repo_root / "vitis_projects" / "ADMM").resolve()
 
+    traj_cmd = [
+        "python3",
+        str(repo_root / "scripts" / "trajectory_generator.py"),
+    ]
+    traj_stdout_log = logs_dir / "traj.stdout.log"
+    traj_stderr_log = logs_dir / "traj.stderr.log"
+    traj_rc, _, _ = run_cmd_streaming(
+        cmd=traj_cmd,
+        cwd=repo_root,
+        env=os.environ.copy(),
+        stdout_log=traj_stdout_log,
+        stderr_log=traj_stderr_log,
+        prefix="traj",
+    )
+    if traj_rc != 0:
+        print(f"trajectory_generator failed ({traj_rc})")
+        print(f"See logs: {logs_dir}")
+        return 1
+
     header_cmd = [
         "python3",
         str(repo_root / "scripts" / "header_generator.py"),
     ]
-    header_env = os.environ.copy()
-    header_env["ADMM_TRAJ_STATE_SOURCE"] = args.traj_state_source
-    header_env["ADMM_TRAJ_TICK_DIV"] = str(args.traj_tick_div)
-    # Trajectory index is held for traj_tick_div solver calls in ADMM.cpp.
-    # Generate references at that effective update period.
-    traj_dt = args.traj_tick_div / args.sim_freq
-    traj_length = max(2, int(round(args.traj_duration_s / traj_dt)) + 1)
-    header_env["ADMM_TRAJ_DT"] = f"{traj_dt:.12g}"
-    header_env["ADMM_TRAJ_LENGTH"] = str(traj_length)
     header_stdout_log = logs_dir / "header.stdout.log"
     header_stderr_log = logs_dir / "header.stderr.log"
     header_rc, _, _ = run_cmd_streaming(
         cmd=header_cmd,
         cwd=repo_root,
-        env=header_env,
+        env=os.environ.copy(),
         stdout_log=header_stdout_log,
         stderr_log=header_stderr_log,
         prefix="header",
@@ -366,7 +381,22 @@ def main() -> int:
 
     plot_path = out_dir / "trajectory.png"
     u_hover = parse_u_hover_from_data_h(expected_data_h)
-    ref_csv_path = repo_root / "build" / "trajectory" / "fig8_refs.csv"
+    traj_tick_div = parse_int_define_from_data_h(expected_data_h, "TRAJ_TICK_DIV")
+    horizon_len = parse_int_define_from_data_h(expected_data_h, "HORIZON_LENGTH")
+    warmstart_pad = max(horizon_len - 1, 0)
+    ref_csv_path = repo_root / "vitis_projects" / "ADMM" / "trajectory_refs.csv"
+    ref_dt = parse_ref_dt_from_csv(ref_csv_path) if ref_csv_path.exists() else None
+    if ref_dt is not None:
+        expected_tick_div = int(round(ref_dt * args.sim_freq))
+        if expected_tick_div < 1:
+            expected_tick_div = 1
+        if expected_tick_div != traj_tick_div:
+            print(
+                "warning: timing mismatch between sim and trajectory references: "
+                f"sim_freq={args.sim_freq:g}Hz, ref_dt={ref_dt:g}s => expected TRAJ_TICK_DIV={expected_tick_div}, "
+                f"but compiled TRAJ_TICK_DIV={traj_tick_div}."
+            )
+            print("warning: this will distort reference timing and can make plots look wrong.")
     n_rows = sum(1 for _ in csv.DictReader(traj_path.open("r", newline="")))
 
     if ref_csv_path.exists():
@@ -386,10 +416,16 @@ def main() -> int:
                     state_setpoint_t.append([0.0] * 12)
                     control_setpoint_t.append([u_hover] * 4)
                 else:
-                    idx = min((i_eff - args.traj_start_step) // args.traj_tick_div, len(x_ref_rows) - 1)
-                    state_setpoint_t.append(list(x_ref_rows[idx]))
-                    # reference CSV stores delta-u around hover
-                    control_setpoint_t.append([u_hover + u_ref_rows[idx][k] for k in range(4)])
+                    traj_sample = (i_eff - args.traj_start_step) // traj_tick_div
+                    ref_idx = traj_sample - warmstart_pad
+                    if ref_idx < 0 or ref_idx >= len(x_ref_rows):
+                        # Runtime switches to q=0 after trajectory is consumed.
+                        state_setpoint_t.append([0.0] * 12)
+                        control_setpoint_t.append([u_hover] * 4)
+                    else:
+                        state_setpoint_t.append(list(x_ref_rows[ref_idx]))
+                        # reference CSV stores delta-u around hover
+                        control_setpoint_t.append([u_hover + u_ref_rows[ref_idx][k] for k in range(4)])
     else:
         state_setpoint_t = [[0.0] * 12 for _ in range(n_rows)]
         control_setpoint_t = [[u_hover] * 4 for _ in range(n_rows)]
