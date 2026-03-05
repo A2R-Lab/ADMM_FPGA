@@ -1,3 +1,0 @@
-relativeroot=/home/agrillo/ADMM_FPGA/vitis_projects/ADMM
-original_argv=--mode hls --csim --config ./hls_eval_config.cfg --work_dir /home/agrillo/ADMM_FPGA/plots/hls_csim_closed_loop_once/run_20260304_175400/hls_work 
-

@@ -402,6 +402,46 @@ def main() -> int:
         f"[{np.min(u_abs):.4f}, {np.max(u_abs):.4f}] "
         "(expect inside [0, 1] for feasible nominal feed-forward)"
     )
+    # Summary metrics for quick feasibility checks.
+    pos_xy = np.sqrt(x_ref[:, 0] ** 2 + x_ref[:, 1] ** 2)
+    speed_xy = np.sqrt(x_ref[:, 6] ** 2 + x_ref[:, 7] ** 2)
+    speed_3d = np.sqrt(x_ref[:, 6] ** 2 + x_ref[:, 7] ** 2 + x_ref[:, 8] ** 2)
+    # Convert controller attitude coordinates (rp = q_vec / q_w) to roll/pitch for a
+    # physically meaningful combined tilt metric.
+    rp0 = x_ref[:, 3]
+    rp1 = x_ref[:, 4]
+    rp2 = x_ref[:, 5]
+    rp_norm2 = rp0**2 + rp1**2 + rp2**2
+    qw = 1.0 / np.sqrt(1.0 + rp_norm2)
+    qx = rp0 * qw
+    qy = rp1 * qw
+    qz = rp2 * qw
+    roll = np.arctan2(2.0 * (qw * qx + qy * qz), 1.0 - 2.0 * (qx * qx + qy * qy))
+    pitch_arg = np.clip(2.0 * (qw * qy - qz * qx), -1.0, 1.0)
+    pitch = np.arcsin(pitch_arg)
+    tilt_deg = np.degrees(np.sqrt(roll**2 + pitch**2))
+    ang_rate_xy = np.sqrt(x_ref[:, 9] ** 2 + x_ref[:, 10] ** 2)
+    ang_rate_3d = np.sqrt(x_ref[:, 9] ** 2 + x_ref[:, 10] ** 2 + x_ref[:, 11] ** 2)
+    accel_xy = np.sqrt(
+        np.gradient(x_ref[:, 6], TRAJ_DT, edge_order=2) ** 2
+        + np.gradient(x_ref[:, 7], TRAJ_DT, edge_order=2) ** 2
+    )
+    accel_3d = np.sqrt(
+        np.gradient(x_ref[:, 6], TRAJ_DT, edge_order=2) ** 2
+        + np.gradient(x_ref[:, 7], TRAJ_DT, edge_order=2) ** 2
+        + np.gradient(x_ref[:, 8], TRAJ_DT, edge_order=2) ** 2
+    )
+    print(
+        "trajectory_stats: "
+        f"max_pos_xy={np.max(pos_xy):.4f} m, "
+        f"max_speed_xy={np.max(speed_xy):.4f} m/s, "
+        f"max_speed_3d={np.max(speed_3d):.4f} m/s, "
+        f"max_tilt_rollpitch={np.max(tilt_deg):.2f} deg, "
+        f"max_ang_rate_xy={np.max(ang_rate_xy):.4f} rad/s, "
+        f"max_ang_rate_3d={np.max(ang_rate_3d):.4f} rad/s, "
+        f"max_accel_xy={np.max(accel_xy):.4f} m/s^2, "
+        f"max_accel_3d={np.max(accel_3d):.4f} m/s^2"
+    )
     return 0
 
 
