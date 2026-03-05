@@ -40,6 +40,7 @@ REPO_ROOT = SCRIPT_DIR.parent
 
 TRAJ_REFS_CSV_OUT = REPO_ROOT / "vitis_projects" / "ADMM" / "trajectory_refs.csv"
 TRAJ_DATA_HEADER_OUT = REPO_ROOT / "vitis_projects" / "ADMM" / "traj_data.h"
+TRAJ_DATA_RAW_HEADER_OUT = REPO_ROOT / "vitis_projects" / "ADMM" / "traj_data_raw.h"
 TRAJ_PREVIEW_PNG_OUT = REPO_ROOT / "build" / "trajectory" / "fig8_preview.png"
 TRAJ_XREF_HEADER_OUT = REPO_ROOT / "build" / "trajectory" / "traj_fig8_12.h"
 
@@ -268,6 +269,30 @@ def build_traj_q_packed(
     return traj_q_packed
 
 
+def build_traj_raw_packed(x_ref: np.ndarray, u_ref: np.ndarray, horizon: int) -> np.ndarray:
+    if horizon <= 0:
+        raise ValueError("horizon must be > 0")
+
+    cols = x_ref.shape[1] + u_ref.shape[1]
+    core = np.zeros((x_ref.shape[0], cols), dtype=np.float64)
+    core[:, : x_ref.shape[1]] = x_ref
+    core[:, x_ref.shape[1] :] = u_ref
+
+    # Match q-packed timeline so both headers are drop-in equivalent in indexing.
+    pad = max(horizon - 1, 0)
+    seq = np.vstack(
+        [
+            np.zeros((pad, cols), dtype=np.float64),
+            core,
+            np.zeros((pad, cols), dtype=np.float64),
+        ]
+    )
+
+    traj_raw_packed = np.zeros((seq.shape[0] + horizon, cols), dtype=np.float64)
+    traj_raw_packed[: seq.shape[0], :] = seq
+    return traj_raw_packed
+
+
 def write_traj_q_header(path: Path, traj_q_packed: np.ndarray) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     rows, cols = traj_q_packed.shape
@@ -283,6 +308,23 @@ def write_traj_q_header(path: Path, traj_q_packed: np.ndarray) -> None:
             f.write(f"   {{ {vals} }},\n")
         f.write("};\n\n")
         f.write("#endif // TRAJ_DATA_H\n")
+
+
+def write_traj_raw_header(path: Path, traj_raw_packed: np.ndarray) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    rows, cols = traj_raw_packed.shape
+    with path.open("w") as f:
+        f.write("#ifndef TRAJ_DATA_RAW_H\n")
+        f.write("#define TRAJ_DATA_RAW_H\n\n")
+        f.write('#include "data_types.h"\n\n')
+        f.write(f"#define TRAJ_RAW_PACKED_ROWS {rows}\n")
+        f.write(f"#define TRAJ_RAW_PACKED_COLS {cols}\n")
+        f.write("const fp_t traj_raw_packed[TRAJ_RAW_PACKED_ROWS][TRAJ_RAW_PACKED_COLS] = {\n")
+        for i in range(rows):
+            vals = ", ".join(f"(fp_t){traj_raw_packed[i, j]:.8f}" for j in range(cols))
+            f.write(f"   {{ {vals} }},\n")
+        f.write("};\n\n")
+        f.write("#endif // TRAJ_DATA_RAW_H\n")
 
 
 def write_header_x_ref(path: Path, x_ref: np.ndarray) -> None:
@@ -384,6 +426,8 @@ def main() -> int:
         horizon=HORIZON_LENGTH,
     )
     write_traj_q_header(TRAJ_DATA_HEADER_OUT, traj_q_packed)
+    traj_raw_packed = build_traj_raw_packed(x_ref=x_ref, u_ref=u_ref, horizon=HORIZON_LENGTH)
+    write_traj_raw_header(TRAJ_DATA_RAW_HEADER_OUT, traj_raw_packed)
     write_header_x_ref(TRAJ_XREF_HEADER_OUT, x_ref)
     write_preview(TRAJ_PREVIEW_PNG_OUT, x_ref, u_ref, TRAJ_DT)
 
@@ -394,6 +438,7 @@ def main() -> int:
     print("state_source=geometric_seed")
     print(f"csv={TRAJ_REFS_CSV_OUT}")
     print(f"traj_data_header={TRAJ_DATA_HEADER_OUT}")
+    print(f"traj_data_raw_header={TRAJ_DATA_RAW_HEADER_OUT}")
     print(f"xref_header={TRAJ_XREF_HEADER_OUT}")
     print(f"preview={TRAJ_PREVIEW_PNG_OUT}")
     print(f"dt={TRAJ_DT:.6f}s traj_length={TRAJ_LENGTH} fig8_period_s={FIG8_PERIOD_S:.6f}")
