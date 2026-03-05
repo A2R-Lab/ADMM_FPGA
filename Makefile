@@ -47,6 +47,7 @@ RTL_SOURCES   := $(wildcard $(RTL_DIR)/*.v)
 XDC_SOURCES   := $(wildcard $(XDC_DIR)/*.xdc)
 HEADER_SCRIPT := $(SCRIPTS_DIR)/header_generator.py
 TRAJ_SCRIPT   := $(SCRIPTS_DIR)/trajectory_generator.py
+PARAMS_SCRIPT := $(SCRIPTS_DIR)/parameters.py
 
 # Generated files
 DATA_HEADER   := $(HLS_DIR)/data.h
@@ -106,7 +107,7 @@ help:
 
 traj: $(TRAJ_HEADER)
 
-$(TRAJ_REFS) $(TRAJ_HEADER): $(TRAJ_SCRIPT) $(SCRIPTS_DIR)/crazyloihimodel.py
+$(TRAJ_REFS) $(TRAJ_HEADER): $(TRAJ_SCRIPT) $(SCRIPTS_DIR)/crazyloihimodel.py $(PARAMS_SCRIPT)
 	@echo "========================================="
 	@echo "Generating trajectory references..."
 	@echo "========================================="
@@ -118,7 +119,7 @@ $(TRAJ_REFS) $(TRAJ_HEADER): $(TRAJ_SCRIPT) $(SCRIPTS_DIR)/crazyloihimodel.py
 
 headers: $(DATA_HEADER)
 
-$(DATA_HEADER): $(HEADER_SCRIPT) $(SCRIPTS_DIR)/crazyloihimodel.py $(TRAJ_HEADER)
+$(DATA_HEADER): $(HEADER_SCRIPT) $(SCRIPTS_DIR)/crazyloihimodel.py $(PARAMS_SCRIPT) $(TRAJ_HEADER)
 	@echo "========================================="
 	@echo "Generating headers..."
 	@echo "========================================="

@@ -148,15 +148,22 @@ def generate_figure8_rollout_trajectory(
     theta_dot = 2.0 * np.pi * cycles * ds_dt
     theta_ddot = 2.0 * np.pi * cycles * d2s_dt2
 
-    # Lemniscate of Gerono.
-    x = amp_x * np.sin(theta)
-    y = amp_y * np.sin(theta) * np.cos(theta)
+    # Lemniscate of Gerono, then swap x/y axes.
+    x_raw = amp_x * np.sin(theta)
+    y_raw = amp_y * np.sin(theta) * np.cos(theta)
+    x = y_raw
+    y = x_raw
     z = np.full_like(x, z0)
 
-    x_theta = amp_x * np.cos(theta)
-    y_theta = amp_y * np.cos(2.0 * theta)
-    x_thetatheta = -amp_x * np.sin(theta)
-    y_thetatheta = -2.0 * amp_y * np.sin(2.0 * theta)
+    x_theta_raw = amp_x * np.cos(theta)
+    y_theta_raw = amp_y * np.cos(2.0 * theta)
+    x_thetatheta_raw = -amp_x * np.sin(theta)
+    y_thetatheta_raw = -2.0 * amp_y * np.sin(2.0 * theta)
+
+    x_theta = y_theta_raw
+    y_theta = x_theta_raw
+    x_thetatheta = y_thetatheta_raw
+    y_thetatheta = x_thetatheta_raw
 
     vx = x_theta * theta_dot
     vy = y_theta * theta_dot

@@ -10,7 +10,7 @@ timer_period = 0.02  # seconds
 # Horizon length
 N = HORIZON_LENGTH
 
-rho = 128
+rho = 64
 rho_mult = 1
 TRAJ_TICK_DIV = 10
 SCRIPT_DIR = Path(__file__).resolve().parent

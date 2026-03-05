@@ -19,6 +19,7 @@ struct SimConfig {
     double step_y = 0.0;
     double step_z = 0.0;
     double step_yaw = 0.1;
+    double yaw_drift_rate_rad_s = 0.0;
     std::string traj_path = "trajectory.csv";
 };
 
@@ -51,6 +52,7 @@ SimConfig load_config() {
     cfg.step_y = getenv_double("ADMM_STEP_Y", cfg.step_y);
     cfg.step_z = getenv_double("ADMM_STEP_Z", cfg.step_z);
     cfg.step_yaw = getenv_double("ADMM_STEP_YAW", cfg.step_yaw);
+    cfg.yaw_drift_rate_rad_s = getenv_double("ADMM_YAW_DRIFT_RAD_S", cfg.yaw_drift_rate_rad_s);
     cfg.traj_path = getenv_string("ADMM_CSIM_TRAJ_PATH", cfg.traj_path);
     return cfg;
 }
@@ -250,6 +252,7 @@ int main() {
         std::cerr << "Invalid simulation config (sim_freq/duration).\n";
         return 1;
     }
+    std::cerr << "Yaw drift rate (rad/s): " << cfg.yaw_drift_rate_rad_s << "\n";
     const double dt = 1.0 / cfg.sim_freq;
     const int sim_steps = static_cast<int>(std::llround(cfg.sim_duration_s * cfg.sim_freq));
 
@@ -324,6 +327,8 @@ int main() {
         // }
 
         state = step12(state, control, dt);
+        // Inject a slow yaw drift disturbance for tuning.
+        state[5] += cfg.yaw_drift_rate_rad_s * dt;
 
         t_hist.push_back((step + 1) * dt);
         x_hist.push_back(state);
