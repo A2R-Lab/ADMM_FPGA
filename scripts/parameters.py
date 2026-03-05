@@ -7,7 +7,8 @@ R_DIAG = [20.0, 20.0, 20.0, 20.0]
 # Trajectory timing/generation (hardcoded for reproducible commits).
 
 TRAJ_DT = 0.02
-FIG8_PERIOD_S = 5.0
+FIG8_PERIOD_S = 8.0
 REPETITIONS = 3
 
-TRAJ_LENGTH = int(REPETITIONS * FIG8_PERIOD_S / TRAJ_DT)
+# Include endpoint sample: duration = (TRAJ_LENGTH - 1) * TRAJ_DT
+TRAJ_LENGTH = int(round(REPETITIONS * FIG8_PERIOD_S / TRAJ_DT)) + 1

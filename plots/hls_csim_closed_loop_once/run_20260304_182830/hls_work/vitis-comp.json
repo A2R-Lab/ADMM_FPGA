@@ -1,0 +1,9 @@
+{
+  "name": "hls_work",
+  "type": "HLS",
+  "configuration": {
+    "componentType": "HLS",
+    "configFiles": ["..\/..\/..\/..\/vitis_projects\/ADMM\/hls_eval_config.cfg"],
+    "work_dir": "."
+  }
+}

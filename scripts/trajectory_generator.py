@@ -18,14 +18,21 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from crazyloihimodel import CrazyLoihiModel
-from parameters import FIG8_PERIOD_S, HORIZON_LENGTH, Q_DIAG, R_DIAG, TRAJ_DT, TRAJ_LENGTH
+from parameters import (
+    FIG8_PERIOD_S,
+    HORIZON_LENGTH,
+    Q_DIAG,
+    R_DIAG,
+    TRAJ_DT,
+    TRAJ_LENGTH,
+)
 
 
 # -----------------------------------------------------------------------------
 # Trajectory generation parameters (edit here)
 # -----------------------------------------------------------------------------
-AMP_X = 0.30
-AMP_Y = 0.5
+AMP_X = 0.60
+AMP_Y = 1.0
 Z0 = 0.0
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -79,7 +86,7 @@ def _rpy_to_rp(roll: np.ndarray, pitch: np.ndarray, yaw: np.ndarray) -> np.ndarr
 
     qw = cr * cp * cy + sr * sp * sy
     qx = sr * cp * cy - cr * sp * sy
-    qy = cr * sp * cy + sr * cp * cy
+    qy = cr * sp * cy + sr * cp * sy
     qz = cr * cp * sy - sr * sp * cy
 
     eps = 1e-9
@@ -160,7 +167,6 @@ def generate_figure8_rollout_trajectory(
 
     # Single yaw mode: fixed yaw = 0.
     yaw = np.zeros_like(x)
-
     cpsi = np.cos(yaw)
     spsi = np.sin(yaw)
     # Flatness-style roll/pitch from desired acceleration and yaw.
@@ -188,11 +194,7 @@ def generate_figure8_rollout_trajectory(
         rhs = np.array([thrust[i], tau_body[0, i], tau_body[1, i], tau_body[2, i]], dtype=np.float64)
         u_abs[i, :] = inv_m @ rhs
 
-    u_hover = MASS * G / (4.0 * KT)
-    u_ref = u_abs - u_hover
-
     rp = _rpy_to_rp(roll, pitch, yaw)
-
     x_ref_seed = np.zeros((length, 12), dtype=np.float64)
     x_ref_seed[:, 0] = x
     x_ref_seed[:, 1] = y
@@ -207,9 +209,9 @@ def generate_figure8_rollout_trajectory(
     x_ref_seed[:, 10] = wy
     x_ref_seed[:, 11] = wz
 
-    # Single state generation method: full nonlinear rollout.
-    x_ref = _rollout_states_from_controls(u_abs=u_abs, dt=dt, x0=x_ref_seed[0, :])
-    return x_ref, u_ref
+    u_hover = MASS * G / (4.0 * KT)
+    u_ref = u_abs - u_hover
+    return x_ref_seed, u_ref
 
 
 def _cycles_from_period_s(length: int, dt: float, period_s: float) -> float:
@@ -382,7 +384,7 @@ def main() -> int:
     u_abs = u_ref + u_hover
 
     print("Trajectory generated.")
-    print("state_source=full_nonlinear_rollout")
+    print("state_source=geometric_seed")
     print(f"csv={TRAJ_REFS_CSV_OUT}")
     print(f"traj_data_header={TRAJ_DATA_HEADER_OUT}")
     print(f"xref_header={TRAJ_XREF_HEADER_OUT}")

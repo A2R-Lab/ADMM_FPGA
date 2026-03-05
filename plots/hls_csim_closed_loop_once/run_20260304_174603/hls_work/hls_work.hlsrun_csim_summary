@@ -1,0 +1,156 @@
+<ENTRY>
+{
+ "thisFile": "/home/agrillo/ADMM_FPGA/plots/hls_csim_closed_loop_once/run_20260304_174603/hls_work/hls_work.hlsrun_csim_summary",
+ "connectId": "",
+ "serverToken": "",
+ "timestamp": "0"
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_CmdStep",
+ "dateTimestamp": "Wed Mar  4 17:46:09 2026",
+ "timestampMillis": "1772664369290",
+ "buildStep": {
+  "cmdId": "6944dc4a-876e-498c-b1bb-353a0ee85ebe",
+  "name": "vitis-run",
+  "logFile": "/home/agrillo/ADMM_FPGA/plots/hls_csim_closed_loop_once/run_20260304_174603/hls_work/logs/hls_work.steps.log",
+  "commandLine": "/home/agrillo/amdfpga/2025.2/Vitis/bin/unwrapped/lnx64.o/vitis-run  --mode hls --csim --config ./hls_eval_config.cfg --work_dir /home/agrillo/ADMM_FPGA/plots/hls_csim_closed_loop_once/run_20260304_174603/hls_work ",
+  "args": [
+   "--mode",
+   "hls",
+   "--csim",
+   "--config",
+   "./hls_eval_config.cfg",
+   "--work_dir",
+   "/home/agrillo/ADMM_FPGA/plots/hls_csim_closed_loop_once/run_20260304_174603/hls_work"
+  ],
+  "iniFiles": [],
+  "cwd": "/home/agrillo/ADMM_FPGA/vitis_projects/ADMM"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Wed Mar  4 17:46:09 2026",
+ "timestampMillis": "1772664369290",
+ "status": {
+  "cmdId": "6944dc4a-876e-498c-b1bb-353a0ee85ebe",
+  "state": "CS_RUNNING"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_FlowMetaData",
+ "dateTimestamp": "Wed Mar  4 17:46:10 2026",
+ "timestampMillis": "1772664370582",
+ "buildSummary": {
+  "hardwarePlatform": "",
+  "hardwareDsa": "",
+  "platformDirectory": "",
+  "runtime": "",
+  "systemConfig": "",
+  "flow": "BF_RUN",
+  "target": "TT_HLS_C_SIM",
+  "kernels": [
+   {
+    "base": {
+     "type": "KERNEL",
+     "name": "ADMM_solver",
+     "file": "",
+     "reports": [],
+     "uuid": ""
+    },
+    "sources": [
+     "/home/agrillo/ADMM_FPGA/vitis_projects/ADMM/ADMM.cpp"
+    ],
+    "psSources": [],
+    "cuNames": [],
+    "type": "HLS",
+    "frequency": 0,
+    "freqUnits": ""
+   }
+  ],
+  "toolVersion": "2025.2"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_SubCmdStep",
+ "dateTimestamp": "Wed Mar  4 17:46:10 2026",
+ "timestampMillis": "1772664370583",
+ "buildStep": {
+  "cmdId": "cc5111f2-fd06-45f4-96fe-d33728d5aa86",
+  "name": "",
+  "logFile": "/home/agrillo/ADMM_FPGA/plots/hls_csim_closed_loop_once/run_20260304_174603/hls_work/hls/hls.log",
+  "commandLine": "",
+  "args": [],
+  "iniFiles": [],
+  "cwd": "/home/agrillo/ADMM_FPGA/plots/hls_csim_closed_loop_once/run_20260304_174603"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Wed Mar  4 17:46:10 2026",
+ "timestampMillis": "1772664370583",
+ "status": {
+  "cmdId": "cc5111f2-fd06-45f4-96fe-d33728d5aa86",
+  "state": "CS_RUNNING"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Wed Mar  4 17:46:16 2026",
+ "timestampMillis": "1772664376992",
+ "status": {
+  "cmdId": "cc5111f2-fd06-45f4-96fe-d33728d5aa86",
+  "state": "CS_PASSED"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Wed Mar  4 17:46:17 2026",
+ "timestampMillis": "1772664377032",
+ "status": {
+  "cmdId": "6944dc4a-876e-498c-b1bb-353a0ee85ebe",
+  "state": "CS_PASSED"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Report",
+ "dateTimestamp": "Wed Mar  4 17:46:17 2026",
+ "timestampMillis": "1772664377032",
+ "report": {
+  "path": "",
+  "name": "",
+  "fileType": "HTML",
+  "reportType": "GLOBAL_RULECHECK_GUIDANCE",
+  "cmdId": ""
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Report",
+ "dateTimestamp": "Wed Mar  4 17:46:17 2026",
+ "timestampMillis": "1772664377032",
+ "report": {
+  "path": "",
+  "name": "",
+  "fileType": "BINARY_PROTOBUF",
+  "reportType": "GLOBAL_RULECHECK_GUIDANCE",
+  "cmdId": ""
+ }
+}
+</ENTRY>
