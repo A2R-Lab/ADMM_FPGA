@@ -1,9 +1,0 @@
-{
-  "name": "ADMM_rho_tb",
-  "type": "HLS",
-  "configuration": {
-    "componentType": "HLS",
-    "configFiles": ["..\/hls_rho_tb_config.cfg"],
-    "work_dir": "."
-  }
-}

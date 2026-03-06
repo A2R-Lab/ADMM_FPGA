@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+`include "admm_autogen_params.vh"
 
 module top_spi (
     input  wire        clk,
@@ -15,8 +16,9 @@ module top_spi (
     //--------------------------------------------------------------
     // Parameters
     //--------------------------------------------------------------
-    localparam N_STATE = 12;
-    localparam N_VAR = 4;
+    localparam N_STATE = `ADMM_N_STATE;
+    localparam N_CTRL_TX = 4;
+    localparam X_MEM_DEPTH = `ADMM_N_VAR;
     localparam DATA_WIDTH = 32;
     
     // Packet Headers
@@ -25,7 +27,8 @@ module top_spi (
     localparam TX_HEADER = 32'hFFFFFFFF; // FPGA sends 0xFF as Ready signal
     
     localparam STATE_LOG = $clog2(N_STATE);
-    localparam VAR_LOG = $clog2(332);  
+    localparam VAR_LOG = $clog2(X_MEM_DEPTH);
+    localparam CTRL_TX_BASE = N_STATE + (`ADMM_STAGE_SIZE * `ADMM_DELAY_STEPS);
     
     // States
     localparam IDLE         = 3'd0;
@@ -68,7 +71,7 @@ module top_spi (
     
     // Memory
     reg [31:0] current_state_mem [0:N_STATE-1];  
-    reg [31:0] x_mem [0:331];                    
+    reg [31:0] x_mem [0:X_MEM_DEPTH-1];
     
     // Memory Ports
     wire [STATE_LOG-1:0] current_state_address0;
@@ -194,9 +197,9 @@ module top_spi (
                     TX_DATA: begin
                         if (spi_tx_ready) begin
                             // The Header (or previous word) is gone.
-                            if (tx_word_count < N_VAR) begin
+                            if (tx_word_count < N_CTRL_TX) begin
                                 // spi_tx_data <= {8'hD0, 8'h0D, tx_word_count[7:0]};
-                                spi_tx_data <= x_mem[12 + tx_word_count][31:0];
+                                spi_tx_data <= x_mem[CTRL_TX_BASE + tx_word_count][31:0];
                                 spi_tx_load <= 1;
                                 tx_word_count <= tx_word_count + 1;
                             end else begin

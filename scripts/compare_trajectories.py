@@ -65,9 +65,10 @@ def load_hw_log(path: Path) -> dict[str, Any]:
         "x": np.array([_as_float(r["state_x"]) for r in rows], dtype=np.float64),
         "y": np.array([_as_float(r["state_y"]) for r in rows], dtype=np.float64),
         "z": np.array([_as_float(r["state_z"]) for r in rows], dtype=np.float64),
-        "roll": np.array([_as_float(r["roll"]) for r in rows], dtype=np.float64),
-        "pitch": np.array([_as_float(r["pitch"]) for r in rows], dtype=np.float64),
-        "yaw": np.array([_as_float(r["yaw"]) for r in rows], dtype=np.float64),
+        # HW log attitude is in degrees; convert to radians to match reference.
+        "roll": np.deg2rad(np.array([_as_float(r["roll"]) for r in rows], dtype=np.float64)),
+        "pitch": np.deg2rad(np.array([_as_float(r["pitch"]) for r in rows], dtype=np.float64)),
+        "yaw": np.deg2rad(np.array([_as_float(r["yaw"]) for r in rows], dtype=np.float64)),
         "u1_16": np.array([_as_float(r["u1_16"]) for r in rows], dtype=np.float64),
         "u2_16": np.array([_as_float(r["u2_16"]) for r in rows], dtype=np.float64),
         "u3_16": np.array([_as_float(r["u3_16"]) for r in rows], dtype=np.float64),
@@ -376,6 +377,36 @@ def _plot_xy_overlay(path: Path, datasets: list[dict[str, Any]]) -> None:
     plt.close(fig)
 
 
+def _plot_xy_reference_fpga_tinympc(
+    path: Path,
+    reference: dict[str, Any],
+    fpga: dict[str, Any],
+    tinympc: dict[str, Any],
+) -> None:
+    fig, ax = plt.subplots(figsize=(8.0, 6.5), constrained_layout=True)
+    plot_specs = [
+        ("Reference", reference, {"lw": 2.2, "ls": "-"}),
+        ("FPGA", fpga, {"lw": 1.8, "ls": "--"}),
+        ("TinyMPC", tinympc, {"lw": 1.8, "ls": "-."}),
+    ]
+
+    for label, ds, style in plot_specs:
+        if ds["n"] < 1:
+            continue
+        line = ax.plot(ds["data"]["x"], ds["data"]["y"], label=label, **style)[0]
+        ax.plot(ds["data"]["x"][0], ds["data"]["y"][0], marker="o", ms=5, color=line.get_color())
+        ax.plot(ds["data"]["x"][-1], ds["data"]["y"][-1], marker="x", ms=6, color=line.get_color())
+
+    ax.set_title("XY plane: Reference vs FPGA vs TinyMPC")
+    ax.set_xlabel("x [m]")
+    ax.set_ylabel("y [m]")
+    ax.grid(True)
+    ax.axis("equal")
+    ax.legend()
+    fig.savefig(path, dpi=150)
+    plt.close(fig)
+
+
 def _plot_xy_overlay_aligned(
     path: Path,
     reference: dict[str, Any],
@@ -543,6 +574,12 @@ def main() -> int:
 
     if not args.no_plots:
         args.plots_dir.mkdir(parents=True, exist_ok=True)
+        _plot_xy_reference_fpga_tinympc(
+            args.plots_dir / "xy_plane_reference_fpga_tinympc.png",
+            reference,
+            fpga,
+            tinympc,
+        )
         _plot_xy_overlay(args.plots_dir / "xy_overlay.png", [reference, tinympc, fpga])
         _plot_xy_overlay_aligned(
             args.plots_dir / "xy_overlay_aligned.png",

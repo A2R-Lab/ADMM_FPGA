@@ -80,6 +80,9 @@ def generate_trajectory_plot(
     u1: list[float] = []
     u2: list[float] = []
     u3: list[float] = []
+    primal_residual: list[float] = []
+    dual_residual: list[float] = []
+    has_residuals = False
 
     with csv_path.open("r", newline="") as f:
         reader = csv.DictReader(f)
@@ -91,20 +94,27 @@ def generate_trajectory_plot(
             u1.append(float(row["u1"]))
             u2.append(float(row["u2"]))
             u3.append(float(row["u3"]))
+            p_res = row.get("primal_residual")
+            d_res = row.get("dual_residual")
+            if p_res is not None and d_res is not None and p_res != "" and d_res != "":
+                primal_residual.append(float(p_res))
+                dual_residual.append(float(d_res))
+                has_residuals = True
 
     if len(state_setpoint_t) != len(t_vals):
         raise ValueError("state_setpoint_t length must match trajectory length")
     if len(control_setpoint_t) != len(t_vals):
         raise ValueError("control_setpoint_t length must match trajectory length")
 
-    fig = plt.figure(figsize=(14, 10))
-    gs = fig.add_gridspec(3, 2, hspace=0.3)
+    fig = plt.figure(figsize=(14, 12))
+    gs = fig.add_gridspec(4, 2, hspace=0.3)
     ax_pos = fig.add_subplot(gs[0, 0])
     ax_att = fig.add_subplot(gs[0, 1])
     ax_vel = fig.add_subplot(gs[1, 0])
     ax_angvel = fig.add_subplot(gs[1, 1])
     ax_u = fig.add_subplot(gs[2, 0])
     ax_xy = fig.add_subplot(gs[2, 1])
+    ax_res = fig.add_subplot(gs[3, :])
 
     l0 = ax_pos.plot(t_vals, x[0], label="x")[0]
     l1 = ax_pos.plot(t_vals, x[1], label="y")[0]
@@ -176,6 +186,20 @@ def generate_trajectory_plot(
     ax_xy.grid(True)
     ax_xy.axis("equal")
     ax_xy.legend()
+
+    if has_residuals and len(primal_residual) == len(t_vals) and len(dual_residual) == len(t_vals):
+        ax_res.plot(t_vals, primal_residual, label="primal residual")
+        ax_res.plot(t_vals, dual_residual, label="dual residual")
+        if all(v > 0.0 for v in primal_residual) and all(v > 0.0 for v in dual_residual):
+            ax_res.set_yscale("log")
+        ax_res.set_title("ADMM Residuals")
+        ax_res.set_ylabel("L2 norm")
+        ax_res.grid(True)
+        ax_res.legend()
+    else:
+        ax_res.set_title("ADMM Residuals (not available in CSV)")
+        ax_res.grid(True)
+    ax_res.set_xlabel("Time [s]")
 
     fig.suptitle(title)
     fig.tight_layout(rect=[0, 0, 1, 0.96])

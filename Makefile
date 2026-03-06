@@ -43,7 +43,7 @@ IP_DIR        := $(PROJ_ROOT)/vivado_project/vivado_project.gen/sources_1/ip/ADM
 
 # Source files
 HLS_SOURCES   := $(HLS_DIR)/ADMM.cpp $(HLS_DIR)/ADMM.h $(HLS_DIR)/data_types.h
-RTL_SOURCES   := $(wildcard $(RTL_DIR)/*.v)
+RTL_SOURCES   := $(wildcard $(RTL_DIR)/*.v) $(wildcard $(RTL_DIR)/*.vh)
 XDC_SOURCES   := $(wildcard $(XDC_DIR)/*.xdc)
 HEADER_SCRIPT := $(SCRIPTS_DIR)/header_generator.py
 TRAJ_SCRIPT   := $(SCRIPTS_DIR)/trajectory_generator.py

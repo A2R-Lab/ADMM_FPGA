@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+`include "admm_autogen_params.vh"
 
 module top (
     input  wire        clk,
@@ -11,8 +12,8 @@ module top (
     //--------------------------------------------------------------
     // Parameters
     //--------------------------------------------------------------
-    localparam N_STATE = 12;        // Size of current_state array
-    localparam N_VAR = 332;         // Size of x array
+    localparam N_STATE = `ADMM_N_STATE;        // Size of current_state array
+    localparam N_VAR = `ADMM_N_VAR;            // Size of x array
     localparam DATA_WIDTH = 32;
     localparam CLK_HZ = 100_000_000;
     localparam BIT_RATE = 921600;
@@ -20,6 +21,9 @@ module top (
     
     localparam STATE_LOG = $clog2(N_STATE);
     localparam VAR_LOG = $clog2(N_VAR);
+    localparam N_CTRL_TX = 4;
+    localparam CTRL_TX_BASE = N_STATE + (`ADMM_STAGE_SIZE * `ADMM_DELAY_STEPS);
+    localparam CTRL_TX_LAST = CTRL_TX_BASE + N_CTRL_TX - 1;
     
     // State machine states
     localparam IDLE         = 3'd0;
@@ -45,7 +49,7 @@ module top (
     reg [3:0] rx_byte_count;      // Counts bytes within current word (0-3)
     reg [5:0] rx_word_count;      // Counts words (0 to N_STATE-1), needs to count up to 12
     reg [3:0] tx_byte_count;
-    reg [9:0] tx_word_count;      // Counts words (0 to N_VAR-1), needs to count up to 332
+    reg [9:0] tx_word_count;      // Counts words (0 to N_VAR-1)
     reg [31:0] rx_word_buffer;
     
     //--------------------------------------------------------------
@@ -118,7 +122,7 @@ module top (
             rx_byte_count <= 0;
             rx_word_count <= 0;
             tx_byte_count <= 0;
-            tx_word_count <= 12;
+            tx_word_count <= CTRL_TX_BASE;
             rx_word_buffer <= 0;
             ap_start <= 0;
             uart_tx_en <= 0;
@@ -190,7 +194,7 @@ module top (
                         ap_start <= 0;
                         state <= TX_DATA;
                         tx_byte_count <= 0;
-                        tx_word_count <= 12;
+                        tx_word_count <= CTRL_TX_BASE;
                     end
                 end
                 
@@ -210,7 +214,7 @@ module top (
                         
                         if (tx_byte_count == 3) begin
                             tx_byte_count <= 0;
-                            if (tx_word_count == 16-1) begin
+                            if (tx_word_count == CTRL_TX_LAST) begin
                                 state <= DONE;
                             end else begin
                                 tx_word_count <= tx_word_count + 1;

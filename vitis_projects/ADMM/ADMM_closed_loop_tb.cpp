@@ -20,6 +20,15 @@ struct SimConfig {
     double step_z = 0.0;
     double step_yaw = 0.1;
     double yaw_drift_rate_rad_s = 0.0;
+    double motor_time_constant_s = 0.02;
+    double mass_scale = 1.03;
+    double thrust_scale = 0.97;
+    double torque_scale = 1.05;
+    double linear_drag_xy = 0.08;
+    double linear_drag_z = 0.12;
+    double quadratic_drag = 0.03;
+    double angular_damping = 1.2e-6;
+    double rotor_imbalance = 0.03;
     std::string traj_path = "trajectory.csv";
 };
 
@@ -53,8 +62,23 @@ SimConfig load_config() {
     cfg.step_z = getenv_double("ADMM_STEP_Z", cfg.step_z);
     cfg.step_yaw = getenv_double("ADMM_STEP_YAW", cfg.step_yaw);
     cfg.yaw_drift_rate_rad_s = getenv_double("ADMM_YAW_DRIFT_RAD_S", cfg.yaw_drift_rate_rad_s);
+    cfg.motor_time_constant_s = getenv_double("ADMM_MOTOR_TAU_S", cfg.motor_time_constant_s);
+    cfg.mass_scale = getenv_double("ADMM_MASS_SCALE", cfg.mass_scale);
+    cfg.thrust_scale = getenv_double("ADMM_THRUST_SCALE", cfg.thrust_scale);
+    cfg.torque_scale = getenv_double("ADMM_TORQUE_SCALE", cfg.torque_scale);
+    cfg.linear_drag_xy = getenv_double("ADMM_LINEAR_DRAG_XY", cfg.linear_drag_xy);
+    cfg.linear_drag_z = getenv_double("ADMM_LINEAR_DRAG_Z", cfg.linear_drag_z);
+    cfg.quadratic_drag = getenv_double("ADMM_QUADRATIC_DRAG", cfg.quadratic_drag);
+    cfg.angular_damping = getenv_double("ADMM_ANGULAR_DAMPING", cfg.angular_damping);
+    cfg.rotor_imbalance = getenv_double("ADMM_ROTOR_IMBALANCE", cfg.rotor_imbalance);
     cfg.traj_path = getenv_string("ADMM_CSIM_TRAJ_PATH", cfg.traj_path);
     return cfg;
+}
+
+double clamp(double v, double lo, double hi) {
+    if (v < lo) return lo;
+    if (v > hi) return hi;
+    return v;
 }
 
 std::array<double, 3> cross3(const std::array<double, 3> &a, const std::array<double, 3> &b) {
@@ -104,7 +128,12 @@ void quat_to_rotmat(const std::array<double, 4> &q_in, double R[3][3]) {
     R[2][2] = 1.0 - 2.0 * (x * x + y * y);
 }
 
-std::array<double, 13> dynamics13(const std::array<double, 13> &x, const std::array<double, 4> &u) {
+std::array<double, 13> dynamics13(
+    const std::array<double, 13> &x,
+    const std::array<double, 4> &u,
+    const SimConfig &cfg,
+    const std::array<double, 4> &motor_gains
+) {
     constexpr double mass = 0.048;
     constexpr double Jx = 2.3951e-5;
     constexpr double Jy = 2.3951e-5;
@@ -113,12 +142,19 @@ std::array<double, 13> dynamics13(const std::array<double, 13> &x, const std::ar
     constexpr double thrust_to_torque = 0.002078;
     constexpr double el = 0.0353;
     constexpr double scale = 65535.0;
-    constexpr double kt = 2.90e-6 * scale;
-    constexpr double km = kt * thrust_to_torque;
+    const double mass_eff = mass * cfg.mass_scale;
+    const double kt = (2.90e-6 * scale) * cfg.thrust_scale;
+    const double km = (kt * thrust_to_torque) * cfg.torque_scale;
 
     std::array<double, 13> dx = {};
     const std::array<double, 4> q = {x[3], x[4], x[5], x[6]};
     const std::array<double, 3> omg = {x[10], x[11], x[12]};
+    const std::array<double, 4> u_eff = {
+        clamp(u[0], 0.0, 1.0) * motor_gains[0],
+        clamp(u[1], 0.0, 1.0) * motor_gains[1],
+        clamp(u[2], 0.0, 1.0) * motor_gains[2],
+        clamp(u[3], 0.0, 1.0) * motor_gains[3],
+    };
 
     dx[0] = x[7];
     dx[1] = x[8];
@@ -131,40 +167,53 @@ std::array<double, 13> dynamics13(const std::array<double, 13> &x, const std::ar
 
     double Q[3][3];
     quat_to_rotmat(q, Q);
-    const double thrust_sum = kt * (u[0] + u[1] + u[2] + u[3]);
-    dx[7] = (Q[0][2] * thrust_sum) / mass;
-    dx[8] = (Q[1][2] * thrust_sum) / mass;
-    dx[9] = -g + (Q[2][2] * thrust_sum) / mass;
+    const std::array<double, 3> vel = {x[7], x[8], x[9]};
+    const double speed = std::sqrt(vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
+    const double thrust_sum = kt * (u_eff[0] + u_eff[1] + u_eff[2] + u_eff[3]);
+    const std::array<double, 3> drag_acc = {
+        -(cfg.linear_drag_xy * vel[0] + cfg.quadratic_drag * speed * vel[0]) / mass_eff,
+        -(cfg.linear_drag_xy * vel[1] + cfg.quadratic_drag * speed * vel[1]) / mass_eff,
+        -(cfg.linear_drag_z * vel[2] + cfg.quadratic_drag * speed * vel[2]) / mass_eff,
+    };
+    dx[7] = (Q[0][2] * thrust_sum) / mass_eff + drag_acc[0];
+    dx[8] = (Q[1][2] * thrust_sum) / mass_eff + drag_acc[1];
+    dx[9] = -g + (Q[2][2] * thrust_sum) / mass_eff + drag_acc[2];
 
     const std::array<double, 3> Jw = {Jx * omg[0], Jy * omg[1], Jz * omg[2]};
     const std::array<double, 3> cross_w_Jw = cross3(omg, Jw);
     const std::array<double, 3> tau = {
-        (-el * kt * u[0]) + (-el * kt * u[1]) + (el * kt * u[2]) + (el * kt * u[3]),
-        (-el * kt * u[0]) + (el * kt * u[1]) + (el * kt * u[2]) + (-el * kt * u[3]),
-        (-km * u[0]) + (km * u[1]) + (-km * u[2]) + (km * u[3]),
+        (-el * kt * u_eff[0]) + (-el * kt * u_eff[1]) + (el * kt * u_eff[2]) + (el * kt * u_eff[3]),
+        (-el * kt * u_eff[0]) + (el * kt * u_eff[1]) + (el * kt * u_eff[2]) + (-el * kt * u_eff[3]),
+        (-km * u_eff[0]) + (km * u_eff[1]) + (-km * u_eff[2]) + (km * u_eff[3]),
     };
 
-    dx[10] = (-cross_w_Jw[0] + tau[0]) / Jx;
-    dx[11] = (-cross_w_Jw[1] + tau[1]) / Jy;
-    dx[12] = (-cross_w_Jw[2] + tau[2]) / Jz;
+    dx[10] = (-cross_w_Jw[0] + tau[0] - cfg.angular_damping * omg[0]) / Jx;
+    dx[11] = (-cross_w_Jw[1] + tau[1] - cfg.angular_damping * omg[1]) / Jy;
+    dx[12] = (-cross_w_Jw[2] + tau[2] - cfg.angular_damping * omg[2]) / Jz;
 
     return dx;
 }
 
-std::array<double, 13> rk4_step(const std::array<double, 13> &x, const std::array<double, 4> &u, double dt) {
-    const auto f1 = dynamics13(x, u);
+std::array<double, 13> rk4_step(
+    const std::array<double, 13> &x,
+    const std::array<double, 4> &u,
+    double dt,
+    const SimConfig &cfg,
+    const std::array<double, 4> &motor_gains
+) {
+    const auto f1 = dynamics13(x, u, cfg, motor_gains);
 
     std::array<double, 13> x2 = {};
     for (int i = 0; i < 13; ++i) x2[i] = x[i] + 0.5 * dt * f1[i];
-    const auto f2 = dynamics13(x2, u);
+    const auto f2 = dynamics13(x2, u, cfg, motor_gains);
 
     std::array<double, 13> x3 = {};
     for (int i = 0; i < 13; ++i) x3[i] = x[i] + 0.5 * dt * f2[i];
-    const auto f3 = dynamics13(x3, u);
+    const auto f3 = dynamics13(x3, u, cfg, motor_gains);
 
     std::array<double, 13> x4 = {};
     for (int i = 0; i < 13; ++i) x4[i] = x[i] + dt * f3[i];
-    const auto f4 = dynamics13(x4, u);
+    const auto f4 = dynamics13(x4, u, cfg, motor_gains);
 
     std::array<double, 13> xn = {};
     for (int i = 0; i < 13; ++i) {
@@ -182,7 +231,13 @@ std::array<double, 13> rk4_step(const std::array<double, 13> &x, const std::arra
     return xn;
 }
 
-std::array<double, 12> step12(const std::array<double, 12> &x12, const std::array<double, 4> &u, double dt) {
+std::array<double, 12> step12(
+    const std::array<double, 12> &x12,
+    const std::array<double, 4> &u,
+    double dt,
+    const SimConfig &cfg,
+    const std::array<double, 4> &motor_gains
+) {
     std::array<double, 13> x13 = {};
     const std::array<double, 3> rp = {x12[3], x12[4], x12[5]};
     const std::array<double, 4> q = rptoq(rp);
@@ -201,7 +256,7 @@ std::array<double, 12> step12(const std::array<double, 12> &x12, const std::arra
     x13[11] = x12[10];
     x13[12] = x12[11];
 
-    const std::array<double, 13> xn = rk4_step(x13, u, dt);
+    const std::array<double, 13> xn = rk4_step(x13, u, dt, cfg, motor_gains);
     const std::array<double, 4> qn = {xn[3], xn[4], xn[5], xn[6]};
     const std::array<double, 3> rpn = qtorp(qn);
 
@@ -225,7 +280,9 @@ void write_traj_csv(
     const std::string &path,
     const std::vector<double> &t,
     const std::vector<std::array<double, 12>> &x_hist,
-    const std::vector<std::array<double, 4>> &u_hist
+    const std::vector<std::array<double, 4>> &u_hist,
+    const std::vector<double> &primal_res_hist,
+    const std::vector<double> &dual_res_hist
 ) {
     std::ofstream f(path);
     if (!f.is_open()) {
@@ -235,11 +292,14 @@ void write_traj_csv(
     f << "t";
     for (int i = 0; i < 12; ++i) f << ",x" << i;
     for (int i = 0; i < 4; ++i) f << ",u" << i;
+    f << ",primal_residual,dual_residual";
     f << "\n";
     for (size_t i = 0; i < t.size(); ++i) {
         f << t[i];
         for (int k = 0; k < 12; ++k) f << "," << x_hist[i][k];
         for (int k = 0; k < 4; ++k) f << "," << u_hist[i][k];
+        f << "," << primal_res_hist[i];
+        f << "," << dual_res_hist[i];
         f << "\n";
     }
 }
@@ -253,6 +313,15 @@ int main() {
         return 1;
     }
     std::cerr << "Yaw drift rate (rad/s): " << cfg.yaw_drift_rate_rad_s << "\n";
+    std::cerr << "Plant realism: tau=" << cfg.motor_time_constant_s
+              << " mass_scale=" << cfg.mass_scale
+              << " thrust_scale=" << cfg.thrust_scale
+              << " torque_scale=" << cfg.torque_scale
+              << " drag_xy=" << cfg.linear_drag_xy
+              << " drag_z=" << cfg.linear_drag_z
+              << " drag_quad=" << cfg.quadratic_drag
+              << " ang_damp=" << cfg.angular_damping
+              << " rotor_imbalance=" << cfg.rotor_imbalance << "\n";
     const double dt = 1.0 / cfg.sim_freq;
     const int sim_steps = static_cast<int>(std::llround(cfg.sim_duration_s * cfg.sim_freq));
 
@@ -267,18 +336,31 @@ int main() {
     state[2] = cfg.step_z;
     state[5] = cfg.step_yaw;
     std::array<double, 4> control = {U_HOVER, U_HOVER, U_HOVER, U_HOVER};
+    std::array<double, 4> actuator = control;
+    const std::array<double, 4> motor_gains = {
+        1.0 - cfg.rotor_imbalance,
+        1.0 + cfg.rotor_imbalance,
+        1.0 - 0.5 * cfg.rotor_imbalance,
+        1.0 + 0.5 * cfg.rotor_imbalance,
+    };
     fp_t admm_x[N_VAR] = {};
 
     std::vector<double> t_hist;
     std::vector<std::array<double, 12>> x_hist;
     std::vector<std::array<double, 4>> u_hist;
+    std::vector<double> primal_res_hist;
+    std::vector<double> dual_res_hist;
     t_hist.reserve(static_cast<size_t>(sim_steps) + 1);
     x_hist.reserve(static_cast<size_t>(sim_steps) + 1);
     u_hist.reserve(static_cast<size_t>(sim_steps) + 1);
+    primal_res_hist.reserve(static_cast<size_t>(sim_steps) + 1);
+    dual_res_hist.reserve(static_cast<size_t>(sim_steps) + 1);
 
     t_hist.push_back(0.0);
     x_hist.push_back(state);
     u_hist.push_back(control);
+    primal_res_hist.push_back(0.0);
+    dual_res_hist.push_back(0.0);
 
     bool terminated_early = false;
     std::string terminate_reason = "completed";
@@ -290,8 +372,16 @@ int main() {
             current_state[i] = static_cast<fp_t>(state[i]);
         }
 
+        fp_t primal_residual_fp = 0;
+        fp_t dual_residual_fp = 0;
         // Keep reference trajectory disabled for this regulation-style closed-loop TB.
-        ADMM_solver(current_state, admm_x,0);// step > 30 ? 1 : 0);
+        ADMM_solver_with_residuals(
+            current_state,
+            admm_x,
+            1,  // step > 30 ? 1 : 0
+            &primal_residual_fp,
+            &dual_residual_fp
+        );
         for (int i = 0; i < kInputSize; ++i) {
             // ADMM outputs delta-u around hover in the first stage input block.
             control[i] = U_HOVER + static_cast<double>(admm_x[kInputOffset + i]);
@@ -326,13 +416,21 @@ int main() {
         //     break;
         // }
 
-        state = step12(state, control, dt);
+        const double tau = cfg.motor_time_constant_s;
+        const double alpha = (tau > 0.0) ? (dt / (tau + dt)) : 1.0;
+        for (int i = 0; i < kInputSize; ++i) {
+            actuator[i] = clamp(actuator[i] + alpha * (control[i] - actuator[i]), 0.0, 1.0);
+        }
+
+        state = step12(state, actuator, dt, cfg, motor_gains);
         // Inject a slow yaw drift disturbance for tuning.
         state[5] += cfg.yaw_drift_rate_rad_s * dt;
 
         t_hist.push_back((step + 1) * dt);
         x_hist.push_back(state);
-        u_hist.push_back(control);
+        u_hist.push_back(actuator);
+        primal_res_hist.push_back(static_cast<double>(primal_residual_fp));
+        dual_res_hist.push_back(static_cast<double>(dual_residual_fp));
 
         // // Stop if position diverges.
         // if (std::abs(state[0]) > 3.0 || std::abs(state[1]) > 1.0) {
@@ -372,7 +470,7 @@ int main() {
          std::cout << step << "/" << sim_steps << std::endl;
     }
 
-    write_traj_csv(cfg.traj_path, t_hist, x_hist, u_hist);
+    write_traj_csv(cfg.traj_path, t_hist, x_hist, u_hist, primal_res_hist, dual_res_hist);
     if (terminated_early) {
         std::cerr << "EARLY_STOP step=" << terminate_step << " reason=" << terminate_reason << "\n";
     } else {

@@ -1,3 +1,0 @@
-relativeroot=/home/agrillo/ADMM_FPGA/vitis_projects/ADMM
-original_argv=--mode hls --csim --config ./hls_rho_tb_config.cfg --work_dir ADMM_rho_tb 
-
