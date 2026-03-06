@@ -12,37 +12,63 @@
 
 static_assert(TRAJ_TICK_DIV > 0, "TRAJ_TICK_DIV must be > 0");
 
-template <typename T>
-static inline typename std::enable_if<std::is_floating_point<T>::value, T>::type
-rho_mul_impl(T v) {
-    return std::ldexp(v, RHO_SHIFT);
-}
+constexpr int ACC_GUARD_BITS = 12;
+
+template <typename T, bool IsFloat = std::is_floating_point<T>::value>
+struct AccType {
+    typedef T type;
+};
 
 template <typename T>
-static inline typename std::enable_if<!std::is_floating_point<T>::value, T>::type
-rho_mul_impl(T v) {
-    return v << RHO_SHIFT;
-}
+struct AccType<T, false> {
+    typedef ap_fixed<T::width + ACC_GUARD_BITS, T::iwidth + ACC_GUARD_BITS, AP_RND, AP_SAT> type;
+};
+
+typedef typename AccType<fp_t>::type acc_t;
+
+template <typename T, bool IsFloat = std::is_floating_point<T>::value>
+struct RhoOps;
 
 template <typename T>
-static inline typename std::enable_if<std::is_floating_point<T>::value, T>::type
-rho_div_impl(T v) {
-    return std::ldexp(v, -RHO_SHIFT);
-}
+struct RhoOps<T, true> {
+    static inline T mul(T v) {
+        return std::ldexp(v, RHO_SHIFT);
+    }
+
+    static inline T div(T v) {
+        return std::ldexp(v, -RHO_SHIFT);
+    }
+};
 
 template <typename T>
-static inline typename std::enable_if<!std::is_floating_point<T>::value, T>::type
-rho_div_impl(T v) {
-    return v >> RHO_SHIFT;
-}
+struct RhoOps<T, false> {
+    typedef ap_fixed<T::width + RHO_SHIFT, T::iwidth + RHO_SHIFT, AP_TRN, AP_WRAP> wide_t;
 
-static inline fp_t rho_mul(fp_t v) {
-    return rho_mul_impl<fp_t>(v);
-}
+    static inline T mul(T v) {
+        wide_t t = v;
+        t <<= RHO_SHIFT;
+        // Narrowing cast applies T's configured quantization/overflow mode.
+        return (T)t;
+    }
 
-static inline fp_t rho_div(fp_t v) {
-    return rho_div_impl<fp_t>(v);
-}
+    static inline T div(T v) {
+        wide_t t = v;
+        t >>= RHO_SHIFT;
+        return (T)t;
+    }
+};
+
+static inline fp_t rho_mul(fp_t v) { return RhoOps<fp_t>::mul(v); }
+
+static inline fp_t rho_div(fp_t v) { return RhoOps<fp_t>::div(v); }
+
+fp_t admm_test_rho_mul(fp_t v) { return rho_mul(v); }
+
+fp_t admm_test_rho_div(fp_t v) { return rho_div(v); }
+
+int admm_test_fp_width() { return fp_t::width; }
+
+int admm_test_acc_width() { return acc_t::width; }
 
 void forward_substitution(
     const fp_t b[L_BANDED_ROWS],
@@ -53,23 +79,23 @@ void forward_substitution(
 
     FORW_SUBST_EXTERN_LOOP:
     for (int i = 0; i < N_VAR; i++) {
-        fp_t sum_val = 0;
+        acc_t sum_val = 0;
 
         FORW_SUBST_DOT_PRODUCT_LOOP:
         // dot product with window
         for (int j = 0; j < L_BANDED_COLS - 1; j++) {
-            sum_val += L_banded[i][j] * window[j];
+            sum_val += (acc_t)L_banded[i][j] * (acc_t)window[j];
         }
 
-        fp_t new_x = (b[i] - q[i] - sum_val) * L_banded[i][L_BANDED_COLS-1];
-        x[i] = new_x;
+        acc_t new_x = ((acc_t)b[i] - (acc_t)q[i] - sum_val) * (acc_t)L_banded[i][L_BANDED_COLS-1];
+        x[i] = (fp_t)new_x;
 
         FORW_SUBST_SHIFT_REGISTER_LOOP:
         // shift register window
         for (int k = 0; k < L_BANDED_COLS - 2; k++) {
             window[k] = window[k+1];
         }
-        window[L_BANDED_COLS - 2] = new_x;
+        window[L_BANDED_COLS - 2] = (fp_t)new_x;
     }
 }
 void backward_substitution(
@@ -87,23 +113,23 @@ void backward_substitution(
     BACK_SUBST_EXTERN_LOOP:
     for (int i = LT_BANDED_ROWS - 1; i >= 0; i--) {
         // Compute dot product with current window state
-        fp_t sum_val = 0;
+        acc_t sum_val = 0;
 
         DOT_PRODUCT:
         for (int j = LT_BANDED_COLS-2; j >= 0; j--) {
-            sum_val += LT_banded[i][j+1] * window[j];
+            sum_val += (acc_t)LT_banded[i][j+1] * (acc_t)window[j];
         }
 
         // Compute new x value
-        fp_t new_x = (b[i] - sum_val) * LT_banded[i][0];
-        x[i] = new_x;
+        acc_t new_x = ((acc_t)b[i] - sum_val) * (acc_t)LT_banded[i][0];
+        x[i] = (fp_t)new_x;
 
         // Shift window - this happens in parallel with next iteration setup
         SHIFT_WINDOW:
         for (int k = LT_BANDED_COLS - 2; k > 0; k--) {
             window[k] = window[k-1];
         }
-        window[0] = new_x;
+        window[0] = (fp_t)new_x;
     }
 }
 
@@ -113,12 +139,12 @@ void AT_mul(
 ) {
     AT_MUL_EXTERN_LOOP:
     for (int i = 0; i < AT_SPARSE_DATA_ROWS; i++) {
-        fp_t sum_val = 0;
+        acc_t sum_val = 0;
         AT_MUL_DOT_PRODUCT_LOOP:
         for (int j = 0; j < AT_SPARSE_DATA_COLS; j++) {
-            sum_val += AT_sparse_data[i][j] * x[AT_sparse_indexes[i][j]];
+            sum_val += (acc_t)AT_sparse_data[i][j] * (acc_t)x[AT_sparse_indexes[i][j]];
         }
-        ATx[i] = sum_val;
+        ATx[i] = (fp_t)sum_val;
     }
 }
 
@@ -139,16 +165,17 @@ void ADMM_iteration(
     // z - y update
     ADMM_IT_ZY_UPDATE_LOOP:
     for (int i = 0; i < N_VAR; i++) {
-        fp_t Axi = 0;
+        acc_t Axi = 0;
         for (int j = 0; j < A_SPARSE_DATA_COLS; j++) {
-            Axi += A_sparse_data[i][j] * x[A_sparse_indexes[i][j]];
+            Axi += (acc_t)A_sparse_data[i][j] * (acc_t)x[A_sparse_indexes[i][j]];
         }
+        fp_t Axi_fp = (fp_t)Axi;
 
         fp_t zi;
         if(i < STATE_SIZE) {
             zi = current_state[i];
         } else if (i >= START_INEQ) { // This will depend on horizon length
-            zi = Axi + rho_div(y[i]);
+            zi = Axi_fp + rho_div(y[i]);
             // Cast to fp_t to avoid floating-point comparison hardware
             if (zi < (fp_t)U_MIN) {
                 zi = (fp_t)U_MIN;
@@ -159,7 +186,7 @@ void ADMM_iteration(
             zi = 0;
         }
 
-        fp_t yi = y[i] + rho_mul(Axi - zi);
+        fp_t yi = y[i] + rho_mul(Axi_fp - zi);
         y[i] = yi;
         b_tmp[i] = rho_mul(zi) - yi;
 
@@ -189,7 +216,7 @@ void ADMM_solver(
     }
 
     ADMM_MAIN_LOOP:
-    for (int iter = 0; iter < 28; iter++) {
+    for (int iter = 0; iter < 20; iter++) {
         ADMM_iteration(x, current_state, q_runtime);
     }
 

@@ -291,7 +291,7 @@ int main() {
         }
 
         // Keep reference trajectory disabled for this regulation-style closed-loop TB.
-        ADMM_solver(current_state, admm_x,1);// step > 30 ? 1 : 0);
+        ADMM_solver(current_state, admm_x,0);// step > 30 ? 1 : 0);
         for (int i = 0; i < kInputSize; ++i) {
             // ADMM outputs delta-u around hover in the first stage input block.
             control[i] = U_HOVER + static_cast<double>(admm_x[kInputOffset + i]);

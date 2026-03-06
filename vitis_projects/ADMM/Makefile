@@ -16,6 +16,7 @@ all: build export
 help:
 	@echo "Available targets:"
 	@echo "  csim    - Run C simulation"
+	@echo "  csim-rho - Run rho/accumulator C simulation testbench"
 	@echo "  build   - Run C synthesis"
 	@echo "  cosim   - Run C/RTL co-simulation"
 	@echo "  export  - Package/export RTL"
@@ -26,6 +27,9 @@ help:
 # C Simulation
 csim:
 	vitis-run --mode hls --csim --config ./$(CONFIG) --work_dir $(WORK_DIR)
+
+csim-rho:
+	vitis-run --mode hls --csim --config ./hls_rho_tb_config.cfg --work_dir ADMM_rho_tb
 
 # C Synthesis - use v++ instead
 build:

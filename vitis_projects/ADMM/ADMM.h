@@ -31,4 +31,9 @@ void ADMM_solver(
     int start_traj
 );
 
+fp_t admm_test_rho_mul(fp_t v);
+fp_t admm_test_rho_div(fp_t v);
+int admm_test_fp_width();
+int admm_test_acc_width();
+
 #endif // ADMM_HN_VAR
