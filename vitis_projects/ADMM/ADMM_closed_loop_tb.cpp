@@ -328,14 +328,14 @@ int main() {
     constexpr int kStateSize = 12;
     constexpr int kInputSize = 4;
     constexpr int kInputOffset = STATE_SIZE;  // x = [x0(12), u0(4), x1(12), ...]
-    const double U_HOVER = -static_cast<double>(U_MIN);
+    const double kUHover = static_cast<double>(U_HOVER);
 
     std::array<double, 12> state = {};
     state[0] = cfg.step_x;
     state[1] = cfg.step_y;
     state[2] = cfg.step_z;
     state[5] = cfg.step_yaw;
-    std::array<double, 4> control = {U_HOVER, U_HOVER, U_HOVER, U_HOVER};
+    std::array<double, 4> control = {kUHover, kUHover, kUHover, kUHover};
     std::array<double, 4> actuator = control;
     const std::array<double, 4> motor_gains = {
         1.0 - cfg.rotor_imbalance,
@@ -384,7 +384,7 @@ int main() {
         );
         for (int i = 0; i < kInputSize; ++i) {
             // ADMM outputs delta-u around hover in the first stage input block.
-            control[i] = U_HOVER + static_cast<double>(admm_x[kInputOffset + i]);
+            control[i] = kUHover + static_cast<double>(admm_x[kInputOffset + i]);
         }
 
         // Prune unstable candidates early:

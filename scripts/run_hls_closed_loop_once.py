@@ -20,16 +20,19 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from parameters import TRAJ_DT, TRAJ_LENGTH
+from parameters import Q_DIAG, R_DIAG, RHO_PARAM, TRAJ_DT, TRAJ_LENGTH, TRAJ_WARMSTART_PAD
 
 
 def parse_u_hover_from_data_h(data_h_path: Path) -> float:
     text = data_h_path.read_text()
-    m = re.search(r"^\s*#define\s+U_MIN\s+([^\s]+)\s*$", text, re.MULTILINE)
-    if m is None:
-        raise ValueError("U_MIN not found in data.h")
-    u_min = float(m.group(1))
-    return -u_min
+    m_hover = re.search(r"^\s*#define\s+U_HOVER\s+([^\s]+)\s*$", text, re.MULTILINE)
+    if m_hover is not None:
+        return float(m_hover.group(1))
+    m_min = re.search(r"^\s*#define\s+U_MIN\s+([^\s]+)\s*$", text, re.MULTILINE)
+    if m_min is None:
+        raise ValueError("Neither U_HOVER nor U_MIN found in data.h")
+    # Backward compatibility with older data.h files where U_MIN = -u_hover.
+    return -float(m_min.group(1))
 
 
 def parse_int_define_from_data_h(data_h_path: Path, define_name: str) -> int:
@@ -38,6 +41,14 @@ def parse_int_define_from_data_h(data_h_path: Path, define_name: str) -> int:
     if m is None:
         raise ValueError(f"{define_name} not found in data.h")
     return int(m.group(1))
+
+
+def parse_float_define_from_data_h(data_h_path: Path, define_name: str) -> float:
+    text = data_h_path.read_text()
+    m = re.search(rf"^\s*#define\s+{define_name}\s+([^\s]+)\s*$", text, re.MULTILINE)
+    if m is None:
+        raise ValueError(f"{define_name} not found in data.h")
+    return float(m.group(1))
 
 
 def load_reference_csv(csv_path: Path) -> tuple[list[list[float]], list[list[float]]]:
@@ -73,6 +84,8 @@ def generate_trajectory_plot(
     title: str,
     state_setpoint_t: list[list[float]],
     control_setpoint_t: list[list[float]],
+    control_limits_abs: tuple[float, float] | None = None,
+    metrics_text: str | None = None,
 ) -> float:
     t_vals: list[float] = []
     x = [[] for _ in range(12)]
@@ -168,6 +181,10 @@ def generate_trajectory_plot(
     ax_u.plot(t_vals, [row[1] for row in control_setpoint_t], "--", color=lu1.get_color(), label="u1_sp")
     ax_u.plot(t_vals, [row[2] for row in control_setpoint_t], "--", color=lu2.get_color(), label="u2_sp")
     ax_u.plot(t_vals, [row[3] for row in control_setpoint_t], "--", color=lu3.get_color(), label="u3_sp")
+    if control_limits_abs is not None:
+        u_min_abs, u_max_abs = control_limits_abs
+        ax_u.axhline(u_min_abs, color="k", linestyle=":", linewidth=1.2, label="u_min")
+        ax_u.axhline(u_max_abs, color="k", linestyle="--", linewidth=1.2, label="u_max")
     ax_u.set_xlabel("Time [s]")
     ax_u.set_ylabel("Control")
     ax_u.grid(True)
@@ -202,11 +219,89 @@ def generate_trajectory_plot(
     ax_res.set_xlabel("Time [s]")
 
     fig.suptitle(title)
+    if metrics_text:
+        fig.text(
+            0.99,
+            0.985,
+            metrics_text,
+            ha="right",
+            va="top",
+            fontsize=9,
+            family="monospace",
+            bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.85, "edgecolor": "0.5"},
+        )
     fig.tight_layout(rect=[0, 0, 1, 0.96])
     png_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(png_path, dpi=140)
     plt.close(fig)
     return x[0][-1] if x[0] else math.nan
+
+
+def compute_position_mse_xyz(
+    csv_path: Path,
+    state_setpoint_t: list[list[float]],
+    active_ref_mask: list[bool],
+) -> tuple[float, float, float]:
+    if len(state_setpoint_t) != len(active_ref_mask):
+        raise ValueError("state_setpoint_t and active_ref_mask length mismatch")
+
+    sum_sq_x = 0.0
+    sum_sq_y = 0.0
+    sum_sq_z = 0.0
+    n = 0
+    with csv_path.open("r", newline="") as f:
+        reader = csv.DictReader(f)
+        for i, row in enumerate(reader):
+            if i >= len(active_ref_mask):
+                break
+            if not active_ref_mask[i]:
+                continue
+            dx = float(row["x0"]) - state_setpoint_t[i][0]
+            dy = float(row["x1"]) - state_setpoint_t[i][1]
+            dz = float(row["x2"]) - state_setpoint_t[i][2]
+            sum_sq_x += dx * dx
+            sum_sq_y += dy * dy
+            sum_sq_z += dz * dz
+            n += 1
+
+    if n == 0:
+        return math.nan, math.nan, math.nan
+    return sum_sq_x / n, sum_sq_y / n, sum_sq_z / n
+
+
+def compute_position_error_integral_xyz(
+    csv_path: Path,
+    state_setpoint_t: list[list[float]],
+    active_ref_mask: list[bool],
+) -> float:
+    if len(state_setpoint_t) != len(active_ref_mask):
+        raise ValueError("state_setpoint_t and active_ref_mask length mismatch")
+
+    t_vals: list[float] = []
+    err_norms: list[float] = []
+    with csv_path.open("r", newline="") as f:
+        reader = csv.DictReader(f)
+        for i, row in enumerate(reader):
+            if i >= len(active_ref_mask):
+                break
+            if not active_ref_mask[i]:
+                continue
+            dx = float(row["x0"]) - state_setpoint_t[i][0]
+            dy = float(row["x1"]) - state_setpoint_t[i][1]
+            dz = float(row["x2"]) - state_setpoint_t[i][2]
+            t_vals.append(float(row["t"]))
+            err_norms.append(math.sqrt(dx * dx + dy * dy + dz * dz))
+
+    if len(t_vals) < 2:
+        return math.nan
+
+    integral = 0.0
+    for i in range(1, len(t_vals)):
+        dt = t_vals[i] - t_vals[i - 1]
+        if dt <= 0.0:
+            continue
+        integral += 0.5 * (err_norms[i] + err_norms[i - 1]) * dt
+    return integral
 
 
 def run_cmd_streaming(
@@ -266,7 +361,8 @@ def run_cmd_streaming(
 
 
 def parse_args() -> argparse.Namespace:
-    default_sim_duration_s = (TRAJ_LENGTH - 1) * TRAJ_DT
+    default_traj_samples = TRAJ_LENGTH + (2 * TRAJ_WARMSTART_PAD)
+    default_sim_duration_s = (default_traj_samples - 1) * TRAJ_DT
     parser = argparse.ArgumentParser(description="Run one ADMM HLS closed-loop csim and plot one trajectory.")
     parser.add_argument("--sim-freq", type=float, default=500.0)
     parser.add_argument("--sim-duration-s", type=float, default=default_sim_duration_s)
@@ -274,6 +370,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--step-y", type=float, default=0.0)
     parser.add_argument("--step-z", type=float, default=0.0)
     parser.add_argument("--step-yaw", type=float, default=0.0)
+    parser.add_argument(
+        "--horizon",
+        type=int,
+        default=None,
+        help="Override ADMM_HORIZON_LENGTH for this run (applied to trajectory/header generation).",
+    )
     parser.add_argument(
         "--traj-start-step",
         type=int,
@@ -306,6 +408,9 @@ def main() -> int:
 
     # Run in-place in the ADMM project directory.
     src_dir = (repo_root / "vitis_projects" / "ADMM").resolve()
+    run_env = os.environ.copy()
+    if args.horizon is not None:
+        run_env["ADMM_HORIZON_LENGTH"] = str(args.horizon)
 
     traj_cmd = [
         "python3",
@@ -316,7 +421,7 @@ def main() -> int:
     traj_rc, _, _ = run_cmd_streaming(
         cmd=traj_cmd,
         cwd=repo_root,
-        env=os.environ.copy(),
+        env=run_env,
         stdout_log=traj_stdout_log,
         stderr_log=traj_stderr_log,
         prefix="traj",
@@ -335,7 +440,7 @@ def main() -> int:
     header_rc, _, _ = run_cmd_streaming(
         cmd=header_cmd,
         cwd=repo_root,
-        env=os.environ.copy(),
+        env=run_env,
         stdout_log=header_stdout_log,
         stderr_log=header_stderr_log,
         prefix="header",
@@ -353,7 +458,7 @@ def main() -> int:
         return 1
 
     traj_path = out_dir / "trajectory.csv"
-    env = os.environ.copy()
+    env = run_env.copy()
     env["ADMM_CSIM_TRAJ_PATH"] = str(traj_path)
     env["ADMM_SIM_FREQ"] = f"{args.sim_freq:.12g}"
     env["ADMM_SIM_DURATION_S"] = f"{args.sim_duration_s:.12g}"
@@ -405,9 +510,16 @@ def main() -> int:
 
     plot_path = out_dir / "trajectory.png"
     u_hover = parse_u_hover_from_data_h(expected_data_h)
+    u_min_delta = parse_float_define_from_data_h(expected_data_h, "U_MIN")
+    u_max_delta = parse_float_define_from_data_h(expected_data_h, "U_MAX")
+    u_min_abs = u_hover + u_min_delta
+    u_max_abs = u_hover + u_max_delta
     traj_tick_div = parse_int_define_from_data_h(expected_data_h, "TRAJ_TICK_DIV")
     horizon_len = parse_int_define_from_data_h(expected_data_h, "HORIZON_LENGTH")
-    warmstart_pad = max(horizon_len - 1, 0)
+    try:
+        warmstart_pad = parse_int_define_from_data_h(expected_data_h, "TRAJ_WARMSTART_PAD")
+    except RuntimeError:
+        warmstart_pad = max(horizon_len - 1, 0)
     ref_csv_path = repo_root / "vitis_projects" / "ADMM" / "trajectory_refs.csv"
     ref_dt = parse_ref_dt_from_csv(ref_csv_path) if ref_csv_path.exists() else None
     if ref_dt is not None:
@@ -428,9 +540,11 @@ def main() -> int:
         if len(x_ref_rows) == 0:
             state_setpoint_t = [[0.0] * 12 for _ in range(n_rows)]
             control_setpoint_t = [[u_hover] * 4 for _ in range(n_rows)]
+            active_ref_mask = [False for _ in range(n_rows)]
         else:
             state_setpoint_t = []
             control_setpoint_t = []
+            active_ref_mask = []
             for i in range(n_rows):
                 # Row i in trajectory.csv is state after applying control from previous solver call.
                 # Align setpoint one sample earlier to avoid apparent phase lead/lag in plots.
@@ -439,6 +553,7 @@ def main() -> int:
                 if i_eff < args.traj_start_step:
                     state_setpoint_t.append([0.0] * 12)
                     control_setpoint_t.append([u_hover] * 4)
+                    active_ref_mask.append(False)
                 else:
                     traj_sample = (i_eff - args.traj_start_step) // traj_tick_div
                     ref_idx = traj_sample - warmstart_pad
@@ -446,26 +561,59 @@ def main() -> int:
                         # Runtime switches to q=0 after trajectory is consumed.
                         state_setpoint_t.append([0.0] * 12)
                         control_setpoint_t.append([u_hover] * 4)
+                        active_ref_mask.append(False)
                     else:
                         state_setpoint_t.append(list(x_ref_rows[ref_idx]))
                         # reference CSV stores delta-u around hover
                         control_setpoint_t.append([u_hover + u_ref_rows[ref_idx][k] for k in range(4)])
+                        active_ref_mask.append(True)
     else:
         state_setpoint_t = [[0.0] * 12 for _ in range(n_rows)]
         control_setpoint_t = [[u_hover] * 4 for _ in range(n_rows)]
+        active_ref_mask = [False for _ in range(n_rows)]
 
+    mse_x, mse_y, mse_z = compute_position_mse_xyz(
+        csv_path=traj_path,
+        state_setpoint_t=state_setpoint_t,
+        active_ref_mask=active_ref_mask,
+    )
+    integrated_position_error_xyz = compute_position_error_integral_xyz(
+        csv_path=traj_path,
+        state_setpoint_t=state_setpoint_t,
+        active_ref_mask=active_ref_mask,
+    )
+    metrics_text = (
+        f"horizon={horizon_len}\n"
+        f"rho={RHO_PARAM}\n"
+        f"traj_dt={TRAJ_DT}\n"
+        f"traj_tick_div={traj_tick_div}\n"
+        f"u_abs_min={u_min_abs:.6g}\n"
+        f"u_abs_max={u_max_abs:.6g}\n"
+        f"Q_DIAG={Q_DIAG}\n"
+        f"R_DIAG={R_DIAG}\n"
+        f"mse_x={mse_x:.10g}\n"
+        f"mse_y={mse_y:.10g}\n"
+        f"mse_z={mse_z:.10g}\n"
+        f"integrated_position_error_xyz={integrated_position_error_xyz:.10g}"
+    )
     final_x = generate_trajectory_plot(
         csv_path=traj_path,
         png_path=plot_path,
-        title=f"ADMM closed-loop once",
+        title="ADMM closed-loop once",
         state_setpoint_t=state_setpoint_t,
         control_setpoint_t=control_setpoint_t,
+        control_limits_abs=(u_min_abs, u_max_abs),
+        metrics_text=metrics_text,
     )
 
     print("Run complete.")
     print(f"early_stop_step={early_step}")
     print(f"early_stop_reason={early_reason}")
     print(f"final_x={final_x:.6g}")
+    print(f"mse_x={mse_x:.9g}")
+    print(f"mse_y={mse_y:.9g}")
+    print(f"mse_z={mse_z:.9g}")
+    print(f"integrated_position_error_xyz={integrated_position_error_xyz:.9g}")
     print(f"trajectory_csv= {traj_path}")
     print(f"trajectory_png= {plot_path}")
     print(f"logs_dir={logs_dir}")

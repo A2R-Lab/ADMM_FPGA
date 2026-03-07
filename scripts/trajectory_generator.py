@@ -19,21 +19,25 @@ import matplotlib.pyplot as plt
 
 from crazyloihimodel import CrazyLoihiModel
 from parameters import (
+    AMP_X,
+    AMP_Y,
+    CHICANE_MIX,
     FIG8_PERIOD_S,
     HORIZON_LENGTH,
+    HUBSTAR_VERTICES,
     Q_DIAG,
     R_DIAG,
+    ROSE_MOD,
+    ROSE_PETALS,
+    SQUARE_SHARPNESS,
+    STAR_INNER_RATIO,
+    STAR_POINTS,
     TRAJ_DT,
     TRAJ_LENGTH,
+    TRAJ_SHAPE,
+    TRAJ_WARMSTART_PAD,
+    Z0,
 )
-
-
-# -----------------------------------------------------------------------------
-# Trajectory generation parameters (edit here)
-# -----------------------------------------------------------------------------
-AMP_X = 0.60
-AMP_Y = 1.0
-Z0 = 0.0
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent
@@ -197,10 +201,10 @@ def generate_figure8_rollout_trajectory(
 
     thrust = MASS * np.sqrt(ax * ax + ay * ay + (G + az) * (G + az))
     inv_m = _motor_mixer_inv()
-    u_abs = np.zeros((length, 4), dtype=np.float64)
+    u_cmd = np.zeros((length, 4), dtype=np.float64)
     for i in range(length):
         rhs = np.array([thrust[i], tau_body[0, i], tau_body[1, i], tau_body[2, i]], dtype=np.float64)
-        u_abs[i, :] = inv_m @ rhs
+        u_cmd[i, :] = inv_m @ rhs
 
     rp = _rpy_to_rp(roll, pitch, yaw)
     x_ref_seed = np.zeros((length, 12), dtype=np.float64)
@@ -218,7 +222,218 @@ def generate_figure8_rollout_trajectory(
     x_ref_seed[:, 11] = wz
 
     u_hover = MASS * G / (4.0 * KT)
-    u_ref = u_abs - u_hover
+    u_ref = u_cmd - u_hover
+    return x_ref_seed, u_ref
+
+
+def generate_planar_shape_rollout_trajectory(
+    *,
+    length: int,
+    dt: float,
+    amp_x: float,
+    amp_y: float,
+    z0: float,
+    cycles: float,
+    shape: str,
+    square_sharpness: float,
+    star_points: int,
+    star_inner_ratio: float,
+    rose_petals: int,
+    rose_mod: float,
+    chicane_mix: float,
+    hubstar_vertices: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    if length <= 2:
+        raise ValueError("length must be > 2")
+    if dt <= 0:
+        raise ValueError("dt must be > 0")
+    if cycles <= 0:
+        raise ValueError("cycles must be > 0")
+    if star_points < 3:
+        raise ValueError("star_points must be >= 3")
+    if not (0.0 < star_inner_ratio <= 1.0):
+        raise ValueError("star_inner_ratio must be in (0, 1]")
+    if rose_petals < 2:
+        raise ValueError("rose_petals must be >= 2")
+    if not (0.0 <= rose_mod < 1.0):
+        raise ValueError("rose_mod must be in [0, 1)")
+    if not (0.0 <= chicane_mix < 0.5):
+        raise ValueError("chicane_mix must be in [0, 0.5)")
+    if hubstar_vertices < 3:
+        raise ValueError("hubstar_vertices must be >= 3")
+
+    t = np.arange(length, dtype=np.float64) * dt
+    t_end = max(dt, (length - 1) * dt)
+    tau = np.clip(t / t_end, 0.0, 1.0)
+    s = 10.0 * tau**3 - 15.0 * tau**4 + 6.0 * tau**5
+    theta = 2.0 * np.pi * cycles * s
+
+    if shape == "circle":
+        x = amp_x * np.sin(theta)
+        y = amp_y * np.cos(theta)
+    elif shape == "square":
+        k = max(0.5, square_sharpness)
+        x = amp_x * np.tanh(k * np.sin(theta)) / np.tanh(k)
+        y = amp_y * np.tanh(k * np.cos(theta)) / np.tanh(k)
+    elif shape == "star":
+        radial = star_inner_ratio + (1.0 - star_inner_ratio) * 0.5 * (
+            1.0 + np.cos(float(star_points) * theta)
+        )
+        x = amp_x * radial * np.cos(theta)
+        y = amp_y * radial * np.sin(theta)
+    elif shape == "rose":
+        radial = 1.0 + rose_mod * np.cos(float(rose_petals) * theta)
+        x = amp_x * radial * np.cos(theta)
+        y = amp_y * radial * np.sin(theta)
+    elif shape == "chicane":
+        x = amp_x * (np.sin(theta) + chicane_mix * np.sin(3.0 * theta))
+        y = amp_y * np.cos(theta)
+    elif shape == "square_hold":
+        # Position-only square reference with edge interpolation and no corner dwell:
+        # only XYZ position is commanded, all other states remain hover reference (zero),
+        # and feed-forward input reference stays zero (hover).
+        total_edges = max(4, int(round(cycles * 4.0)))
+        # Use endpoint=False so the same corner is not sampled twice on edge transitions.
+        # This keeps the path moving through corners without one-sample "stops".
+        phase = np.linspace(0.0, 1.0, num=length, endpoint=False, dtype=np.float64)
+        edge_phase = phase * float(total_edges)
+        edge_idx = np.floor(edge_phase).astype(np.int64)
+        edge_alpha = edge_phase - edge_idx
+        vertices = np.array(
+            [
+                [amp_x, amp_y],
+                [amp_x, -amp_y],
+                [-amp_x, -amp_y],
+                [-amp_x, amp_y],
+            ],
+            dtype=np.float64,
+        )
+        # Translate so the first vertex coincides with the starting point (origin).
+        vertices = vertices - vertices[0]
+        i0 = np.mod(edge_idx, 4)
+        i1 = np.mod(edge_idx + 1, 4)
+        p0 = vertices[i0]
+        p1 = vertices[i1]
+        p = (1.0 - edge_alpha)[:, None] * p0 + edge_alpha[:, None] * p1
+        x = p[:, 0]
+        y = p[:, 1]
+        x_ref_seed = np.zeros((length, 12), dtype=np.float64)
+        x_ref_seed[:, 0] = x
+        x_ref_seed[:, 1] = y
+        x_ref_seed[:, 2] = z0
+        u_ref = np.zeros((length, 4), dtype=np.float64)
+        return x_ref_seed, u_ref
+    elif shape == "fig8_hold":
+        # Figure-8 position-only reference:
+        # use geometric XY path but keep non-position states at hover reference.
+        x_raw = amp_x * np.sin(theta)
+        y_raw = amp_y * np.sin(theta) * np.cos(theta)
+        x = y_raw
+        y = x_raw
+        x_ref_seed = np.zeros((length, 12), dtype=np.float64)
+        x_ref_seed[:, 0] = x
+        x_ref_seed[:, 1] = y
+        x_ref_seed[:, 2] = z0
+        u_ref = np.zeros((length, 4), dtype=np.float64)
+        return x_ref_seed, u_ref
+    elif shape == "diag_bounce":
+        # Position-only diagonal bounce:
+        # (0,0) -> (L,L) -> (0,0), repeated with no endpoint dwell.
+        # L is taken from amp_x.
+        segments = max(1, int(round(cycles * 2.0)))
+        phase = np.linspace(0.0, 1.0, num=length, endpoint=False, dtype=np.float64)
+        seg_phase = phase * float(segments)
+        seg_idx = np.floor(seg_phase).astype(np.int64)
+        seg_alpha = seg_phase - seg_idx
+
+        endpoints = np.array(
+            [
+                [0.0, 0.0],
+                [amp_x, amp_x],
+            ],
+            dtype=np.float64,
+        )
+        i0 = np.mod(seg_idx, 2)
+        i1 = np.mod(seg_idx + 1, 2)
+        p0 = endpoints[i0]
+        p1 = endpoints[i1]
+        p = (1.0 - seg_alpha)[:, None] * p0 + seg_alpha[:, None] * p1
+        x = p[:, 0]
+        y = p[:, 1]
+        x_ref_seed = np.zeros((length, 12), dtype=np.float64)
+        x_ref_seed[:, 0] = x
+        x_ref_seed[:, 1] = y
+        x_ref_seed[:, 2] = z0
+        u_ref = np.zeros((length, 4), dtype=np.float64)
+        return x_ref_seed, u_ref
+    elif shape == "hubstar":
+        total_legs = max(1, hubstar_vertices)
+        leg_phase = s * float(total_legs)
+        leg_idx = np.floor(leg_phase).astype(np.int64)
+        leg_local = leg_phase - leg_idx
+
+        spoke_idx = np.mod(leg_idx, hubstar_vertices)
+        angle = 2.0 * np.pi * (spoke_idx.astype(np.float64) / float(hubstar_vertices))
+
+        # Smooth center -> tip -> center profile with zero speed at both ends.
+        r = 0.5 * (1.0 - np.cos(2.0 * np.pi * leg_local))
+        x = amp_x * r * np.cos(angle)
+        y = amp_y * r * np.sin(angle)
+    else:
+        raise ValueError(f"unsupported shape: {shape}")
+
+    z = np.full_like(x, z0)
+    vx = np.gradient(x, dt, edge_order=2)
+    vy = np.gradient(y, dt, edge_order=2)
+    vz = np.zeros_like(vx)
+    ax = np.gradient(vx, dt, edge_order=2)
+    ay = np.gradient(vy, dt, edge_order=2)
+    az = np.zeros_like(vx)
+
+    yaw = np.zeros_like(x)
+    cpsi = np.cos(yaw)
+    spsi = np.sin(yaw)
+    roll = np.arctan2(ax * spsi - ay * cpsi, G + az)
+    pitch = np.arctan2(ax * cpsi + ay * spsi, G + az)
+
+    wx, wy, wz = _body_rates_from_euler(roll, pitch, yaw, dt)
+    wdot = np.vstack(
+        [
+            np.gradient(wx, dt, edge_order=2),
+            np.gradient(wy, dt, edge_order=2),
+            np.gradient(wz, dt, edge_order=2),
+        ]
+    )
+    w = np.vstack([wx, wy, wz])
+    jdiag = np.array([JX, JY, JZ], dtype=np.float64)
+    jw = jdiag[:, None] * w
+    cross = np.cross(w.T, jw.T).T
+    tau_body = jdiag[:, None] * wdot + cross
+
+    thrust = MASS * np.sqrt(ax * ax + ay * ay + (G + az) * (G + az))
+    inv_m = _motor_mixer_inv()
+    u_cmd = np.zeros((length, 4), dtype=np.float64)
+    for i in range(length):
+        rhs = np.array([thrust[i], tau_body[0, i], tau_body[1, i], tau_body[2, i]], dtype=np.float64)
+        u_cmd[i, :] = inv_m @ rhs
+
+    rp = _rpy_to_rp(roll, pitch, yaw)
+    x_ref_seed = np.zeros((length, 12), dtype=np.float64)
+    x_ref_seed[:, 0] = x
+    x_ref_seed[:, 1] = y
+    x_ref_seed[:, 2] = z
+    x_ref_seed[:, 3] = rp[:, 0]
+    x_ref_seed[:, 4] = rp[:, 1]
+    x_ref_seed[:, 5] = rp[:, 2]
+    x_ref_seed[:, 6] = vx
+    x_ref_seed[:, 7] = vy
+    x_ref_seed[:, 8] = vz
+    x_ref_seed[:, 9] = wx
+    x_ref_seed[:, 10] = wy
+    x_ref_seed[:, 11] = wz
+
+    u_hover = MASS * G / (4.0 * KT)
+    u_ref = u_cmd - u_hover
     return x_ref_seed, u_ref
 
 
@@ -251,10 +466,8 @@ def build_traj_q_packed(
     core[:, : x_ref.shape[1]] = q_state_ref
     core[:, x_ref.shape[1] :] = q_input_ref
 
-    # Warmstart-friendly timeline:
-    # - prepend (horizon-1) all-zero stages so reference first appears at horizon tail
-    # - append (horizon-1) all-zero stages so reference fades out to zero
-    pad = max(horizon - 1, 0)
+    # Warmstart-friendly timeline with fixed pad so cross-horizon comparisons are aligned.
+    pad = max(TRAJ_WARMSTART_PAD, 0)
     seq = np.vstack(
         [
             np.zeros((pad, cols), dtype=np.float64),
@@ -279,7 +492,7 @@ def build_traj_raw_packed(x_ref: np.ndarray, u_ref: np.ndarray, horizon: int) ->
     core[:, x_ref.shape[1] :] = u_ref
 
     # Match q-packed timeline so both headers are drop-in equivalent in indexing.
-    pad = max(horizon - 1, 0)
+    pad = max(TRAJ_WARMSTART_PAD, 0)
     seq = np.vstack(
         [
             np.zeros((pad, cols), dtype=np.float64),
@@ -408,14 +621,43 @@ def write_preview(path: Path, x_ref: np.ndarray, u_ref: np.ndarray, dt: float) -
 
 def main() -> int:
     cycles = _cycles_from_period_s(length=TRAJ_LENGTH, dt=TRAJ_DT, period_s=FIG8_PERIOD_S)
-    x_ref, u_ref = generate_figure8_rollout_trajectory(
-        length=TRAJ_LENGTH,
-        dt=TRAJ_DT,
-        amp_x=AMP_X,
-        amp_y=AMP_Y,
-        z0=Z0,
-        cycles=cycles,
-    )
+    if TRAJ_SHAPE == "fig8":
+        x_ref, u_ref = generate_figure8_rollout_trajectory(
+            length=TRAJ_LENGTH,
+            dt=TRAJ_DT,
+            amp_x=AMP_X,
+            amp_y=AMP_Y,
+            z0=Z0,
+            cycles=cycles,
+        )
+    else:
+        x_ref, u_ref = generate_planar_shape_rollout_trajectory(
+            length=TRAJ_LENGTH,
+            dt=TRAJ_DT,
+            amp_x=AMP_X,
+            amp_y=AMP_Y,
+            z0=Z0,
+            cycles=cycles,
+            shape=TRAJ_SHAPE,
+            square_sharpness=SQUARE_SHARPNESS,
+            star_points=STAR_POINTS,
+            star_inner_ratio=STAR_INNER_RATIO,
+            rose_petals=ROSE_PETALS,
+            rose_mod=ROSE_MOD,
+            chicane_mix=CHICANE_MIX,
+            hubstar_vertices=HUBSTAR_VERTICES,
+        )
+
+    u_hover = MASS * G / (4.0 * KT)
+    u_cmd = u_ref + u_hover
+    u_min = float(np.min(u_cmd))
+    u_max = float(np.max(u_cmd))
+    if u_min < 0.0 or u_max > 1.0:
+        print(
+            "Trajectory infeasible: raw motor command u is out of bounds. "
+            f"u_range=[{u_min:.4f}, {u_max:.4f}] required: 0 <= u <= 1."
+        )
+        return 1
 
     write_csv_refs(TRAJ_REFS_CSV_OUT, x_ref, u_ref, TRAJ_DT)
     traj_q_packed = build_traj_q_packed(
@@ -431,21 +673,26 @@ def main() -> int:
     write_header_x_ref(TRAJ_XREF_HEADER_OUT, x_ref)
     write_preview(TRAJ_PREVIEW_PNG_OUT, x_ref, u_ref, TRAJ_DT)
 
-    u_hover = MASS * G / (4.0 * KT)
-    u_abs = u_ref + u_hover
-
     print("Trajectory generated.")
     print("state_source=geometric_seed")
     print(f"csv={TRAJ_REFS_CSV_OUT}")
     print(f"traj_data_header={TRAJ_DATA_HEADER_OUT}")
     print(f"traj_data_raw_header={TRAJ_DATA_RAW_HEADER_OUT}")
     print(f"xref_header={TRAJ_XREF_HEADER_OUT}")
-    print(f"preview={TRAJ_PREVIEW_PNG_OUT}")
+    print(f"preview= {TRAJ_PREVIEW_PNG_OUT}")
+    print(
+        f"shape={TRAJ_SHAPE} amp_x={AMP_X:.4f} amp_y={AMP_Y:.4f} "
+        f"square_sharpness={SQUARE_SHARPNESS:.3f} star_points={STAR_POINTS} "
+        f"star_inner_ratio={STAR_INNER_RATIO:.3f} "
+        f"rose_petals={ROSE_PETALS} rose_mod={ROSE_MOD:.3f} "
+        f"chicane_mix={CHICANE_MIX:.3f} "
+        f"hubstar_vertices={HUBSTAR_VERTICES}"
+    )
     print(f"dt={TRAJ_DT:.6f}s traj_length={TRAJ_LENGTH} fig8_period_s={FIG8_PERIOD_S:.6f}")
     print(
-        "u_abs_range="
-        f"[{np.min(u_abs):.4f}, {np.max(u_abs):.4f}] "
-        "(expect inside [0, 1] for feasible nominal feed-forward)"
+        "u_range="
+        f"[{u_min:.4f}, {u_max:.4f}] "
+        "(required: 0 <= u <= 1 for feasible nominal feed-forward)"
     )
     # Summary metrics for quick feasibility checks.
     pos_xy = np.sqrt(x_ref[:, 0] ** 2 + x_ref[:, 1] ** 2)

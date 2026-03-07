@@ -1,5 +1,6 @@
 from pathlib import Path
 import re
+import os
 import numpy as np
 from crazyloihimodel import CrazyLoihiModel
 from parameters import (
@@ -12,6 +13,8 @@ from parameters import (
     ADMM_ITERATIONS,
     MPC_LINEAR_DRAG_XY,
     MPC_LINEAR_DRAG_Z,
+    TRAJ_WARMSTART_PAD,
+    TRAJ_TICK_DIV,
 )
 
 # Run controller at 50 Hz
@@ -22,13 +25,13 @@ N = HORIZON_LENGTH
 
 rho = RHO_PARAM
 rho_mult = 1
-TRAJ_TICK_DIV = 10
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent
 TRAJ_DATA_HEADER_PATH = REPO_ROOT / "vitis_projects" / "ADMM" / "traj_data.h"
 DATA_HEADER_PATH = REPO_ROOT / "vitis_projects" / "ADMM" / "data.h"
 RTL_PARAMS_HEADER_PATH = REPO_ROOT / "vivado_project" / "vivado_project.srcs" / "sources_1" / "new" / "admm_autogen_params.vh"
 RUNTIME_CONFIG_HEADER_PATH = REPO_ROOT / "vitis_projects" / "ADMM" / "admm_runtime_config.h"
+ABQR_OVERRIDE_PATH = os.environ.get("ADMM_ABQR_OVERRIDE_PATH", "").strip()
 
 # Initialize goal state
 xg = np.zeros(13)
@@ -38,21 +41,44 @@ quad = CrazyLoihiModel(freq=1/timer_period)
 ug = quad.hover_thrust
 mass_kg = quad.mass
 
-# Get linearized system
-A, B = quad.get_linearized_dynamics(xg, ug)
+def _parse_matrix_block(text: str, name: str, rows: int, cols: int) -> np.ndarray:
+    m = re.search(rf"\b{name}\s*<<\s*(.*?);", text, re.DOTALL)
+    if m is None:
+        raise ValueError(f"Missing block for {name} in override file")
+    body = m.group(1)
+    nums = re.findall(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?f?", body)
+    vals = [float(tok[:-1] if tok.lower().endswith("f") else tok) for tok in nums]
+    expected = rows * cols
+    if len(vals) != expected:
+        raise ValueError(f"{name} expected {expected} values, found {len(vals)}")
+    return np.asarray(vals, dtype=np.float64).reshape(rows, cols)
 
-# Match dominant plant non-ideality (linear drag) in the MPC model.
-A[6, 6] -= timer_period * (MPC_LINEAR_DRAG_XY / mass_kg)
-A[7, 7] -= timer_period * (MPC_LINEAR_DRAG_XY / mass_kg)
-A[8, 8] -= timer_period * (MPC_LINEAR_DRAG_Z / mass_kg)
 
-# Cost matrices
-max_dev_x = np.array([0.075, 0.075, 0.075, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.7, 0.7, 0.2])
-max_dev_u = np.array([0.5, 0.5, 0.5, 0.5])
-q_diag = Q_DIAG
+def _load_abqr_override(path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    text = path.read_text()
+    A_ovr = _parse_matrix_block(text, "A", 12, 12)
+    B_ovr = _parse_matrix_block(text, "B", 12, 4)
+    Q_ovr = _parse_matrix_block(text, "Q", 12, 12)
+    R_ovr = _parse_matrix_block(text, "R", 4, 4)
+    return A_ovr, B_ovr, Q_ovr, R_ovr
 
-Q = np.diag(q_diag) #1./max_dev_x**2)
-R = np.diag(R_DIAG) #1./max_dev_u**2)
+
+if ABQR_OVERRIDE_PATH:
+    override_path = Path(ABQR_OVERRIDE_PATH)
+    A, B, Q, R = _load_abqr_override(override_path)
+    print(f"Using matrix override file: {override_path}")
+else:
+    # Get linearized system
+    A, B = quad.get_linearized_dynamics(xg, ug)
+
+    # Match dominant plant non-ideality (linear drag) in the MPC model.
+    A[6, 6] -= timer_period * (MPC_LINEAR_DRAG_XY / mass_kg)
+    A[7, 7] -= timer_period * (MPC_LINEAR_DRAG_XY / mass_kg)
+    A[8, 8] -= timer_period * (MPC_LINEAR_DRAG_Z / mass_kg)
+
+    q_diag = Q_DIAG
+    Q = np.diag(q_diag)
+    R = np.diag(R_DIAG)
 
 
 def load_traj_length_from_header(header_path: Path, horizon: int) -> int:
@@ -67,8 +93,8 @@ def load_traj_length_from_header(header_path: Path, horizon: int) -> int:
     return traj_length
 
 # Control input constraints
-u_max = np.array([1.0 - ug[0]] * 4)
-u_min = np.array([-ug[0]] * 4)
+u_max = np.array([1 - ug[0]] * 4)
+u_min = np.array([0 - ug[0]] * 4)
 
 
 def build_Aeq_interleaved(Anp, Bnp, N):
@@ -378,8 +404,10 @@ constants["DELAY_STEPS"] = DELAY_STEPS
 constants["RHO_SHIFT"] = int(np.log2(rho))
 constants["U_MIN"] = u_min[0]
 constants["U_MAX"] = u_max[0]
+constants["U_HOVER"] = ug[0]
 constants["TRAJ_LENGTH"] = load_traj_length_from_header(TRAJ_DATA_HEADER_PATH, horizon=N)
 constants["TRAJ_TICK_DIV"] = TRAJ_TICK_DIV
+constants["TRAJ_WARMSTART_PAD"] = TRAJ_WARMSTART_PAD
 
 data = []
 data.append(generate_constants_header(constants))

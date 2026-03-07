@@ -18,7 +18,7 @@ constexpr int ACC_GUARD_BITS = 12;
 template <typename T, bool IsFloat = std::is_floating_point<T>::value>
 struct AccType {
     typedef T type;
-};
+};  
 
 template <typename T>
 struct AccType<T, false> {
