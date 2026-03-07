@@ -143,6 +143,29 @@ def build_Aeq_interleaved(Anp, Bnp, N):
     return A_eq, b_eq
 
 
+def compute_lqr_terminal_cost(
+    A: np.ndarray,
+    B: np.ndarray,
+    Q: np.ndarray,
+    R: np.ndarray,
+    *,
+    max_iter: int = 2000,
+    tol: float = 1e-10,
+) -> np.ndarray:
+    """Solve the discrete-time algebraic Riccati equation via fixed-point iteration."""
+    P = Q.astype(np.float64).copy()
+    for _ in range(max_iter):
+        bt_p = B.T @ P
+        s = R + bt_p @ B
+        k = np.linalg.solve(s, bt_p @ A)
+        p_next = Q + A.T @ P @ A - A.T @ P @ B @ k
+        p_next = 0.5 * (p_next + p_next.T)
+        if np.linalg.norm(p_next - P, ord="fro") < tol:
+            return p_next
+        P = p_next
+    raise RuntimeError("LQR terminal-cost Riccati iteration did not converge")
+
+
 # Number of states and inputs
 n = A.shape[0]
 m = B.shape[1]
@@ -153,11 +176,12 @@ num_u = m * N
 num_var = num_x + num_u
 
 # Build Hessian matrix P
+Q_terminal = compute_lqr_terminal_cost(A, B, Q, R)
 blocks = []
 for k in range(N):
     blocks.append(Q)     # Q_k
     blocks.append(R)     # R_k
-blocks.append(Q)         # Final terminal Q_N
+blocks.append(Q_terminal)  # Final terminal Q_N from discrete LQR
 
 # total size
 total = sum(block.shape[0] for block in blocks)
