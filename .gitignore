@@ -1,5 +1,6 @@
 # Build output
 build/
+plots/
 
 # HLS project output
 vitis_projects/ADMM/ADMM/

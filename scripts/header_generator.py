@@ -10,6 +10,8 @@ from parameters import (
     DELAY_STEPS,
     ADMM_USE_FLOAT,
     ADMM_ITERATIONS,
+    MPC_LINEAR_DRAG_XY,
+    MPC_LINEAR_DRAG_Z,
 )
 
 # Run controller at 50 Hz
@@ -34,9 +36,15 @@ xg[3] = 1.0  # unit quaternion
 # Create quadrotor instance
 quad = CrazyLoihiModel(freq=1/timer_period)
 ug = quad.hover_thrust
+mass_kg = quad.mass
 
 # Get linearized system
 A, B = quad.get_linearized_dynamics(xg, ug)
+
+# Match dominant plant non-ideality (linear drag) in the MPC model.
+A[6, 6] -= timer_period * (MPC_LINEAR_DRAG_XY / mass_kg)
+A[7, 7] -= timer_period * (MPC_LINEAR_DRAG_XY / mass_kg)
+A[8, 8] -= timer_period * (MPC_LINEAR_DRAG_Z / mass_kg)
 
 # Cost matrices
 max_dev_x = np.array([0.075, 0.075, 0.075, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.7, 0.7, 0.2])

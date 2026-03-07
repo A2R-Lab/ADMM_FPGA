@@ -9,6 +9,10 @@ R_DIAG = [5.0, 5.0, 5.0, 5.0]
 ADMM_USE_FLOAT = True   # False: ap_fixed, True: float
 ADMM_ITERATIONS = 10
 
+# Linear drag terms used to bias the MPC linear model (header_generator.py).
+MPC_LINEAR_DRAG_XY = 0.12
+MPC_LINEAR_DRAG_Z = 0.12
+
 # Trajectory timing/generation (hardcoded for reproducible commits).
 RHO_PARAM = 64
 DELAY_STEPS = 0
