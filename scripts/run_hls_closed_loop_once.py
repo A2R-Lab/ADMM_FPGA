@@ -85,6 +85,7 @@ def generate_trajectory_plot(
     state_setpoint_t: list[list[float]],
     control_setpoint_t: list[list[float]],
     control_limits_abs: tuple[float, float] | None = None,
+    xy_limits: tuple[float, float] | None = None,
     metrics_text: str | None = None,
 ) -> float:
     t_vals: list[float] = []
@@ -93,9 +94,6 @@ def generate_trajectory_plot(
     u1: list[float] = []
     u2: list[float] = []
     u3: list[float] = []
-    primal_residual: list[float] = []
-    dual_residual: list[float] = []
-    has_residuals = False
 
     with csv_path.open("r", newline="") as f:
         reader = csv.DictReader(f)
@@ -107,27 +105,20 @@ def generate_trajectory_plot(
             u1.append(float(row["u1"]))
             u2.append(float(row["u2"]))
             u3.append(float(row["u3"]))
-            p_res = row.get("primal_residual")
-            d_res = row.get("dual_residual")
-            if p_res is not None and d_res is not None and p_res != "" and d_res != "":
-                primal_residual.append(float(p_res))
-                dual_residual.append(float(d_res))
-                has_residuals = True
 
     if len(state_setpoint_t) != len(t_vals):
         raise ValueError("state_setpoint_t length must match trajectory length")
     if len(control_setpoint_t) != len(t_vals):
         raise ValueError("control_setpoint_t length must match trajectory length")
 
-    fig = plt.figure(figsize=(14, 12))
-    gs = fig.add_gridspec(4, 2, hspace=0.3)
+    fig = plt.figure(figsize=(14, 10))
+    gs = fig.add_gridspec(3, 2, hspace=0.3)
     ax_pos = fig.add_subplot(gs[0, 0])
     ax_att = fig.add_subplot(gs[0, 1])
     ax_vel = fig.add_subplot(gs[1, 0])
     ax_angvel = fig.add_subplot(gs[1, 1])
     ax_u = fig.add_subplot(gs[2, 0])
     ax_xy = fig.add_subplot(gs[2, 1])
-    ax_res = fig.add_subplot(gs[3, :])
 
     l0 = ax_pos.plot(t_vals, x[0], label="x")[0]
     l1 = ax_pos.plot(t_vals, x[1], label="y")[0]
@@ -137,15 +128,16 @@ def generate_trajectory_plot(
     ax_pos.plot(t_vals, [row[2] for row in state_setpoint_t], "--", color=l2.get_color(), label="z_sp")
     ax_pos.set_title("Position [x y z]")
     ax_pos.set_ylabel("m")
+    if xy_limits is not None:
+        xy_min, xy_max = xy_limits
+        ax_pos.axhline(xy_min, color="k", linestyle=":", linewidth=1.2, label="xy_min")
+        ax_pos.axhline(xy_max, color="k", linestyle="--", linewidth=1.2, label="xy_max")
     ax_pos.grid(True)
     ax_pos.legend()
 
     l3 = ax_att.plot(t_vals, x[3], label="roll")[0]
     l4 = ax_att.plot(t_vals, x[4], label="pitch")[0]
     l5 = ax_att.plot(t_vals, x[5], label="yaw")[0]
-    ax_att.plot(t_vals, [row[3] for row in state_setpoint_t], "--", color=l3.get_color(), label="roll_sp")
-    ax_att.plot(t_vals, [row[4] for row in state_setpoint_t], "--", color=l4.get_color(), label="pitch_sp")
-    ax_att.plot(t_vals, [row[5] for row in state_setpoint_t], "--", color=l5.get_color(), label="yaw_sp")
     ax_att.set_title("Orientation [roll pitch yaw]")
     ax_att.set_ylabel("rad")
     ax_att.grid(True)
@@ -154,9 +146,6 @@ def generate_trajectory_plot(
     l6 = ax_vel.plot(t_vals, x[6], label="vx")[0]
     l7 = ax_vel.plot(t_vals, x[7], label="vy")[0]
     l8 = ax_vel.plot(t_vals, x[8], label="vz")[0]
-    ax_vel.plot(t_vals, [row[6] for row in state_setpoint_t], "--", color=l6.get_color(), label="vx_sp")
-    ax_vel.plot(t_vals, [row[7] for row in state_setpoint_t], "--", color=l7.get_color(), label="vy_sp")
-    ax_vel.plot(t_vals, [row[8] for row in state_setpoint_t], "--", color=l8.get_color(), label="vz_sp")
     ax_vel.set_title("Linear Velocity")
     ax_vel.set_ylabel("m/s")
     ax_vel.grid(True)
@@ -165,9 +154,6 @@ def generate_trajectory_plot(
     l9 = ax_angvel.plot(t_vals, x[9], label="wx")[0]
     l10 = ax_angvel.plot(t_vals, x[10], label="wy")[0]
     l11 = ax_angvel.plot(t_vals, x[11], label="wz")[0]
-    ax_angvel.plot(t_vals, [row[9] for row in state_setpoint_t], "--", color=l9.get_color(), label="wx_sp")
-    ax_angvel.plot(t_vals, [row[10] for row in state_setpoint_t], "--", color=l10.get_color(), label="wy_sp")
-    ax_angvel.plot(t_vals, [row[11] for row in state_setpoint_t], "--", color=l11.get_color(), label="wz_sp")
     ax_angvel.set_title("Angular Velocity")
     ax_angvel.set_ylabel("rad/s")
     ax_angvel.grid(True)
@@ -177,10 +163,6 @@ def generate_trajectory_plot(
     lu1 = ax_u.plot(t_vals, u1, label="u1")[0]
     lu2 = ax_u.plot(t_vals, u2, label="u2")[0]
     lu3 = ax_u.plot(t_vals, u3, label="u3")[0]
-    ax_u.plot(t_vals, [row[0] for row in control_setpoint_t], "--", color=lu0.get_color(), label="u0_sp")
-    ax_u.plot(t_vals, [row[1] for row in control_setpoint_t], "--", color=lu1.get_color(), label="u1_sp")
-    ax_u.plot(t_vals, [row[2] for row in control_setpoint_t], "--", color=lu2.get_color(), label="u2_sp")
-    ax_u.plot(t_vals, [row[3] for row in control_setpoint_t], "--", color=lu3.get_color(), label="u3_sp")
     if control_limits_abs is not None:
         u_min_abs, u_max_abs = control_limits_abs
         ax_u.axhline(u_min_abs, color="k", linestyle=":", linewidth=1.2, label="u_min")
@@ -202,21 +184,13 @@ def generate_trajectory_plot(
     ax_xy.set_ylabel("y [m]")
     ax_xy.grid(True)
     ax_xy.axis("equal")
+    if xy_limits is not None:
+        xy_min, xy_max = xy_limits
+        ax_xy.axvline(xy_min, color="k", linestyle=":", linewidth=1.2, label="x_min")
+        ax_xy.axvline(xy_max, color="k", linestyle="--", linewidth=1.2, label="x_max")
+        ax_xy.axhline(xy_min, color="0.35", linestyle=":", linewidth=1.2, label="y_min")
+        ax_xy.axhline(xy_max, color="0.35", linestyle="--", linewidth=1.2, label="y_max")
     ax_xy.legend()
-
-    if has_residuals and len(primal_residual) == len(t_vals) and len(dual_residual) == len(t_vals):
-        ax_res.plot(t_vals, primal_residual, label="primal residual")
-        ax_res.plot(t_vals, dual_residual, label="dual residual")
-        if all(v > 0.0 for v in primal_residual) and all(v > 0.0 for v in dual_residual):
-            ax_res.set_yscale("log")
-        ax_res.set_title("ADMM Residuals")
-        ax_res.set_ylabel("L2 norm")
-        ax_res.grid(True)
-        ax_res.legend()
-    else:
-        ax_res.set_title("ADMM Residuals (not available in CSV)")
-        ax_res.grid(True)
-    ax_res.set_xlabel("Time [s]")
 
     fig.suptitle(title)
     if metrics_text:
@@ -512,6 +486,8 @@ def main() -> int:
     u_hover = parse_u_hover_from_data_h(expected_data_h)
     u_min_delta = parse_float_define_from_data_h(expected_data_h, "U_MIN")
     u_max_delta = parse_float_define_from_data_h(expected_data_h, "U_MAX")
+    xy_min = parse_float_define_from_data_h(expected_data_h, "XY_MIN")
+    xy_max = parse_float_define_from_data_h(expected_data_h, "XY_MAX")
     u_min_abs = u_hover + u_min_delta
     u_max_abs = u_hover + u_max_delta
     traj_tick_div = parse_int_define_from_data_h(expected_data_h, "TRAJ_TICK_DIV")
@@ -603,6 +579,7 @@ def main() -> int:
         state_setpoint_t=state_setpoint_t,
         control_setpoint_t=control_setpoint_t,
         control_limits_abs=(u_min_abs, u_max_abs),
+        xy_limits=(xy_min, xy_max),
         metrics_text=metrics_text,
     )
 

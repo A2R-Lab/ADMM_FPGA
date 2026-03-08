@@ -15,6 +15,22 @@ static_assert(TRAJ_TICK_DIV > 0, "TRAJ_TICK_DIV must be > 0");
 
 constexpr int ACC_GUARD_BITS = 12;
 
+#ifndef RHO_SHIFT_EQ
+#error "RHO_SHIFT_EQ must be generated in data.h by scripts/header_generator.py"
+#endif
+
+#ifndef RHO_SHIFT_INEQ
+#error "RHO_SHIFT_INEQ must be generated in data.h by scripts/header_generator.py"
+#endif
+
+constexpr int RHO_SHIFT_EQ_V = RHO_SHIFT_EQ;
+constexpr int RHO_SHIFT_INEQ_V = RHO_SHIFT_INEQ;
+constexpr int RHO_SHIFT_MAX_V =
+    (RHO_SHIFT_EQ_V > RHO_SHIFT_INEQ_V) ? RHO_SHIFT_EQ_V : RHO_SHIFT_INEQ_V;
+
+static_assert(RHO_SHIFT_EQ_V >= 0, "RHO_SHIFT_EQ must be >= 0");
+static_assert(RHO_SHIFT_INEQ_V >= 0, "RHO_SHIFT_INEQ must be >= 0");
+
 template <typename T, bool IsFloat = std::is_floating_point<T>::value>
 struct AccType {
     typedef T type;
@@ -32,36 +48,52 @@ struct RhoOps;
 
 template <typename T>
 struct RhoOps<T, true> {
-    static inline T mul(T v) {
-        return std::ldexp(v, RHO_SHIFT);
+    template <int Shift>
+    static inline T mul_shift(T v) {
+        return std::ldexp(v, Shift);
     }
 
-    static inline T div(T v) {
-        return std::ldexp(v, -RHO_SHIFT);
+    template <int Shift>
+    static inline T div_shift(T v) {
+        return std::ldexp(v, -Shift);
     }
 };
 
 template <typename T>
 struct RhoOps<T, false> {
-    typedef ap_fixed<T::width + RHO_SHIFT, T::iwidth + RHO_SHIFT, AP_TRN, AP_WRAP> wide_t;
+    typedef ap_fixed<T::width + RHO_SHIFT_MAX_V, T::iwidth + RHO_SHIFT_MAX_V, AP_TRN, AP_WRAP> wide_t;
 
-    static inline T mul(T v) {
+    template <int Shift>
+    static inline T mul_shift(T v) {
         wide_t t = v;
-        t <<= RHO_SHIFT;
+        t <<= Shift;
         // Narrowing cast applies T's configured quantization/overflow mode.
         return (T)t;
     }
 
-    static inline T div(T v) {
+    template <int Shift>
+    static inline T div_shift(T v) {
         wide_t t = v;
-        t >>= RHO_SHIFT;
+        t >>= Shift;
         return (T)t;
     }
 };
 
-static inline fp_t rho_mul(fp_t v) { return RhoOps<fp_t>::mul(v); }
+static inline bool is_inequality_constraint(int constraint_idx) {
+    return constraint_idx >= START_INEQ;
+}
 
-static inline fp_t rho_div(fp_t v) { return RhoOps<fp_t>::div(v); }
+static inline fp_t rho_mul(fp_t v, bool use_ineq_rho) {
+    return use_ineq_rho
+               ? RhoOps<fp_t>::template mul_shift<RHO_SHIFT_INEQ_V>(v)
+               : RhoOps<fp_t>::template mul_shift<RHO_SHIFT_EQ_V>(v);
+}
+
+static inline fp_t rho_div(fp_t v, bool use_ineq_rho) {
+    return use_ineq_rho
+               ? RhoOps<fp_t>::template div_shift<RHO_SHIFT_INEQ_V>(v)
+               : RhoOps<fp_t>::template div_shift<RHO_SHIFT_EQ_V>(v);
+}
 
 void forward_substitution(
     const fp_t b[L_BANDED_ROWS],
@@ -127,8 +159,8 @@ void backward_substitution(
 }
 
 void AT_mul(
-    const fp_t x[AT_SPARSE_DATA_ROWS],
-    fp_t ATx[AT_SPARSE_DATA_ROWS]
+    const fp_t x[N_CONSTR],
+    fp_t ATx[N_VAR]
 ) {
     AT_MUL_EXTERN_LOOP:
     for (int i = 0; i < AT_SPARSE_DATA_ROWS; i++) {
@@ -147,9 +179,9 @@ void ADMM_iteration(
     const fp_t q_vec[N_VAR]
 ) {
     static fp_t b[N_VAR] = {0};
-    static fp_t y[N_VAR] = {0};
+    static fp_t y[N_CONSTR] = {0};
     fp_t tmp[N_VAR];
-    fp_t b_tmp[N_VAR];
+    fp_t b_tmp[N_CONSTR];
 
     // x_update
     forward_substitution(b, q_vec, tmp);
@@ -157,19 +189,26 @@ void ADMM_iteration(
 
     // z - y update
     ADMM_IT_ZY_UPDATE_LOOP:
-    for (int i = 0; i < N_VAR; i++) {
+    for (int i = 0; i < N_CONSTR; i++) {
         acc_t Axi = 0;
         for (int j = 0; j < A_SPARSE_DATA_COLS; j++) {
             Axi += (acc_t)A_sparse_data[i][j] * (acc_t)x[A_sparse_indexes[i][j]];
         }
         fp_t Axi_fp = (fp_t)Axi;
+        const bool use_ineq_rho = is_inequality_constraint(i);
 
         fp_t zi;
         if(i < STATE_SIZE) {
             zi = current_state[i];
-        } else if (i >= START_INEQ) { // This will depend on horizon length
-            zi = Axi_fp + rho_div(y[i]);
-            // Cast to fp_t to avoid floating-point comparison hardware
+        } else if (i >= START_XY_INEQ) {
+            zi = Axi_fp + rho_div(y[i], use_ineq_rho);
+            if (zi < (fp_t)XY_MIN) {
+                zi = (fp_t)XY_MIN;
+            } else if (zi > (fp_t)XY_MAX) {
+                zi = (fp_t)XY_MAX;
+            }
+        } else if (i >= START_U_INEQ) {
+            zi = Axi_fp + rho_div(y[i], use_ineq_rho);
             if (zi < (fp_t)U_MIN) {
                 zi = (fp_t)U_MIN;
             } else if (zi > (fp_t)U_MAX) {
@@ -179,9 +218,9 @@ void ADMM_iteration(
             zi = 0;
         }
 
-        fp_t yi = y[i] + rho_mul(Axi_fp - zi);
+        fp_t yi = y[i] + rho_mul(Axi_fp - zi, use_ineq_rho);
         y[i] = yi;
-        b_tmp[i] = rho_mul(zi) - yi;
+        b_tmp[i] = rho_mul(zi, use_ineq_rho) - yi;
 
 
     }
@@ -237,7 +276,7 @@ void ADMM_solver_with_residuals(
     // Keep dedicated ADMM memory for this solver variant so the original
     // ADMM_solver interface/behavior remains untouched.
     static fp_t b[N_VAR] = {0};
-    static fp_t y[N_VAR] = {0};
+    static fp_t y[N_CONSTR] = {0};
 
     if (start_traj != 0) {
         traj_started = true;
@@ -249,33 +288,41 @@ void ADMM_solver_with_residuals(
     }
 
     fp_t tmp[N_VAR];
-    fp_t b_tmp[N_VAR];
-    fp_t z_prev[N_VAR] = {0};
-    fp_t z_curr[N_VAR] = {0};
-    fp_t dz[N_VAR];
+    fp_t b_tmp[N_CONSTR];
+    fp_t z_prev[N_CONSTR] = {0};
+    fp_t z_curr[N_CONSTR] = {0};
+    fp_t dz[N_CONSTR];
+    fp_t rho_dz[N_CONSTR];
     fp_t ATdz[N_VAR];
     fp_t primal_last = 0;
     fp_t dual_last = 0;
     bool has_prev_z = false;
-    const double rho = static_cast<double>(1 << RHO_SHIFT);
 
     for (int iter = 0; iter < ADMM_ITERATIONS; ++iter) {
         forward_substitution(b, q_runtime, tmp);
         backward_substitution(tmp, x);
 
         double primal_sq = 0.0;
-        for (int i = 0; i < N_VAR; ++i) {
+        for (int i = 0; i < N_CONSTR; ++i) {
             acc_t Axi = 0;
             for (int j = 0; j < A_SPARSE_DATA_COLS; ++j) {
                 Axi += (acc_t)A_sparse_data[i][j] * (acc_t)x[A_sparse_indexes[i][j]];
             }
             const fp_t Axi_fp = (fp_t)Axi;
+            const bool use_ineq_rho = is_inequality_constraint(i);
 
             fp_t zi;
             if (i < STATE_SIZE) {
                 zi = current_state[i];
-            } else if (i >= START_INEQ) {
-                zi = Axi_fp + rho_div(y[i]);
+            } else if (i >= START_XY_INEQ) {
+                zi = Axi_fp + rho_div(y[i], use_ineq_rho);
+                if (zi < (fp_t)XY_MIN) {
+                    zi = (fp_t)XY_MIN;
+                } else if (zi > (fp_t)XY_MAX) {
+                    zi = (fp_t)XY_MAX;
+                }
+            } else if (i >= START_U_INEQ) {
+                zi = Axi_fp + rho_div(y[i], use_ineq_rho);
                 if (zi < (fp_t)U_MIN) {
                     zi = (fp_t)U_MIN;
                 } else if (zi > (fp_t)U_MAX) {
@@ -291,31 +338,32 @@ void ADMM_solver_with_residuals(
             const double r_i_d = (double)r_i;
             primal_sq += r_i_d * r_i_d;
 
-            const fp_t yi = y[i] + rho_mul(r_i);
+            const fp_t yi = y[i] + rho_mul(r_i, use_ineq_rho);
             y[i] = yi;
-            b_tmp[i] = rho_mul(zi) - yi;
+            b_tmp[i] = rho_mul(zi, use_ineq_rho) - yi;
         }
 
         AT_mul(b_tmp, b);
 
         primal_last = (fp_t)std::sqrt(primal_sq);
         if (has_prev_z) {
-            for (int i = 0; i < N_VAR; ++i) {
+            for (int i = 0; i < N_CONSTR; ++i) {
                 dz[i] = z_curr[i] - z_prev[i];
+                rho_dz[i] = rho_mul(dz[i], is_inequality_constraint(i));
             }
-            AT_mul(dz, ATdz);
+            AT_mul(rho_dz, ATdz);
 
             double atdz_sq = 0.0;
             for (int i = 0; i < N_VAR; ++i) {
                 const double v = (double)ATdz[i];
                 atdz_sq += v * v;
             }
-            dual_last = (fp_t)(rho * std::sqrt(atdz_sq));
+            dual_last = (fp_t)std::sqrt(atdz_sq);
         } else {
             dual_last = 0;
         }
 
-        for (int i = 0; i < N_VAR; ++i) {
+        for (int i = 0; i < N_CONSTR; ++i) {
             z_prev[i] = z_curr[i];
         }
         has_prev_z = true;
@@ -335,4 +383,33 @@ void ADMM_solver_with_residuals(
             traj_idx++;
         }
     }
+}
+
+template <typename T, bool IsFloat = std::is_floating_point<T>::value>
+struct TypeWidth;
+
+template <typename T>
+struct TypeWidth<T, true> {
+    static int width() { return (int)(sizeof(T) * 8); }
+};
+
+template <typename T>
+struct TypeWidth<T, false> {
+    static int width() { return T::width; }
+};
+
+fp_t admm_test_rho_mul(fp_t v) {
+    return rho_mul(v, false);
+}
+
+fp_t admm_test_rho_div(fp_t v) {
+    return rho_div(v, false);
+}
+
+int admm_test_fp_width() {
+    return TypeWidth<fp_t>::width();
+}
+
+int admm_test_acc_width() {
+    return TypeWidth<acc_t>::width();
 }

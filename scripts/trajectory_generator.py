@@ -323,6 +323,46 @@ def generate_planar_shape_rollout_trajectory(
         x_ref_seed[:, 2] = z0
         u_ref = np.zeros((length, 4), dtype=np.float64)
         return x_ref_seed, u_ref
+    elif shape == "diamond1m_hold":
+        # Position-only rotated square (diamond), fixed 1.0 m side length.
+        # Useful with axis-aligned XY box limits to produce clipped-octagon behavior.
+        side_m = 1.0
+        radius = side_m / np.sqrt(2.0)
+        vertices = np.array(
+            [
+                [0.0, radius],
+                [radius, 0.0],
+                [0.0, -radius],
+                [-radius, 0.0],
+            ],
+            dtype=np.float64,
+        )
+
+        # Use the midpoint of edge [v0 -> v1] as frame origin so trajectory
+        # starts at (0,0) while preserving the same geometric path shape.
+        origin_xy = 0.5 * (vertices[0] + vertices[1])
+        vertices = vertices - origin_xy[None, :]
+
+        # Start directly on-trajectory at the chosen origin (edge midpoint).
+        total_edges = max(4, int(round(cycles * 4.0)))
+        phase = np.linspace(0.0, 1.0, num=length, endpoint=True, dtype=np.float64)
+        edge_phase = 0.5 + phase * float(total_edges)
+        edge_idx = np.floor(edge_phase).astype(np.int64)
+        edge_alpha = edge_phase - edge_idx
+        i0 = np.mod(edge_idx, 4)
+        i1 = np.mod(edge_idx + 1, 4)
+        p0 = vertices[i0]
+        p1 = vertices[i1]
+        p = (1.0 - edge_alpha)[:, None] * p0 + edge_alpha[:, None] * p1
+
+        x = p[:, 0]
+        y = p[:, 1]
+        x_ref_seed = np.zeros((length, 12), dtype=np.float64)
+        x_ref_seed[:, 0] = x
+        x_ref_seed[:, 1] = y
+        x_ref_seed[:, 2] = z0
+        u_ref = np.zeros((length, 4), dtype=np.float64)
+        return x_ref_seed, u_ref
     elif shape == "fig8_hold":
         # Figure-8 position-only reference:
         # use geometric XY path but keep non-position states at hover reference.

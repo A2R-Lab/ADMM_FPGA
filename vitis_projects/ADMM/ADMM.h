@@ -15,7 +15,7 @@ void backward_substitution(
 );
 
 void AT_mul(
-    const fp_t x[N_VAR],
+    const fp_t x[N_CONSTR],
     fp_t ATx[N_VAR]
 );
 

@@ -7,7 +7,8 @@ from parameters import (
     HORIZON_LENGTH,
     Q_DIAG,
     R_DIAG,
-    RHO_PARAM,
+    RHO_EQ_PARAM,
+    RHO_INEQ_PARAM,
     DELAY_STEPS,
     ADMM_USE_FLOAT,
     ADMM_ITERATIONS,
@@ -15,6 +16,11 @@ from parameters import (
     MPC_LINEAR_DRAG_Z,
     TRAJ_WARMSTART_PAD,
     TRAJ_TICK_DIV,
+    TRAJ_SHAPE,
+    U_ABS_MIN,
+    U_ABS_MAX,
+    XY_MIN,
+    XY_MAX,
 )
 
 # Run controller at 50 Hz
@@ -23,8 +29,10 @@ timer_period = 0.02  # seconds
 # Horizon length
 N = HORIZON_LENGTH
 
-rho = RHO_PARAM
-rho_mult = 1
+# ADMM row-wise rho values (single source of truth for both KKT generation
+# and emitted C/HLS constants).
+rho_ineq = RHO_INEQ_PARAM
+rho_eq = RHO_EQ_PARAM
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent
 TRAJ_DATA_HEADER_PATH = REPO_ROOT / "vitis_projects" / "ADMM" / "traj_data.h"
@@ -93,8 +101,8 @@ def load_traj_length_from_header(header_path: Path, horizon: int) -> int:
     return traj_length
 
 # Control input constraints
-u_max = np.array([1 - ug[0]] * 4)
-u_min = np.array([0 - ug[0]] * 4)
+u_max = np.array([U_ABS_MAX - ug[0]] * 4)
+u_min = np.array([U_ABS_MIN - ug[0]] * 4)
 
 
 def build_Aeq_interleaved(Anp, Bnp, N):
@@ -181,7 +189,7 @@ blocks = []
 for k in range(N):
     blocks.append(Q)     # Q_k
     blocks.append(R)     # R_k
-blocks.append(Q_terminal)  # Final terminal Q_N from discrete LQR
+blocks.append(Q)  # Final terminal Q_N from discrete LQR
 
 # total size
 total = sum(block.shape[0] for block in blocks)
@@ -198,33 +206,63 @@ for block in blocks:
 
 A_eq, b_eq = build_Aeq_interleaved(A, B, N)
 
-# Input constraints
-
-# Total number of constraints (only 1 per input)
-n_ineq = m * N
+# Input + state box constraints
+num_input_ineq = m * N
+num_state_box_ineq = 2 * N  # x and y for predicted states k=1..N
+n_ineq = num_input_ineq + num_state_box_ineq
 A_ineq = np.zeros((n_ineq, num_var))
+START_U_INEQ = 0
+START_XY_INEQ = num_input_ineq
 
 row = 0
+# Input box constraints: u_min <= u_k <= u_max
 for k in range(N):
-    # u_start = n*(N+1) + k*m
     u_start = k * (n + m) + n
-
-    # print("u_start:", u_start)
-    u_end   = u_start + m
-
-    # Select ONLY u_k in the full z vector
-    A_ineq[  row:row+m    , u_start:u_end] = np.eye(m)
+    u_end = u_start + m
+    A_ineq[row : row + m, u_start:u_end] = np.eye(m)
     row += m
+
+# State box constraints: -1 <= x_k <= 1 and -1 <= y_k <= 1
+# Apply only to predicted states (k=1..N). k=0 is measured/current state and
+# is already enforced by the equality constraint x0 = current_state.
+for k in range(1, N + 1):
+    xk_start = k * (n + m)
+    # x position
+    A_ineq[row, xk_start + 0] = 1.0
+    row += 1
+    # y position
+    A_ineq[row, xk_start + 1] = 1.0
+    row += 1
+
+if row != n_ineq:
+    raise RuntimeError(f"Internal inequality row mismatch: row={row}, n_ineq={n_ineq}")
 
 A = np.vstack([A_eq, A_ineq])
 
 
-l = np.hstack([b_eq, np.tile(u_min, N)])
-u = np.hstack([b_eq, np.tile(u_max, N)])
+# Keep constraints aligned with trajectory frame for the rotated-square mode:
+# midpoint of one side is treated as origin, so shift XY bounds equally.
+xy_bound_shift = 0.0
+xy_bound_halfspan = None
+if TRAJ_SHAPE == "diamond1m_hold":
+    xy_bound_shift = 0.5 / np.sqrt(2.0)  # side=1.0 => midpoint component
+    # Match constraint box side to trajectory side (1.0 m).
+    xy_bound_halfspan = 0.5
+
+if xy_bound_halfspan is None:
+    xy_min_eff = XY_MIN - xy_bound_shift
+    xy_max_eff = XY_MAX - xy_bound_shift
+else:
+    xy_min_eff = -xy_bound_halfspan - xy_bound_shift
+    xy_max_eff = xy_bound_halfspan - xy_bound_shift
+l_u = np.hstack([np.tile(u_min, N), np.full(num_state_box_ineq, xy_min_eff)])
+u_u = np.hstack([np.tile(u_max, N), np.full(num_state_box_ineq, xy_max_eff)])
+l = np.hstack([b_eq, l_u])
+u = np.hstack([b_eq, u_u])
 
 
-rho_vect = rho * np.ones(P.shape[0])
-rho_vect[np.where(l == u)[0]] *= rho_mult
+rho_vect = rho_ineq * np.ones(A.shape[0])
+rho_vect[np.where(l == u)[0]] = rho_eq
 rho_diag = np.diag(rho_vect)
 
 eq_indices = np.arange(n * (N + 1))
@@ -336,6 +374,7 @@ def generate_verilog_params_header(constants_dict):
     lines.append(f"`define ADMM_N_STATE {constants_dict['STATE_SIZE']}\n")
     lines.append(f"`define ADMM_STAGE_SIZE {constants_dict['STAGE_SIZE']}\n")
     lines.append(f"`define ADMM_N_VAR {constants_dict['N_VAR']}\n")
+    lines.append(f"`define ADMM_N_CONSTR {constants_dict['N_CONSTR']}\n")
     lines.append(f"`define ADMM_START_INEQ {constants_dict['START_INEQ']}\n")
     lines.append(f"`define ADMM_DELAY_STEPS {constants_dict['DELAY_STEPS']}\n")
     lines.append("`endif // ADMM_AUTOGEN_PARAMS_VH\n")
@@ -388,15 +427,24 @@ def generate_full_header(data, filename="data.h", guard="DATA_H"):
         
         f.write(f"#endif // {guard}\n")
 
+def _checked_pow2_shift(name: str, value: int) -> int:
+    if value <= 0:
+        raise ValueError(f"{name} must be > 0, got {value}")
+    shift = int(np.log2(value))
+    if (1 << shift) != value:
+        raise ValueError(f"{name} must be a power of two for shift-based rho ops, got {value}")
+    return shift
+
+
 def ADMM_iteration(l, u, iter):
     x = np.zeros(P.shape[0])
-    z = np.zeros(P.shape[0])
-    y = np.zeros(P.shape[0])
+    z = np.zeros(A.shape[0])
+    y = np.zeros(A.shape[0])
 
     for i in range(iter):
-        x = np.linalg.solve(KKT, A.T @ ((rho * z) - y))
-        z = np.clip(A @ x + (y / rho), l, u)
-        y = y + rho * (A @ x - z)
+        x = np.linalg.solve(KKT, A.T @ ((rho_ineq * z) - y))
+        z = np.clip(A @ x + (y / rho_ineq), l, u)
+        y = y + rho_ineq * (A @ x - z)
     
     return x, z, y
 
@@ -408,7 +456,7 @@ def testOSQP(l,u, iter):
     A_csc = sparse.csc_matrix(A)
 
     prob = osqp.OSQP()
-    prob.setup(P_csc, np.zeros(P.shape[0]), A_csc, l, u, verbose=False, rho=rho, adaptive_rho = False, max_iter=iter)
+    prob.setup(P_csc, np.zeros(P.shape[0]), A_csc, l, u, verbose=False, rho=rho_eq, adaptive_rho = False, max_iter=iter)
     res = prob.solve()
 
     return res.x
@@ -423,11 +471,22 @@ constants["STATE_SIZE"] = n
 constants["INPUT_SIZE"] = m
 constants["STAGE_SIZE"] = n + m
 constants["N_VAR"] = num_var
+constants["N_CONSTR"] = A.shape[0]
+constants["N_INEQ"] = n_ineq
 constants["START_INEQ"] = A_eq.shape[0]
+constants["START_U_INEQ"] = A_eq.shape[0] + START_U_INEQ
+constants["START_XY_INEQ"] = A_eq.shape[0] + START_XY_INEQ
 constants["DELAY_STEPS"] = DELAY_STEPS
-constants["RHO_SHIFT"] = int(np.log2(rho))
+rho_shift_ineq = _checked_pow2_shift("rho_ineq", int(rho_ineq))
+rho_shift_eq = _checked_pow2_shift("rho_eq", int(rho_eq))
+constants["RHO_SHIFT_INEQ"] = rho_shift_ineq
+constants["RHO_SHIFT_EQ"] = rho_shift_eq
+# Backward-compat alias for existing code/tests that still use RHO_SHIFT.
+constants["RHO_SHIFT"] = rho_shift_eq
 constants["U_MIN"] = u_min[0]
 constants["U_MAX"] = u_max[0]
+constants["XY_MIN"] = xy_min_eff
+constants["XY_MAX"] = xy_max_eff
 constants["U_HOVER"] = ug[0]
 constants["TRAJ_LENGTH"] = load_traj_length_from_header(TRAJ_DATA_HEADER_PATH, horizon=N)
 constants["TRAJ_TICK_DIV"] = TRAJ_TICK_DIV
