@@ -4,6 +4,8 @@ import os
 import numpy as np
 from crazyloihimodel import CrazyLoihiModel
 from parameters import (
+    AMP_X,
+    AMP_Y,
     HORIZON_LENGTH,
     Q_DIAG,
     R_DIAG,
@@ -14,6 +16,7 @@ from parameters import (
     ADMM_ITERATIONS,
     MPC_LINEAR_DRAG_XY,
     MPC_LINEAR_DRAG_Z,
+    STAR_INNER_RATIO,
     TRAJ_WARMSTART_PAD,
     TRAJ_TICK_DIV,
     TRAJ_SHAPE,
@@ -248,6 +251,9 @@ if TRAJ_SHAPE == "diamond1m_hold":
     xy_bound_shift = 0.5 / np.sqrt(2.0)  # side=1.0 => midpoint component
     # Match constraint box side to trajectory side (1.0 m).
     xy_bound_halfspan = 0.5
+elif TRAJ_SHAPE == "star_hold":
+    diagonal_angle = np.arctan2(AMP_X, AMP_Y)
+    xy_bound_shift = AMP_X * STAR_INNER_RATIO * np.cos(diagonal_angle)
 
 if xy_bound_halfspan is None:
     xy_min_eff = XY_MIN - xy_bound_shift

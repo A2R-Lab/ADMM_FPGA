@@ -29,6 +29,7 @@ from parameters import (
     R_DIAG,
     ROSE_MOD,
     ROSE_PETALS,
+    STAR_INNER_HOLD,
     SQUARE_SHARPNESS,
     STAR_INNER_RATIO,
     STAR_POINTS,
@@ -238,6 +239,7 @@ def generate_planar_shape_rollout_trajectory(
     square_sharpness: float,
     star_points: int,
     star_inner_ratio: float,
+    star_inner_hold: float,
     rose_petals: int,
     rose_mod: float,
     chicane_mix: float,
@@ -253,6 +255,8 @@ def generate_planar_shape_rollout_trajectory(
         raise ValueError("star_points must be >= 3")
     if not (0.0 < star_inner_ratio <= 1.0):
         raise ValueError("star_inner_ratio must be in (0, 1]")
+    if not (0.0 <= star_inner_hold < 1.0):
+        raise ValueError("star_inner_hold must be in [0, 1)")
     if rose_petals < 2:
         raise ValueError("rose_petals must be >= 2")
     if not (0.0 <= rose_mod < 1.0):
@@ -315,6 +319,58 @@ def generate_planar_shape_rollout_trajectory(
         p0 = vertices[i0]
         p1 = vertices[i1]
         p = (1.0 - edge_alpha)[:, None] * p0 + edge_alpha[:, None] * p1
+        x = p[:, 0]
+        y = p[:, 1]
+        x_ref_seed = np.zeros((length, 12), dtype=np.float64)
+        x_ref_seed[:, 0] = x
+        x_ref_seed[:, 1] = y
+        x_ref_seed[:, 2] = z0
+        u_ref = np.zeros((length, 4), dtype=np.float64)
+        return x_ref_seed, u_ref
+    elif shape == "star_hold":
+        # Position-only star polygon matching the alternating outer/inner vertex path,
+        # phase-rotated so the first inner vertex lies on the x=y diagonal, then
+        # translated so that first sample becomes the origin.
+        # Uses amp_x/amp_y for the outer radius and star_inner_ratio for the inner radius.
+        phase = np.linspace(0.0, 1.0, num=length, endpoint=False, dtype=np.float64)
+        vertex_count = max(6, int(round(cycles * 2.0 * star_points)))
+        path_phase = phase * float(vertex_count)
+        vertex_idx = np.floor(path_phase).astype(np.int64)
+        edge_alpha = path_phase - vertex_idx
+
+        # Choose the global star rotation so the first inner vertex satisfies x=y.
+        diagonal_angle = np.arctan2(amp_x, amp_y)
+        star_phase = diagonal_angle - (np.pi / float(star_points))
+        base_angles = (
+            np.linspace(0.0, 2.0 * np.pi, num=star_points, endpoint=False, dtype=np.float64)
+            + star_phase
+        )
+        vertices = np.zeros((2 * star_points, 2), dtype=np.float64)
+        for i, angle0 in enumerate(base_angles):
+            outer_idx = 2 * i
+            inner_idx = outer_idx + 1
+            vertices[outer_idx, 0] = amp_x * np.cos(angle0)
+            vertices[outer_idx, 1] = amp_y * np.sin(angle0)
+            inner_angle = angle0 + (np.pi / float(star_points))
+            vertices[inner_idx, 0] = amp_x * star_inner_ratio * np.cos(inner_angle)
+            vertices[inner_idx, 1] = amp_y * star_inner_ratio * np.sin(inner_angle)
+
+        vertices = np.roll(vertices, shift=-1, axis=0)
+        vertices = vertices - vertices[0]
+
+        i0 = np.mod(vertex_idx, 2 * star_points)
+        i1 = np.mod(vertex_idx + 1, 2 * star_points)
+        is_inner_start = (i0 % 2) == 0
+        edge_alpha_eff = edge_alpha.copy()
+        if star_inner_hold > 0.0:
+            moving_mask = is_inner_start & (edge_alpha >= star_inner_hold)
+            edge_alpha_eff[is_inner_start & ~moving_mask] = 0.0
+            edge_alpha_eff[moving_mask] = (
+                (edge_alpha[moving_mask] - star_inner_hold) / (1.0 - star_inner_hold)
+            )
+        p0 = vertices[i0]
+        p1 = vertices[i1]
+        p = (1.0 - edge_alpha_eff)[:, None] * p0 + edge_alpha_eff[:, None] * p1
         x = p[:, 0]
         y = p[:, 1]
         x_ref_seed = np.zeros((length, 12), dtype=np.float64)
@@ -400,6 +456,26 @@ def generate_planar_shape_rollout_trajectory(
         p = (1.0 - seg_alpha)[:, None] * p0 + seg_alpha[:, None] * p1
         x = p[:, 0]
         y = p[:, 1]
+        x_ref_seed = np.zeros((length, 12), dtype=np.float64)
+        x_ref_seed[:, 0] = x
+        x_ref_seed[:, 1] = y
+        x_ref_seed[:, 2] = z0
+        u_ref = np.zeros((length, 4), dtype=np.float64)
+        return x_ref_seed, u_ref
+    elif shape == "hubstar_hold":
+        # Position-only center-hub star:
+        # center -> spoke tip -> center, repeated for each spoke, with hover input.
+        total_legs = max(1, hubstar_vertices)
+        leg_phase = s * float(total_legs)
+        leg_idx = np.floor(leg_phase).astype(np.int64)
+        leg_local = leg_phase - leg_idx
+
+        spoke_idx = np.mod(leg_idx, hubstar_vertices)
+        angle = 2.0 * np.pi * (spoke_idx.astype(np.float64) / float(hubstar_vertices))
+
+        r = 0.5 * (1.0 - np.cos(2.0 * np.pi * leg_local))
+        x = amp_x * r * np.cos(angle)
+        y = amp_y * r * np.sin(angle)
         x_ref_seed = np.zeros((length, 12), dtype=np.float64)
         x_ref_seed[:, 0] = x
         x_ref_seed[:, 1] = y
@@ -682,6 +758,7 @@ def main() -> int:
             square_sharpness=SQUARE_SHARPNESS,
             star_points=STAR_POINTS,
             star_inner_ratio=STAR_INNER_RATIO,
+            star_inner_hold=STAR_INNER_HOLD,
             rose_petals=ROSE_PETALS,
             rose_mod=ROSE_MOD,
             chicane_mix=CHICANE_MIX,
@@ -724,6 +801,7 @@ def main() -> int:
         f"shape={TRAJ_SHAPE} amp_x={AMP_X:.4f} amp_y={AMP_Y:.4f} "
         f"square_sharpness={SQUARE_SHARPNESS:.3f} star_points={STAR_POINTS} "
         f"star_inner_ratio={STAR_INNER_RATIO:.3f} "
+        f"star_inner_hold={STAR_INNER_HOLD:.3f} "
         f"rose_petals={ROSE_PETALS} rose_mod={ROSE_MOD:.3f} "
         f"chicane_mix={CHICANE_MIX:.3f} "
         f"hubstar_vertices={HUBSTAR_VERTICES}"
