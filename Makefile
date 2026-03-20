@@ -19,8 +19,17 @@
 # =============================================================================
 
 # Configuration
+BOARD        ?= custom
+
 PART          := xc7a100tcsg324-1
+
+ifeq ($(BOARD),arty)
+TOP_MODULE    := top_uart
+else ifeq ($(BOARD),custom)
 TOP_MODULE    := top_spi
+else
+$(error Unsupported BOARD='$(BOARD)'. Use BOARD=arty or BOARD=custom)
+endif
 # For sync: remote repo path, e.g. user@host:~/ADMM_FPGA (path must exist on server)
 REMOTE       ?=
 # Optional SSH port for sync (default 22): make sync REMOTE=... SSH_PORT=2222
@@ -43,16 +52,21 @@ IP_DIR        := $(PROJ_ROOT)/vivado_project/vivado_project.gen/sources_1/ip/ADM
 # Source files
 HLS_SOURCES   := $(HLS_DIR)/ADMM.cpp $(HLS_DIR)/ADMM.h $(HLS_DIR)/data_types.h
 RTL_SOURCES   := $(wildcard $(RTL_DIR)/*.v)
-XDC_SOURCES   := $(wildcard $(XDC_DIR)/*.xdc)
+ifeq ($(BOARD),arty)
+XDC_SOURCES   := $(XDC_DIR)/constraints_arty_a7.xdc
+else
+XDC_SOURCES   := $(XDC_DIR)/constraints.xdc
+endif
 HEADER_SCRIPT := $(SCRIPTS_DIR)/header_generator.py
 
 # Generated files
 DATA_HEADER   := $(HLS_DIR)/data.h
 HLS_IP_MARKER := $(HLS_WORK_DIR)/.export_done
-SYNTH_DCP     := $(BUILD_DIR)/post_synth.dcp
-ROUTE_DCP     := $(BUILD_DIR)/post_route.dcp
 BITSTREAM     := $(BUILD_DIR)/$(TOP_MODULE).bit
 FLASH_BIN     := $(BUILD_DIR)/$(TOP_MODULE).bin
+BUILD_TAG     := $(TOP_MODULE)_$(BOARD)
+SYNTH_DCP     := $(BUILD_DIR)/post_synth_$(BUILD_TAG).dcp
+ROUTE_DCP     := $(BUILD_DIR)/post_route_$(BUILD_TAG).dcp
 
 # =============================================================================
 # Main Targets
@@ -132,11 +146,12 @@ vivado: $(ROUTE_DCP)
 # Synthesis
 $(SYNTH_DCP): $(RTL_SOURCES) $(XDC_SOURCES) $(HLS_IP_MARKER)
 	@echo "========================================="
-	@echo "Running Vivado Synthesis..."
+	@echo "Running Vivado Synthesis (BOARD=$(BOARD), TOP=$(TOP_MODULE))..."
 	@echo "========================================="
 	@mkdir -p $(BUILD_DIR)/logs $(BUILD_DIR)/reports
 	$(VIVADO) -mode batch \
 		-source $(SCRIPTS_DIR)/synth.tcl \
+		-tclargs $(TOP_MODULE) $(notdir $(XDC_SOURCES)) $(notdir $(SYNTH_DCP)) \
 		-log $(BUILD_DIR)/logs/synth.log \
 		-journal $(BUILD_DIR)/logs/synth.jou \
 		-notrace
@@ -148,6 +163,7 @@ $(ROUTE_DCP): $(SYNTH_DCP)
 	@echo "========================================="
 	$(VIVADO) -mode batch \
 		-source $(SCRIPTS_DIR)/impl.tcl \
+		-tclargs $(notdir $(SYNTH_DCP)) $(notdir $(ROUTE_DCP)) \
 		-log $(BUILD_DIR)/logs/impl.log \
 		-journal $(BUILD_DIR)/logs/impl.jou \
 		-notrace
@@ -160,10 +176,11 @@ bit: $(BITSTREAM)
 
 $(BITSTREAM): $(ROUTE_DCP)
 	@echo "========================================="
-	@echo "Generating Bitstream..."
+	@echo "Generating Bitstream ($(TOP_MODULE))..."
 	@echo "========================================="
 	$(VIVADO) -mode batch \
 		-source $(SCRIPTS_DIR)/bitstream.tcl \
+		-tclargs $(TOP_MODULE) $(notdir $(ROUTE_DCP)) \
 		-log $(BUILD_DIR)/logs/bitstream.log \
 		-journal $(BUILD_DIR)/logs/bitstream.jou \
 		-notrace
@@ -195,21 +212,23 @@ program:
 		echo "Error: $(BITSTREAM) not found. Run 'make' or 'make sync' first."; exit 1; \
 	fi
 	@echo "========================================="
-	@echo "Programming FPGA..."
+	@echo "Programming FPGA (BOARD=$(BOARD), TOP=$(TOP_MODULE))..."
 	@echo "========================================="
 	$(VIVADO) -mode batch \
 		-source $(SCRIPTS_DIR)/program.tcl \
+		-tclargs $(TOP_MODULE) \
 		-notrace
 
 flash:
-	@if [ ! -f $(FLASH_BIN) ]; then \
-		echo "Error: $(FLASH_BIN) not found. Run 'make' or 'make sync' first."; exit 1; \
+	@if [ ! -f $(BITSTREAM) ]; then \
+		echo "Error: $(BITSTREAM) not found. Run 'make' or 'make sync' first."; exit 1; \
 	fi
 	@echo "========================================="
-	@echo "Writing to SPI Flash..."
+	@echo "Writing to SPI Flash (BOARD=$(BOARD), TOP=$(TOP_MODULE))..."
 	@echo "========================================="
 	$(VIVADO) -mode batch \
 		-source $(SCRIPTS_DIR)/program_flash.tcl \
+		-tclargs $(TOP_MODULE) \
 		-notrace
 
 $(FLASH_BIN): $(BITSTREAM)

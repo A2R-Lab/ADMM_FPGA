@@ -20,13 +20,12 @@ void AT_mul(
 
 void ADMM_iteration(
     fp_t x[N_VAR],
-    state_t current_state
+    fp_t current_state[12]
 );
 
 void ADMM_solver(
-    state_t current_state,
-    fp_t x[N_VAR],
-    int iters
+    current_state_t current_in,
+    command_out_t &command_out
 );
 
 #endif // ADMM_H

@@ -96,15 +96,11 @@ void AT_mul(
     }
 }
 
-void ADMM_iteration(
+inline void ADMM_iteration(
     fp_t x[N_VAR],
-    state_t current_state
+    fp_t current_state[12]
 ) {
-#pragma HLS INLINE off
-#pragma HLS ARRAY_PARTITION variable=A_sparse_data dim=2 complete
-#pragma HLS ARRAY_PARTITION variable=A_sparse_indexes dim=2 complete
-#pragma HLS ARRAY_PARTITION variable=current_state.s complete
-
+    #pragma HLS INLINE
     static fp_t b[N_VAR] = {0};
 #pragma HLS ARRAY_PARTITION variable=b cyclic factor=16 dim=1
     static fp_t y[N_VAR] = {0};
@@ -131,7 +127,7 @@ void ADMM_iteration(
 
         fp_t zi;
         if(i < STATE_SIZE) {
-            zi = current_state.s[i];
+            zi = current_state[i];
         } else if (i >= START_INEQ) { // This will depend on horizon length
             zi = Axi + (y[i] >> RHO_SHIFT);
             // Cast to fp_t to avoid floating-point comparison hardware
@@ -153,15 +149,25 @@ void ADMM_iteration(
 }
 
 void ADMM_solver(
-    state_t current_state,
-    fp_t x[N_VAR],
-    int iters
+    current_state_t current_in,
+    command_out_t &command_out
 ) {
-#pragma HLS ARRAY_PARTITION variable=current_state.s complete
-    // x kept as single port so top_spi RTL interface matches
-    ADMM_MAIN_LOOP:
-    for (int iter = 0; iter < 10; iter++) {
-#pragma HLS PIPELINE off
-        ADMM_iteration(x, current_state);
+
+    static fp_t x[N_VAR] = {0};
+    fp_t current_state_vec[12];
+
+    for (int i = 0; i < 12; i++) {
+        current_state_vec[i] = current_in.state[i];
     }
+
+ADMM_MAIN_LOOP:
+    for (int iter = 0; iter < ADMM_ITERS; iter++) {
+        ADMM_iteration(x, current_state_vec);
+    }
+
+    // Add hover thrust offset before returning commands
+    command_out.u0 = x[12] + (fp_t)U_HOVER;
+    command_out.u1 = x[13] + (fp_t)U_HOVER;
+    command_out.u2 = x[14] + (fp_t)U_HOVER;
+    command_out.u3 = x[15] + (fp_t)U_HOVER;
 }

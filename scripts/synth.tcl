@@ -12,19 +12,36 @@ file mkdir $build_dir
 file mkdir $reports_dir
 
 #------------------------------------------------------------------------------
-# Configuration
+# Configuration (top_module, xdc_file, and synth checkpoint name via -tclargs)
 #------------------------------------------------------------------------------
 set part "xc7a100tcsg324-1"
-set top_module "top_spi"
+if {[llength $argv] >= 2} {
+    set top_module [lindex $argv 0]
+    set xdc_file [lindex $argv 1]
+} else {
+    set top_module "top_spi"
+    set xdc_file "constraints.xdc"
+}
+if {[llength $argv] >= 3} {
+    set synth_dcp [lindex $argv 2]
+} else {
+    set synth_dcp "post_synth.dcp"
+}
 
 set rtl_dir "$proj_root/vivado_project/vivado_project.srcs/sources_1/new"
 set xdc_dir "$proj_root/vivado_project/vivado_project.srcs/constrs_1/new"
 set hls_export_dir "$proj_root/vitis_projects/ADMM/ADMM/hls/impl/ip"
 
+puts "Top module: $top_module"
+puts "Constraints: $xdc_file"
+
 #------------------------------------------------------------------------------
-# Read RTL Sources
+# Read RTL Sources (all tops and peripherals; synth_design -top selects which)
 #------------------------------------------------------------------------------
 puts "Reading RTL sources..."
+read_verilog "$rtl_dir/top_uart.v"
+read_verilog "$rtl_dir/uart_rx.v"
+read_verilog "$rtl_dir/uart_tx.v"
 read_verilog "$rtl_dir/top_spi.v"
 read_verilog "$rtl_dir/spi_slave.v"
 read_verilog "$rtl_dir/spi_slave_word.v"
@@ -48,7 +65,7 @@ if {[file exists "$hls_export_dir/hdl/verilog"]} {
 # Read Constraints
 #------------------------------------------------------------------------------
 puts "Reading constraints..."
-read_xdc "$xdc_dir/constraints.xdc"
+read_xdc "$xdc_dir/$xdc_file"
 
 #------------------------------------------------------------------------------
 # Synthesis
@@ -68,9 +85,9 @@ report_timing_summary -file "$reports_dir/post_synth_timing.rpt"
 #------------------------------------------------------------------------------
 # Save Checkpoint
 #------------------------------------------------------------------------------
-write_checkpoint -force "$build_dir/post_synth.dcp"
+write_checkpoint -force "$build_dir/$synth_dcp"
 
 puts "========================================"
 puts "Synthesis complete!"
-puts "Checkpoint: $build_dir/post_synth.dcp"
+puts "Checkpoint: $build_dir/$synth_dcp"
 puts "========================================"

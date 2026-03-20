@@ -1,13 +1,17 @@
 import numpy as np
 from crazyloihimodel import CrazyLoihiModel
 
+
+# Number of ADMM iterations to run in hardware
+ADMM_ITERS = 28
+
 # Run controller at 50 Hz
 timer_period = 0.02  # seconds
 
 # Horizon length
 N = 20
 
-rho = 256
+rho = 64
 rho_mult = 1
 
 # Initialize goal state
@@ -21,7 +25,7 @@ ug = quad.hover_thrust
 A, B = quad.get_linearized_dynamics(xg, ug)
 
 # Cost matrices
-max_dev_x = np.array([0.1, 0.1, 0.1, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.7, 0.7, 0.2])
+max_dev_x = np.array([0.075, 0.075, 0.075, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.7, 0.7, 0.2])
 max_dev_u = np.array([0.5, 0.5, 0.5, 0.5])
 Q = np.diag(1./max_dev_x**2)
 R = np.diag(1./max_dev_u**2)
@@ -309,6 +313,8 @@ constants["START_INEQ"] = A_eq.shape[0]
 constants["RHO_SHIFT"] = int(np.log2(rho))
 constants["U_MIN"] = u_min[0]
 constants["U_MAX"] = u_max[0]
+constants["ADMM_ITERS"] = ADMM_ITERS
+constants["U_HOVER"] = ug[0]
 
 data = []
 data.append(generate_constants_header(constants))
@@ -366,6 +372,13 @@ x, z, y = ADMM_iteration(l, u, iter=50)
 test_data.append(generate_vector_header(x, "ADMM_x_after_50_iter", type="double"))
 test_data.append(generate_vector_header(z, "ADMM_z_after_50_iter", type="double"))
 test_data.append(generate_vector_header(y, "ADMM_y_after_50_iter", type="double"))
+
+# Reference snapshot matching the configured hardware iteration count.
+x, z, y = ADMM_iteration(l, u, iter=ADMM_ITERS)
+
+test_data.append(generate_vector_header(x, "ADMM_x_after_hw_iters", type="double"))
+test_data.append(generate_vector_header(z, "ADMM_z_after_hw_iters", type="double"))
+test_data.append(generate_vector_header(y, "ADMM_y_after_hw_iters", type="double"))
 
 generate_full_header(test_data, filename="../vitis_projects/ADMM/test_data.h", guard="TEST_DATA_H")
 

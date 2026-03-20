@@ -8,15 +8,15 @@ import math
 class CrazyLoihiModel:
     def __init__(self, freq=50.0):
         # Quadrotor parameters
-        self.mass = 0.035
-        self.J = np.array([[1.66e-5, 0.83e-6, 0.72e-6], 
-                          [0.83e-6, 1.66e-5, 1.8e-6], 
-                          [0.72e-6, 1.8e-6, 2.93e-5]])
+        self.mass = 0.048
+        self.J = np.array([[2.3951e-5, 0.0, 0.0],
+                          [0.0, 2.3951e-5, 0.0],
+                          [0.0, 0.0, 3.2347e-5]])
         self.g = 9.81
-        self.thrustToTorque = 0.0008
-        self.el = 0.046/1.414213562
+        self.thrustToTorque = 0.002078
+        self.el = 0.0353
         self.scale = 65535
-        self.kt = 2.245365e-6 * self.scale
+        self.kt = 2.90e-6 * self.scale
         self.km = self.kt * self.thrustToTorque
 
         self.freq = freq
@@ -26,6 +26,7 @@ class CrazyLoihiModel:
         self.nu = 4
         
         self.hover_thrust = (self.mass * self.g / self.kt / 4) * np.ones(4)
+        print("Hover thrust (raw):", self.hover_thrust)
     
     def step(self, x, u):
         x_next = self.dynamics_rk4(np.hstack([x[0:3], self.rptoq(x[3:6]), x[6:13]]), u, self.dt)

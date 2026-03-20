@@ -6,13 +6,23 @@ set script_dir [file dirname [info script]]
 set proj_root [file normalize "$script_dir/.."]
 
 set build_dir "$proj_root/build"
-set top_module "top_spi"
+if {[llength $argv] >= 1} {
+    set top_module [lindex $argv 0]
+} else {
+    set top_module "top_spi"
+}
+if {[llength $argv] >= 2} {
+    set route_dcp [lindex $argv 1]
+} else {
+    set route_dcp "post_route.dcp"
+}
+puts "Bitstream top module: $top_module"
 
 #------------------------------------------------------------------------------
 # Open Routed Checkpoint
 #------------------------------------------------------------------------------
 puts "Opening routed checkpoint..."
-open_checkpoint "$build_dir/post_route.dcp"
+open_checkpoint "$build_dir/$route_dcp"
 
 #------------------------------------------------------------------------------
 # Generate Bitstream
