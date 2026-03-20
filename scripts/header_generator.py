@@ -25,10 +25,23 @@ ug = quad.hover_thrust
 A, B = quad.get_linearized_dynamics(xg, ug)
 
 # Cost matrices
-max_dev_x = np.array([0.075, 0.075, 0.075, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.7, 0.7, 0.2])
-max_dev_u = np.array([0.5, 0.5, 0.5, 0.5])
-Q = np.diag(1./max_dev_x**2)
-R = np.diag(1./max_dev_u**2)
+Q_DIAG =  [70.0, # x
+           70.0, # y
+           178.0,# z
+           0.4,  # roll
+           0.4,  # pitch
+           40.0, # yaw
+           3.5,  # vx
+           3.5,  # vy
+           4.0,  # vz
+           0.2,    # wx
+           0.2,    # wy
+           25.0] # wz
+
+R_DIAG = [1.0, 1.0, 1.0, 1.0]
+Q = np.diag(Q_DIAG)
+R = np.diag(R_DIAG)
+
 
 # Control input constraints
 u_max = np.array([1.0 - ug[0]] * 4)
