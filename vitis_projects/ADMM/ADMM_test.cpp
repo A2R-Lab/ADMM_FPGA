@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -11,21 +12,18 @@ bool compare_vectors(const fp_t *dut, const double *ref, size_t size, double max
     bool ret = true;
     double rel_error;
     int fail_count = 0;
-    // Check results
-    for (int i = 0; i < size; i++) { // i = size - 1; i >= 0; i--) {
-        if(fabs(ref[i]) > 1e-5)
-            rel_error = fabs(((double)dut[i]) - ref[i]) / ref[i];
-        else
+    for (int i = 0; i < (int)size; i++) {
+        if (fabs(ref[i]) > 1e-5) {
+            rel_error = fabs(((double)dut[i]) - ref[i]) / fabs(ref[i]);
+        } else {
             rel_error = fabs(((double)dut[i]) - ref[i]);
+        }
 
         if (rel_error > max_rel_err) {
-            printf("Test failed at index %d: expected %f, got %f. Relative error is: %f.\n", i, ref[i], (double)dut[i], rel_error);
+            printf("Test failed at index %d: expected %f, got %f. Relative error is: %f.\n",
+                   i, ref[i], (double)dut[i], rel_error);
             ret = false;
             fail_count++;
-        }
-        else
-        {
-            // printf("Test passed at index %d: expected %f, got %f. Relative error is: %f.\n", i, (double)ref[i], (double)dut[i], rel_error);
         }
     }
     printf("Number of failed elements: %d out of %zu\n", fail_count, size);
@@ -36,36 +34,18 @@ bool compare_vectors(const fp_t *dut, const double *ref, size_t size, double max
 int main() {
     bool res = true;
 
-
-    // printf("================= FORWARD SUBSTITUTION =================\n");
-    // forward_substitution(random_vector, res_dut);
-    // res &= compare_vectors(res_dut, forw_subst_out, RANDOM_VECTOR_SIZE, REL_ERROR * 2);
-
-    // printf("================= BACKWARD SUBSTITUTION =================\n");
-    // backward_substitution(random_vector, res_dut);
-    // res &= compare_vectors(res_dut, back_subst_out, RANDOM_VECTOR_SIZE, REL_ERROR * 2);
-
-    // printf("================= A MULT =================\n");
-    // A_mul(random_vector, res_dut);
-    // res &= compare_vectors(res_dut, A_mul_out, RANDOM_VECTOR_SIZE, REL_ERROR);
-
-    // printf("================= AT MULT =================\n");
-    // AT_mul(random_vector, res_dut);
-    // res &= compare_vectors(res_dut, AT_mul_out, RANDOM_VECTOR_SIZE, REL_ERROR);
-
     command_out_t cmd_out;
-    current_state_t current;
-    
-    current.state[0] = (fp_t)0.1; current.state[1] = (fp_t)0.1; current.state[2] = (fp_t)-0.1;
+    current_state_t current = {};
 
-    printf("================= ADMM SOLVER %d iterations =================\n", ADMM_ITERS);
+    current.state[0] = (fp_t)0.1;
+    current.state[1] = (fp_t)0.1;
+    current.state[2] = (fp_t)-0.1;
+    current.traj_cmd = 0;
 
-    ADMM_solver(
-        current,
-        cmd_out
-    );
+    printf("================= ADMM SOLVER %d iterations =================\n", ADMM_ITERATIONS);
 
-    // Compare only the four control components against reference
+    ADMM_solver(current, cmd_out);
+
     fp_t dut_controls[4];
     double ref_controls[4];
 
@@ -80,6 +60,6 @@ int main() {
 
     printf("================= Comparing control outputs against ADMM_x_after_hw_iters =================\n");
     res &= compare_vectors(dut_controls, ref_controls, 4, REL_ERROR);
-    
+
     return res ? 0 : 1;
 }

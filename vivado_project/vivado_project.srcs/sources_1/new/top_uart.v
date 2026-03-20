@@ -1,6 +1,7 @@
 `timescale 1ns/1ps
+`include "admm_autogen_params.vh"
 
-module top (
+module top_uart (
     input  wire        clk,
     input  wire        resetn,
     input  wire        uart_rxd,
@@ -8,26 +9,21 @@ module top (
     output wire [3:0]  led
 );
 
-    //--------------------------------------------------------------
-    // Parameters
-    //--------------------------------------------------------------
-    localparam N_STATE = 12;        // Size of current_state (input)
-    localparam N_CMD   = 4;         // Number of command outputs (u0..u3)
+    localparam N_STATE = `ADMM_N_STATE;
+    localparam N_CMD = 4;
     localparam DATA_WIDTH = 32;
+    localparam TRAJ_CMD_WIDTH = 2;
+    localparam CURRENT_IN_WIDTH = N_STATE * DATA_WIDTH + TRAJ_CMD_WIDTH;
     localparam CLK_HZ = 100_000_000;
     localparam BIT_RATE = 921600;
     localparam PAYLOAD_BITS = 8;
 
-    // State machine states
-    localparam IDLE         = 3'd0;
-    localparam RX_DATA      = 3'd1;
-    localparam COMPUTE      = 3'd2;
-    localparam TX_DATA      = 3'd3;
-    localparam DONE         = 3'd4;
+    localparam IDLE = 3'd0;
+    localparam RX_DATA = 3'd1;
+    localparam COMPUTE = 3'd2;
+    localparam TX_DATA = 3'd3;
+    localparam DONE = 3'd4;
 
-    //--------------------------------------------------------------
-    // UART Signals
-    //--------------------------------------------------------------
     wire [PAYLOAD_BITS-1:0] uart_rx_data;
     wire uart_rx_valid;
     wire uart_rx_break;
@@ -35,33 +31,23 @@ module top (
     reg  [PAYLOAD_BITS-1:0] uart_tx_data;
     reg  uart_tx_en;
 
-    //--------------------------------------------------------------
-    // FSM and Control Signals
-    //--------------------------------------------------------------
     reg [2:0] state;
     reg [3:0] rx_byte_count;
     reg [5:0] rx_word_count;
     reg [3:0] tx_byte_count;
-    reg [1:0] tx_word_count;       // 0..3 for 4 command words
+    reg [1:0] tx_word_count;
     reg [31:0] rx_word_buffer;
 
-    //--------------------------------------------------------------
-    // HLS interface: current_in (384 = 12 x 32), command_out (128 = 4 x 32)
-    //--------------------------------------------------------------
     reg ap_start;
     wire ap_done;
     wire ap_idle;
     wire ap_ready;
 
-    reg [383:0] current_in_reg;   // 12 x 32-bit state, LSB = state[0]
-    wire [127:0] command_out;     // 4 x 32-bit: [31:0]=u0, [63:32]=u1, [95:64]=u2, [127:96]=u3
+    reg [CURRENT_IN_WIDTH-1:0] current_in_reg;
+    wire [127:0] command_out;
     wire command_out_ap_vld;
+    reg [127:0] command_out_latch;
 
-    reg [127:0] command_out_latch; // Capture when ap_done so we can TX after core goes idle
-
-    //--------------------------------------------------------------
-    // LED Status
-    //--------------------------------------------------------------
     reg [3:0] led_reg;
     assign led = led_reg;
 
@@ -79,11 +65,6 @@ module top (
             endcase
         end
     end
-
-    //--------------------------------------------------------------
-    // Main FSM
-    //--------------------------------------------------------------
-    integer i;
 
     always @(posedge clk) begin
         if (resetn) begin
@@ -108,6 +89,7 @@ module top (
                         rx_byte_count <= 0;
                         rx_word_count <= 0;
                         rx_word_buffer <= 0;
+                        current_in_reg[N_STATE * DATA_WIDTH +: TRAJ_CMD_WIDTH] <= 0;
                     end
                     ap_start <= 0;
                 end
@@ -120,13 +102,13 @@ module top (
                             2: rx_word_buffer[23:16] <= uart_rx_data;
                             3: begin
                                 rx_word_buffer[31:24] <= uart_rx_data;
-                                current_in_reg[rx_word_count*32 +: 32] <= {uart_rx_data, rx_word_buffer[23:0]};
+                                current_in_reg[rx_word_count * DATA_WIDTH +: DATA_WIDTH] <= {uart_rx_data, rx_word_buffer[23:0]};
                             end
                         endcase
 
                         if (rx_byte_count == 3) begin
                             rx_byte_count <= 0;
-                            if (rx_word_count == N_STATE-1) begin
+                            if (rx_word_count == N_STATE - 1) begin
                                 state <= COMPUTE;
                             end else begin
                                 rx_word_count <= rx_word_count + 1;
@@ -141,8 +123,9 @@ module top (
                     ap_start <= 1;
                     if (ap_ready || ap_done) begin
                         ap_start <= 0;
-                        if (command_out_ap_vld)
-                            command_out_latch <= command_out;  // HLS drives command_out valid with ap_done
+                        if (command_out_ap_vld) begin
+                            command_out_latch <= command_out;
+                        end
                         state <= TX_DATA;
                         tx_byte_count <= 0;
                         tx_word_count <= 0;
@@ -152,10 +135,10 @@ module top (
                 TX_DATA: begin
                     if (!uart_tx_busy && !uart_tx_en) begin
                         case (tx_byte_count)
-                            0: uart_tx_data <= command_out_latch[tx_word_count*32 +: 8];
-                            1: uart_tx_data <= command_out_latch[tx_word_count*32 + 8 +: 8];
-                            2: uart_tx_data <= command_out_latch[tx_word_count*32 + 16 +: 8];
-                            3: uart_tx_data <= command_out_latch[tx_word_count*32 + 24 +: 8];
+                            0: uart_tx_data <= command_out_latch[tx_word_count * 32 +: 8];
+                            1: uart_tx_data <= command_out_latch[tx_word_count * 32 + 8 +: 8];
+                            2: uart_tx_data <= command_out_latch[tx_word_count * 32 + 16 +: 8];
+                            3: uart_tx_data <= command_out_latch[tx_word_count * 32 + 24 +: 8];
                         endcase
                         uart_tx_en <= 1;
 
@@ -181,9 +164,6 @@ module top (
         end
     end
 
-    //--------------------------------------------------------------
-    // HLS Module Instantiation (struct interface: current_in, command_out)
-    //--------------------------------------------------------------
     ADMM_solver dut (
         .ap_clk(clk),
         .ap_rst(resetn),
@@ -196,9 +176,6 @@ module top (
         .command_out_ap_vld(command_out_ap_vld)
     );
 
-    //--------------------------------------------------------------
-    // UART RX/TX
-    //--------------------------------------------------------------
     uart_rx #(
         .BIT_RATE(BIT_RATE),
         .PAYLOAD_BITS(PAYLOAD_BITS),

@@ -1,10 +1,15 @@
 # Build output
 build/
+plots/
 
 # HLS project output
 vitis_projects/ADMM/ADMM/
 vitis_projects/ADMM/data.h
 vitis_projects/ADMM/test_data.h
+vitis_projects/ADMM/traj_data.h
+vitis_projects/ADMM/traj_data_raw.h
+vitis_projects/ADMM/trajectory_refs.csv
+vitis_projects/ADMM/admm_runtime_config.h
 vitis_projects/ADMM/.Xil/
 vitis_projects/ADMM/.cache/
 
@@ -37,3 +42,8 @@ vitis_projects/_ide/
 scripts/admm_results.txt*
 scripts/clockInfo.txt
 clockInfo.txt
+
+# Generated trajectory / analysis artifacts
+fpga_trajectory.csv
+tinympc_*.csv
+vivado_project/vivado_project.srcs/sources_1/new/admm_autogen_params.vh
