@@ -185,9 +185,9 @@ module top_spi (
         .ap_done(ap_done),
         .ap_idle(ap_idle),
         .ap_ready(ap_ready),
-        .current_in(current_in_reg),
-        .command_out(command_out),
-        .command_out_ap_vld(command_out_ap_vld)
+        .current_in_bits(current_in_reg),
+        .command_out_bits(command_out),
+        .command_out_bits_ap_vld(command_out_ap_vld)
     );
 
     spi_slave_word #(.WORD_WIDTH(DATA_WIDTH)) i_spi_slave (

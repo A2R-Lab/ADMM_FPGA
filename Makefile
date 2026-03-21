@@ -21,6 +21,14 @@
 # =============================================================================
 
 # Configuration
+SUPPORTED_MAKE_OVERRIDE_VARS := BOARD REMOTE SSH_PORT VIVADO VITIS_HLS PYTHON HLS_CLOSED_LOOP_ARGS
+CMDLINE_OVERRIDE_VARS := $(sort $(foreach tok,$(MAKEOVERRIDES),$(if $(findstring =,$(tok)),$(word 1,$(subst =, ,$(tok))),)))
+UNKNOWN_CMDLINE_OVERRIDE_VARS := $(filter-out $(SUPPORTED_MAKE_OVERRIDE_VARS),$(CMDLINE_OVERRIDE_VARS))
+
+ifneq ($(strip $(UNKNOWN_CMDLINE_OVERRIDE_VARS)),)
+$(error Unsupported make variable override(s): $(UNKNOWN_CMDLINE_OVERRIDE_VARS). Supported overrides: $(SUPPORTED_MAKE_OVERRIDE_VARS))
+endif
+
 BOARD        ?= custom
 
 PART          := xc7a100tcsg324-1
@@ -85,6 +93,8 @@ ROUTE_DCP     := $(BUILD_DIR)/post_route_$(BUILD_TAG).dcp
 all: $(BITSTREAM)
 	@echo "========================================="
 	@echo "Build complete!"
+	@echo "BOARD: $(BOARD)"
+	@echo "TOP: $(TOP_MODULE)"
 	@echo "Bitstream: $(BITSTREAM)"
 	@echo "Flash bin: $(FLASH_BIN)"
 	@echo "========================================="

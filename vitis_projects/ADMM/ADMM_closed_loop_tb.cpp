@@ -12,6 +12,34 @@
 
 namespace {
 
+ap_uint<32> fp_to_bits(fp_t v) {
+    return v.range(31, 0);
+}
+
+fp_t bits_to_fp(ap_uint<32> bits) {
+    fp_t v;
+    v.range(31, 0) = bits;
+    return v;
+}
+
+ap_uint<386> pack_current_state(const current_state_t &current) {
+    ap_uint<386> bits = 0;
+    for (int i = 0; i < 12; ++i) {
+        bits.range(i * 32 + 31, i * 32) = fp_to_bits(current.state[i]);
+    }
+    bits.range(385, 384) = current.traj_cmd;
+    return bits;
+}
+
+command_out_t unpack_command_out(ap_uint<128> bits) {
+    command_out_t out = {};
+    out.u0 = bits_to_fp(bits.range(31, 0));
+    out.u1 = bits_to_fp(bits.range(63, 32));
+    out.u2 = bits_to_fp(bits.range(95, 64));
+    out.u3 = bits_to_fp(bits.range(127, 96));
+    return out;
+}
+
 struct SimConfig {
     double sim_freq = 200.0;
     double sim_duration_s = 10.0;
@@ -358,8 +386,6 @@ int main() {
         1.0 - 0.5 * cfg.rotor_imbalance,
         1.0 + 0.5 * cfg.rotor_imbalance,
     };
-    fp_t admm_x[N_VAR] = {};
-
     std::vector<double> t_hist;
     std::vector<std::array<double, 12>> x_hist;
     std::vector<std::array<double, 4>> u_hist;
@@ -394,18 +420,15 @@ int main() {
             current_state.traj_cmd[0] = 1;
         }
 
-        fp_t primal_residual_fp = 0;
-        fp_t dual_residual_fp = 0;
-        ADMM_solver_with_residuals(
-            current_state,
-            admm_x,
-            &primal_residual_fp,
-            &dual_residual_fp
-        );
-        for (int i = 0; i < kInputSize; ++i) {
-            // ADMM outputs delta-u around hover in the first stage input block.
-            control[i] = kUHover + static_cast<double>(admm_x[kInputOffset + i]);
-        }
+        ap_uint<128> cmd_out_bits = 0;
+        const double primal_residual_fp = 0.0;
+        const double dual_residual_fp = 0.0;
+        ADMM_solver(pack_current_state(current_state), cmd_out_bits);
+        command_out_t cmd_out = unpack_command_out(cmd_out_bits);
+        control[0] = static_cast<double>(cmd_out.u0);
+        control[1] = static_cast<double>(cmd_out.u1);
+        control[2] = static_cast<double>(cmd_out.u2);
+        control[3] = static_cast<double>(cmd_out.u3);
 
         // Prune unstable candidates early:
         // stop immediately if any control exits [0, 1].
@@ -449,8 +472,8 @@ int main() {
         t_hist.push_back((step + 1) * dt);
         x_hist.push_back(state);
         u_hist.push_back(actuator);
-        primal_res_hist.push_back(static_cast<double>(primal_residual_fp));
-        dual_res_hist.push_back(static_cast<double>(dual_residual_fp));
+        primal_res_hist.push_back(primal_residual_fp);
+        dual_res_hist.push_back(dual_residual_fp);
 
         // // Stop if position diverges.
         // if (std::abs(state[0]) > 3.0 || std::abs(state[1]) > 1.0) {

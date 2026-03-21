@@ -6,7 +6,8 @@
 
 void forward_substitution(
     const fp_t b[N_VAR],
-    const fp_t q[N_VAR],
+    bool use_traj_q,
+    int traj_idx,
     fp_t x[N_VAR]
 );
 
@@ -22,13 +23,16 @@ void AT_mul(
 
 void ADMM_iteration(
     fp_t x[N_VAR],
+    fp_t b[N_VAR],
+    fp_t y[N_CONSTR],
     fp_t current_state[12],
-    const fp_t q_vec[N_VAR]
+    bool use_traj_q,
+    int traj_idx
 );
 
 void ADMM_solver(
-    current_state_t current_in,
-    command_out_t &command_out
+    ap_uint<386> current_in_bits,
+    ap_uint<128> &command_out_bits
 );
 
 void ADMM_solver_with_residuals(

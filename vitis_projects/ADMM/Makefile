@@ -17,6 +17,9 @@ help:
 	@echo "Available targets:"
 	@echo "  csim    - Run C simulation"
 	@echo "  csim-rho - Run rho/accumulator C simulation testbench"
+	@echo "  csim-uart-smoke - Run one-shot ADMM_solver smoke testbench"
+	@echo "  build-uart-smoke - Run HLS synthesis for one-shot ADMM_solver smoke testbench"
+	@echo "  cosim-uart-smoke - Run one-shot ADMM_solver RTL co-simulation smoke testbench"
 	@echo "  build   - Run C synthesis"
 	@echo "  cosim   - Run C/RTL co-simulation"
 	@echo "  export  - Package/export RTL"
@@ -30,6 +33,15 @@ csim:
 
 csim-rho:
 	vitis-run --mode hls --csim --config ./hls_rho_tb_config.cfg --work_dir ADMM_rho_tb
+
+csim-uart-smoke:
+	vitis-run --mode hls --csim --config ./hls_uart_smoke_config.cfg --work_dir ADMM_uart_smoke
+
+build-uart-smoke:
+	v++ -c --mode hls --config ./hls_uart_smoke_config.cfg --work_dir ADMM_uart_smoke
+
+cosim-uart-smoke: build-uart-smoke
+	vitis-run --mode hls --cosim --config ./hls_uart_smoke_config.cfg --work_dir ADMM_uart_smoke
 
 # C Synthesis - use v++ instead
 build:

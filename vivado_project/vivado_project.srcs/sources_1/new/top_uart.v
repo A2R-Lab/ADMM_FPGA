@@ -20,9 +20,10 @@ module top_uart (
 
     localparam IDLE = 3'd0;
     localparam RX_DATA = 3'd1;
-    localparam COMPUTE = 3'd2;
-    localparam TX_DATA = 3'd3;
-    localparam DONE = 3'd4;
+    localparam START_COMPUTE = 3'd2;
+    localparam WAIT_DONE = 3'd3;
+    localparam TX_DATA = 3'd4;
+    localparam DONE = 3'd5;
 
     wire [PAYLOAD_BITS-1:0] uart_rx_data;
     wire uart_rx_valid;
@@ -58,7 +59,8 @@ module top_uart (
             case (state)
                 IDLE:    led_reg <= 4'b0001;
                 RX_DATA: led_reg <= 4'b0011;
-                COMPUTE: led_reg <= 4'b0111;
+                START_COMPUTE: led_reg <= 4'b0111;
+                WAIT_DONE: led_reg <= 4'b1110;
                 TX_DATA: led_reg <= 4'b1111;
                 DONE:    led_reg <= 4'b1000;
                 default: led_reg <= 4'b0000;
@@ -89,7 +91,7 @@ module top_uart (
                         rx_byte_count <= 0;
                         rx_word_count <= 0;
                         rx_word_buffer <= 0;
-                        current_in_reg[N_STATE * DATA_WIDTH +: TRAJ_CMD_WIDTH] <= 0;
+                        current_in_reg[N_STATE * DATA_WIDTH +: TRAJ_CMD_WIDTH] <= 2'b00;
                     end
                     ap_start <= 0;
                 end
@@ -109,7 +111,7 @@ module top_uart (
                         if (rx_byte_count == 3) begin
                             rx_byte_count <= 0;
                             if (rx_word_count == N_STATE - 1) begin
-                                state <= COMPUTE;
+                                state <= START_COMPUTE;
                             end else begin
                                 rx_word_count <= rx_word_count + 1;
                             end
@@ -119,13 +121,15 @@ module top_uart (
                     end
                 end
 
-                COMPUTE: begin
+                START_COMPUTE: begin
                     ap_start <= 1;
-                    if (ap_ready || ap_done) begin
-                        ap_start <= 0;
-                        if (command_out_ap_vld) begin
-                            command_out_latch <= command_out;
-                        end
+                    state <= WAIT_DONE;
+                end
+
+                WAIT_DONE: begin
+                    ap_start <= 0;
+                    if (command_out_ap_vld) begin
+                        command_out_latch <= command_out;
                         state <= TX_DATA;
                         tx_byte_count <= 0;
                         tx_word_count <= 0;
@@ -135,8 +139,8 @@ module top_uart (
                 TX_DATA: begin
                     if (!uart_tx_busy && !uart_tx_en) begin
                         case (tx_byte_count)
-                            0: uart_tx_data <= command_out_latch[tx_word_count * 32 +: 8];
-                            1: uart_tx_data <= command_out_latch[tx_word_count * 32 + 8 +: 8];
+                            0: uart_tx_data <= command_out_latch[tx_word_count * 32 +  0 +: 8];
+                            1: uart_tx_data <= command_out_latch[tx_word_count * 32 +  8 +: 8];
                             2: uart_tx_data <= command_out_latch[tx_word_count * 32 + 16 +: 8];
                             3: uart_tx_data <= command_out_latch[tx_word_count * 32 + 24 +: 8];
                         endcase
@@ -171,9 +175,9 @@ module top_uart (
         .ap_done(ap_done),
         .ap_idle(ap_idle),
         .ap_ready(ap_ready),
-        .current_in(current_in_reg),
-        .command_out(command_out),
-        .command_out_ap_vld(command_out_ap_vld)
+        .current_in_bits(current_in_reg),
+        .command_out_bits(command_out),
+        .command_out_bits_ap_vld(command_out_ap_vld)
     );
 
     uart_rx #(

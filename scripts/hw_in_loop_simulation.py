@@ -114,7 +114,7 @@ def main():
 
     for i in range(T):
         print(f"\n=== Time step {i+1}/{T} ===")
-        control = get_control(ser, state) + model.hover_thrust
+        control = get_control(ser, state)
         state = model.step(state, control)
         print("Next state:", state)
         state_hist.append(state.copy())
