@@ -95,7 +95,7 @@ def main():
     model = CrazyLoihiModel(freq=200)
 
     state = np.zeros(model.nx)
-    state[0] = 2
+    state[0] = 0.1
     state[1] = 0
     state[2] = 0
     control = np.copy(model.hover_thrust)
@@ -110,7 +110,7 @@ def main():
 
 
     dt = 1.0 / model.freq
-    T = 10 * model.freq  # total time steps
+    T = 3 * model.freq  # total time steps
 
     for i in range(T):
         print(f"\n=== Time step {i+1}/{T} ===")

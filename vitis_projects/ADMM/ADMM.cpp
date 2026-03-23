@@ -265,30 +265,12 @@ static void ADMM_solver_core(
     command_out_t &command_out
 ) {
     static fp_t x[N_VAR] = {0};
+    static fp_t b[N_VAR] = {0};
+    static fp_t y[N_CONSTR] = {0};
     static bool traj_started = false;
     static int traj_idx = 0;
     static int traj_tick_div_ctr = 0;
-    fp_t b[N_VAR];
-    fp_t y[N_CONSTR];
     fp_t current_state_vec[12];
-
-RESET_X_LOOP:
-    for (int i = 0; i < N_VAR; ++i) {
-#pragma HLS PIPELINE II=1
-        x[i] = 0;
-    }
-
-RESET_B_LOOP:
-    for (int i = 0; i < N_VAR; ++i) {
-#pragma HLS PIPELINE II=1
-        b[i] = 0;
-    }
-
-RESET_Y_LOOP:
-    for (int i = 0; i < N_CONSTR; ++i) {
-#pragma HLS PIPELINE II=1
-        y[i] = 0;
-    }
 
     for (int i = 0; i < 12; i++) {
         current_state_vec[i] = current_in.state[i];

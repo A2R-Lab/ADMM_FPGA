@@ -26,10 +26,6 @@ from parameters import (
     XY_MAX,
 )
 
-
-# Number of ADMM iterations to run in hardware
-ADMM_ITERS = int(ADMM_ITERATIONS)
-
 # Run controller at 50 Hz
 timer_period = 0.02  # seconds
 
@@ -539,54 +535,54 @@ RTL_PARAMS_HEADER_PATH.write_text(generate_verilog_params_header(constants))
 RUNTIME_CONFIG_HEADER_PATH.write_text(generate_runtime_config_header())
 
 # Test header generation
-np.random.seed(0)
-rand_vec_var = np.random.randn(L_banded.shape[0])
-rand_vec_constr = np.random.randn(A.shape[0])
-test_data = []
-test_data.append(generate_vector_header(rand_vec_var, "random_vector", type="double"))
+# np.random.seed(0)
+# rand_vec_var = np.random.randn(L_banded.shape[0])
+# rand_vec_constr = np.random.randn(A.shape[0])
+# test_data = []
+# test_data.append(generate_vector_header(rand_vec_var, "random_vector", type="double"))
 
-forw_subst_out = np.linalg.solve(L, rand_vec_var)
-test_data.append(generate_vector_header(forw_subst_out, "forw_subst_out", type="double"))
+# forw_subst_out = np.linalg.solve(L, rand_vec_var)
+# test_data.append(generate_vector_header(forw_subst_out, "forw_subst_out", type="double"))
 
-back_subst_out = np.linalg.solve(L.T, rand_vec_var)
-test_data.append(generate_vector_header(back_subst_out, "back_subst_out", type="double"))
+# back_subst_out = np.linalg.solve(L.T, rand_vec_var)
+# test_data.append(generate_vector_header(back_subst_out, "back_subst_out", type="double"))
 
-A_mul_out = A @ rand_vec_var
-test_data.append(generate_vector_header(A_mul_out, "A_mul_out", type="double"))
+# A_mul_out = A @ rand_vec_var
+# test_data.append(generate_vector_header(A_mul_out, "A_mul_out", type="double"))
 
-AT_mul_out = A.T @ rand_vec_constr
-test_data.append(generate_vector_header(AT_mul_out, "AT_mul_out", type="double"))
+# AT_mul_out = A.T @ rand_vec_constr
+# test_data.append(generate_vector_header(AT_mul_out, "AT_mul_out", type="double"))
 
-l[0:3] = 0.1, 0.1, -0.1
-u[0:3] = 0.1, 0.1, -0.1
+# l[0:3] = 0.1, 0.1, -0.1
+# u[0:3] = 0.1, 0.1, -0.1
 
-x, z, y = ADMM_iteration(l, u, iter=1)
-test_data.append(generate_vector_header(x, "ADMM_x_after_1_iter", type="double"))
-test_data.append(generate_vector_header(z, "ADMM_z_after_1_iter", type="double"))
-test_data.append(generate_vector_header(y, "ADMM_y_after_1_iter", type="double"))
+# x, z, y = ADMM_iteration(l, u, iter=1)
+# test_data.append(generate_vector_header(x, "ADMM_x_after_1_iter", type="double"))
+# test_data.append(generate_vector_header(z, "ADMM_z_after_1_iter", type="double"))
+# test_data.append(generate_vector_header(y, "ADMM_y_after_1_iter", type="double"))
 
-x, z, y = ADMM_iteration(l, u, iter=10)
-test_data.append(generate_vector_header(x, "ADMM_x_after_10_iter", type="double"))
-test_data.append(generate_vector_header(z, "ADMM_z_after_10_iter", type="double"))
-test_data.append(generate_vector_header(y, "ADMM_y_after_10_iter", type="double"))
+# x, z, y = ADMM_iteration(l, u, iter=10)
+# test_data.append(generate_vector_header(x, "ADMM_x_after_10_iter", type="double"))
+# test_data.append(generate_vector_header(z, "ADMM_z_after_10_iter", type="double"))
+# test_data.append(generate_vector_header(y, "ADMM_y_after_10_iter", type="double"))
 
-x, z, y = ADMM_iteration(l, u, iter=100)
-test_data.append(generate_vector_header(x, "ADMM_x_after_100_iter", type="double"))
-test_data.append(generate_vector_header(z, "ADMM_z_after_100_iter", type="double"))
-test_data.append(generate_vector_header(y, "ADMM_y_after_100_iter", type="double"))
+# x, z, y = ADMM_iteration(l, u, iter=100)
+# test_data.append(generate_vector_header(x, "ADMM_x_after_100_iter", type="double"))
+# test_data.append(generate_vector_header(z, "ADMM_z_after_100_iter", type="double"))
+# test_data.append(generate_vector_header(y, "ADMM_y_after_100_iter", type="double"))
 
-x, z, y = ADMM_iteration(l, u, iter=50)
-test_data.append(generate_vector_header(x, "ADMM_x_after_50_iter", type="double"))
-test_data.append(generate_vector_header(z, "ADMM_z_after_50_iter", type="double"))
-test_data.append(generate_vector_header(y, "ADMM_y_after_50_iter", type="double"))
+# x, z, y = ADMM_iteration(l, u, iter=50)
+# test_data.append(generate_vector_header(x, "ADMM_x_after_50_iter", type="double"))
+# test_data.append(generate_vector_header(z, "ADMM_z_after_50_iter", type="double"))
+# test_data.append(generate_vector_header(y, "ADMM_y_after_50_iter", type="double"))
 
-# Reference snapshot matching the configured hardware iteration count.
-x, z, y = ADMM_iteration(l, u, iter=ADMM_ITERS)
-test_data.append(generate_vector_header(x, "ADMM_x_after_hw_iters", type="double"))
-test_data.append(generate_vector_header(z, "ADMM_z_after_hw_iters", type="double"))
-test_data.append(generate_vector_header(y, "ADMM_y_after_hw_iters", type="double"))
+# # Reference snapshot matching the configured hardware iteration count.
+# x, z, y = ADMM_iteration(l, u, iter=ADMM_ITERATIONS)
+# test_data.append(generate_vector_header(x, "ADMM_x_after_hw_iters", type="double"))
+# test_data.append(generate_vector_header(z, "ADMM_z_after_hw_iters", type="double"))
+# test_data.append(generate_vector_header(y, "ADMM_y_after_hw_iters", type="double"))
 
-generate_full_header(test_data, filename=str(TEST_DATA_HEADER_PATH), guard="TEST_DATA_H")
+# generate_full_header(test_data, filename=str(TEST_DATA_HEADER_PATH), guard="TEST_DATA_H")
 
 # OSQP_x = testOSQP(l, u, iter=1000)
 
