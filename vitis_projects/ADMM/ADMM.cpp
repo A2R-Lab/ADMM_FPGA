@@ -116,7 +116,7 @@ void forward_substitution(
 
     FORW_SUBST_EXTERN_LOOP:
     for (int i = 0; i < N_VAR; i++) {
-        fp_t sum_val = 0;
+        acc_t sum_val = 0;
         fp_t q_i = 0;
 
         if (use_traj_q && (traj_idx < TRAJ_LENGTH)) {
@@ -126,17 +126,17 @@ void forward_substitution(
         FORW_SUBST_DOT_PRODUCT_LOOP:
         for (int j = 0; j < L_BANDED_COLS - 1; j++) {
             acc_t mul_term = (acc_t)L_banded[i][j] * (acc_t)window[j];
-            sum_val += (fp_t)mul_term;
+            sum_val += mul_term;
         }
 
-        fp_t new_x = (b[i] - q_i - sum_val) * L_banded[i][L_BANDED_COLS - 1];
-        x[i] = new_x;
+        acc_t new_x = ((acc_t)b[i] - (acc_t)q_i - sum_val) * (acc_t)L_banded[i][L_BANDED_COLS - 1];
+        x[i] = (fp_t)new_x;
 
         FORW_SUBST_SHIFT_REGISTER_LOOP:
         for (int k = 0; k < L_BANDED_COLS - 2; k++) {
             window[k] = window[k + 1];
         }
-        window[L_BANDED_COLS - 2] = new_x;
+        window[L_BANDED_COLS - 2] = (fp_t)new_x;
     }
 }
 
@@ -225,21 +225,18 @@ void ADMM_iteration(
         }
         fp_t Axi = (fp_t)Axi_acc;
         const bool use_ineq_rho = is_inequality_constraint(i);
-        rho_acc_t y_div = (rho_acc_t)y[i];
-        y_div >>= use_ineq_rho ? RHO_SHIFT_INEQ : RHO_SHIFT_EQ;
-
         fp_t zi;
         if (i < STATE_SIZE) {
             zi = current_state[i];
         } else if (i >= START_XY_INEQ) {
-            zi = (fp_t)((rho_acc_t)Axi + y_div);
+            zi = Axi + rho_div(y[i], use_ineq_rho);
             if (zi < (fp_t)XY_MIN) {
                 zi = (fp_t)XY_MIN;
             } else if (zi > (fp_t)XY_MAX) {
                 zi = (fp_t)XY_MAX;
             }
         } else if (i >= START_U_INEQ) {
-            zi = (fp_t)((rho_acc_t)Axi + y_div);
+            zi = Axi + rho_div(y[i], use_ineq_rho);
             if (zi < (fp_t)U_MIN) {
                 zi = (fp_t)U_MIN;
             } else if (zi > (fp_t)U_MAX) {
@@ -249,13 +246,11 @@ void ADMM_iteration(
             zi = 0;
         }
 
-        rho_acc_t r_shifted = (rho_acc_t)(Axi - zi);
-        r_shifted <<= use_ineq_rho ? RHO_SHIFT_INEQ : RHO_SHIFT_EQ;
-        fp_t yi = (fp_t)((rho_acc_t)y[i] + r_shifted);
+        fp_t yi = y[i] + rho_mul(Axi - zi, use_ineq_rho);
         y[i] = yi;
         rho_acc_t zi_shifted = zi;
         zi_shifted <<= use_ineq_rho ? RHO_SHIFT_INEQ : RHO_SHIFT_EQ;
-        b_tmp[i] = (fp_t)(zi_shifted - (rho_acc_t)yi);
+        b_tmp[i] = rho_mul(zi, use_ineq_rho) - yi;
     }
     AT_mul(b_tmp, b);
 }
