@@ -12,16 +12,6 @@
 
 namespace {
 
-ap_uint<32> fp_to_bits(fp_t v) {
-    return v.range(31, 0);
-}
-
-fp_t bits_to_fp(ap_uint<32> bits) {
-    fp_t v;
-    v.range(31, 0) = bits;
-    return v;
-}
-
 ap_uint<386> pack_current_state(const current_state_t &current) {
     ap_uint<386> bits = 0;
     for (int i = 0; i < 12; ++i) {

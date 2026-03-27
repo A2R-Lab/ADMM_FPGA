@@ -6,6 +6,7 @@
 #include <ap_fixed.h>
 #include <cstdint>
 #include <cmath>
+#include <type_traits>
 
 #ifndef TRAJ_TICK_DIV
 #define TRAJ_TICK_DIV 1
@@ -31,65 +32,103 @@ constexpr int RHO_SHIFT_MAX_V =
 static_assert(RHO_SHIFT_EQ_V >= 0, "RHO_SHIFT_EQ must be >= 0");
 static_assert(RHO_SHIFT_INEQ_V >= 0, "RHO_SHIFT_INEQ must be >= 0");
 
-typedef ap_fixed<fp_t::width + ACC_GUARD_BITS, fp_t::iwidth + ACC_GUARD_BITS, AP_RND, AP_SAT> acc_t;
-typedef ap_fixed<fp_t::width + RHO_SHIFT_MAX_V, fp_t::iwidth + RHO_SHIFT_MAX_V, AP_TRN, AP_WRAP> rho_acc_t;
+template <typename T, bool IsFloat = std::is_floating_point<T>::value>
+struct AccType {
+    typedef T type;
+};
+
+template <typename T>
+struct AccType<T, false> {
+    typedef ap_fixed<T::width + ACC_GUARD_BITS, T::iwidth + ACC_GUARD_BITS, AP_RND, AP_SAT> type;
+};
+
+typedef typename AccType<fp_t>::type acc_t;
+
+template <typename T, bool IsFloat = std::is_floating_point<T>::value>
+struct RhoType {
+    typedef T type;
+};
+
+template <typename T>
+struct RhoType<T, false> {
+    typedef ap_fixed<T::width + RHO_SHIFT_MAX_V, T::iwidth + RHO_SHIFT_MAX_V, AP_TRN, AP_WRAP> type;
+};
+
+typedef typename RhoType<fp_t>::type rho_acc_t;
 
 static inline bool is_inequality_constraint(int constraint_idx) {
+#pragma HLS INLINE
     return constraint_idx >= START_INEQ;
 }
 
 static inline fp_t rho_mul_eq(fp_t v) {
+#pragma HLS INLINE
+
+#if ADMM_USE_FLOAT
+    return std::ldexp(v, RHO_SHIFT_EQ_V);
+#else
     rho_acc_t t = v;
     t <<= RHO_SHIFT_EQ;
     return (fp_t)t;
+#endif
 }
 
 static inline fp_t rho_mul_ineq(fp_t v) {
+#pragma HLS INLINE
+
+#if ADMM_USE_FLOAT
+    return std::ldexp(v, RHO_SHIFT_INEQ_V);
+#else
     rho_acc_t t = v;
     t <<= RHO_SHIFT_INEQ;
     return (fp_t)t;
+#endif
 }
 
 static inline fp_t rho_div_eq(fp_t v) {
+#if ADMM_USE_FLOAT
+    return std::ldexp(v, -RHO_SHIFT_EQ_V);
+#else
     rho_acc_t t = v;
     t >>= RHO_SHIFT_EQ;
     return (fp_t)t;
+#endif
 }
 
 static inline fp_t rho_div_ineq(fp_t v) {
+#if ADMM_USE_FLOAT
+    return std::ldexp(v, -RHO_SHIFT_INEQ_V);
+#else
     rho_acc_t t = v;
     t >>= RHO_SHIFT_INEQ;
     return (fp_t)t;
+#endif
 }
 
 static inline fp_t rho_mul(fp_t v, bool use_ineq_rho) {
+    
     return use_ineq_rho ? rho_mul_ineq(v) : rho_mul_eq(v);
 }
 
 static inline fp_t rho_div(fp_t v, bool use_ineq_rho) {
+#pragma HLS INLINE
     return use_ineq_rho ? rho_div_ineq(v) : rho_div_eq(v);
 }
 
 static inline bool traj_start_cmd(const current_state_t &current_in) {
+#pragma HLS INLINE
     return current_in.traj_cmd[0] != 0;
 }
 
 static inline bool traj_reset_cmd(const current_state_t &current_in) {
+#pragma HLS INLINE
     return current_in.traj_cmd[1] != 0;
 }
 
-static inline fp_t bits_to_fp(ap_uint<32> bits) {
-    fp_t v;
-    v.range(31, 0) = bits;
-    return v;
-}
-
-static inline ap_uint<32> fp_to_bits(fp_t v) {
-    return v.range(31, 0);
-}
-
 static inline current_state_t unpack_current_state(ap_uint<386> current_in_bits) {
-    current_state_t current_in = {};
+#pragma HLS INLINE
+
+current_state_t current_in = {};
     for (int i = 0; i < 12; ++i) {
         current_in.state[i] = bits_to_fp(current_in_bits.range(i * 32 + 31, i * 32));
     }
@@ -98,6 +137,8 @@ static inline current_state_t unpack_current_state(ap_uint<386> current_in_bits)
 }
 
 static inline ap_uint<128> pack_command_out(const command_out_t &command_out) {
+#pragma HLS INLINE
+
     ap_uint<128> command_out_bits = 0;
     command_out_bits.range(31, 0) = fp_to_bits(command_out.u0);
     command_out_bits.range(63, 32) = fp_to_bits(command_out.u1);
@@ -112,6 +153,8 @@ void forward_substitution(
     int traj_idx,
     fp_t x[L_BANDED_ROWS]
 ) {
+#pragma HLS INLINE
+
     fp_t window[L_BANDED_COLS - 1] = {0};
 
     FORW_SUBST_EXTERN_LOOP:
@@ -144,26 +187,20 @@ void backward_substitution(
     const fp_t b[LT_BANDED_ROWS],
     fp_t x[LT_BANDED_ROWS]
 ) {
-#pragma HLS INLINE off
-#pragma HLS ARRAY_PARTITION variable=LT_banded dim=2 complete
-
+#pragma HLS INLINE
     fp_t window[LT_BANDED_COLS - 1];
-#pragma HLS ARRAY_PARTITION variable=window dim=1 complete
 
     INIT_WINDOW:
     for (int j = 0; j < LT_BANDED_COLS - 1; j++) {
-#pragma HLS UNROLL
         window[j] = 0;
     }
 
     BACK_SUBST_EXTERN_LOOP:
     for (int i = LT_BANDED_ROWS - 1; i >= 0; i--) {
-#pragma HLS PIPELINE II=6
         acc_t sum_val = 0;
 
         DOT_PRODUCT:
         for (int j = LT_BANDED_COLS - 2; j >= 0; j--) {
-#pragma HLS UNROLL factor=4
             sum_val += (acc_t)LT_banded[i][j + 1] * (acc_t)window[j];
         }
 
@@ -172,7 +209,6 @@ void backward_substitution(
 
         SHIFT_WINDOW:
         for (int k = LT_BANDED_COLS - 2; k > 0; k--) {
-#pragma HLS UNROLL factor=4
             window[k] = window[k - 1];
         }
         window[0] = (fp_t)new_x;
@@ -183,17 +219,13 @@ void AT_mul(
     const fp_t x[N_CONSTR],
     fp_t ATx[N_VAR]
 ) {
-#pragma HLS INLINE off
-#pragma HLS ARRAY_PARTITION variable=AT_sparse_data dim=2 complete
-#pragma HLS ARRAY_PARTITION variable=AT_sparse_indexes dim=2 complete
+#pragma HLS INLINE
 
     AT_MUL_EXTERN_LOOP:
     for (int i = 0; i < AT_SPARSE_DATA_ROWS; i++) {
-#pragma HLS PIPELINE II=1
         acc_t sum_val = 0;
         AT_MUL_DOT_PRODUCT_LOOP:
         for (int j = 0; j < AT_SPARSE_DATA_COLS; j++) {
-#pragma HLS UNROLL
             sum_val += (acc_t)AT_sparse_data[i][j] * (acc_t)x[AT_sparse_indexes[i][j]];
         }
         ATx[i] = (fp_t)sum_val;
@@ -217,10 +249,8 @@ void ADMM_iteration(
 
     ADMM_IT_ZY_UPDATE_LOOP:
     for (int i = 0; i < N_CONSTR; i++) {
-#pragma HLS PIPELINE II=1
         acc_t Axi_acc = 0;
         for (int j = 0; j < A_SPARSE_DATA_COLS; j++) {
-#pragma HLS UNROLL
             Axi_acc += (acc_t)A_sparse_data[i][j] * (acc_t)x[A_sparse_indexes[i][j]];
         }
         fp_t Axi = (fp_t)Axi_acc;
@@ -248,8 +278,6 @@ void ADMM_iteration(
 
         fp_t yi = y[i] + rho_mul(Axi - zi, use_ineq_rho);
         y[i] = yi;
-        rho_acc_t zi_shifted = zi;
-        zi_shifted <<= use_ineq_rho ? RHO_SHIFT_INEQ : RHO_SHIFT_EQ;
         b_tmp[i] = rho_mul(zi, use_ineq_rho) - yi;
     }
     AT_mul(b_tmp, b);
@@ -259,6 +287,8 @@ static void ADMM_solver_core(
     current_state_t current_in,
     command_out_t &command_out
 ) {
+#pragma HLS INLINE
+
     static fp_t x[N_VAR] = {0};
     static fp_t b[N_VAR] = {0};
     static fp_t y[N_CONSTR] = {0};
@@ -320,9 +350,9 @@ fp_t admm_test_rho_div(fp_t v) {
 }
 
 int admm_test_fp_width() {
-    return fp_t::width;
+    return fp_bit_width();
 }
 
 int admm_test_acc_width() {
-    return acc_t::width;
+    return fp_bit_width() + ACC_GUARD_BITS;
 }
