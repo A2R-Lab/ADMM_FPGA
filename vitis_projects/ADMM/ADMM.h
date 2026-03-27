@@ -35,13 +35,6 @@ void ADMM_solver(
     ap_uint<128> &command_out_bits
 );
 
-void ADMM_solver_with_residuals(
-    current_state_t current_in,
-    fp_t x[N_VAR],
-    fp_t* primal_residual,
-    fp_t* dual_residual
-);
-
 fp_t admm_test_rho_mul(fp_t v);
 fp_t admm_test_rho_div(fp_t v);
 int admm_test_fp_width();
