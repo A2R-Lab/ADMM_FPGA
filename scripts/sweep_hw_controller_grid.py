@@ -15,11 +15,13 @@ import argparse
 import csv
 import itertools
 import math
+import os
 import subprocess
 from pathlib import Path
 
 DEFAULT_RHO_VALUES = [1, 4, 8, 16, 32, 64, 128, 256]
 DEFAULT_Q_VALUES = [100, 200, 500, 1000, 2000, 5000, 10000, 20000]
+DEFAULT_Q_DIAG = [70.0, 70.0, 178.0, 0.4, 0.4, 40.0, 3.5, 3.5, 4.0, 0.2, 0.2, 25.0]
 
 
 def parse_int_list(text: str, what: str) -> list[int]:
@@ -36,9 +38,28 @@ def parse_float_list(text: str, what: str) -> list[float]:
     return vals
 
 
-def run_cmd(cmd: list[str], cwd: Path) -> None:
+def run_cmd(cmd: list[str], cwd: Path, env: dict[str, str] | None = None) -> None:
     print(f"+ {' '.join(cmd)}")
-    subprocess.run(cmd, cwd=cwd, check=True)
+    subprocess.run(cmd, cwd=cwd, env=env, check=True)
+
+
+def make_generation_env(*, horizon: int, admm_iters: int, rho: int, qx: float, qy: float) -> dict[str, str]:
+    q_diag = list(DEFAULT_Q_DIAG)
+    q_diag[0] = qx
+    q_diag[1] = qy
+    env = os.environ.copy()
+    env["ADMM_HORIZON_LENGTH"] = str(horizon)
+    env["ADMM_ITERATIONS"] = str(admm_iters)
+    env["ADMM_RHO_EQ_PARAM"] = str(rho)
+    env["ADMM_RHO_INEQ_PARAM"] = str(rho)
+    env["ADMM_Q_DIAG"] = ",".join(f"{v:.12g}" for v in q_diag)
+    return env
+
+
+def run_generators(repo_root: Path, env: dict[str, str]) -> None:
+    scripts_dir = repo_root / "scripts"
+    run_cmd(["python3", str(scripts_dir / "trajectory_generator.py")], cwd=repo_root, env=env)
+    run_cmd(["python3", str(scripts_dir / "header_generator.py")], cwd=repo_root, env=env)
 
 
 def make_slug(x: float) -> str:
@@ -300,23 +321,14 @@ def main() -> None:
         }
 
         try:
-            run_cmd(
-                [
-                    "python3",
-                    str(scripts_dir / "header_generator.py"),
-                    "--horizon",
-                    str(args.horizon),
-                    "--admm-iters",
-                    str(args.admm_iters),
-                    "--rho",
-                    str(rho),
-                    "--qx",
-                    str(qx),
-                    "--qy",
-                    str(qy),
-                ],
-                cwd=repo_root,
+            gen_env = make_generation_env(
+                horizon=args.horizon,
+                admm_iters=args.admm_iters,
+                rho=rho,
+                qx=qx,
+                qy=qy,
             )
+            run_generators(repo_root, gen_env)
 
             if not args.skip_build:
                 run_cmd(["make", f"BOARD={args.board}", "bit"], cwd=repo_root)

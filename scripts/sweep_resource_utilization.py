@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 import re
 import shutil
 import subprocess
@@ -40,9 +41,18 @@ def parse_positive_int_list(text: str, what: str) -> list[int]:
     return vals
 
 
-def run_cmd(cmd: list[str], cwd: Path) -> None:
+def run_cmd(cmd: list[str], cwd: Path, env: dict[str, str] | None = None) -> None:
     print(f"+ {' '.join(cmd)}")
-    subprocess.run(cmd, cwd=cwd, check=True)
+    subprocess.run(cmd, cwd=cwd, env=env, check=True)
+
+
+def run_generation(repo_root: Path, *, horizon: int, admm_iters: int) -> None:
+    env = os.environ.copy()
+    env["ADMM_HORIZON_LENGTH"] = str(horizon)
+    env["ADMM_ITERATIONS"] = str(admm_iters)
+    scripts_dir = repo_root / "scripts"
+    run_cmd(["python3", str(scripts_dir / "trajectory_generator.py")], cwd=repo_root, env=env)
+    run_cmd(["python3", str(scripts_dir / "header_generator.py")], cwd=repo_root, env=env)
 
 
 def read_text(path: Path) -> str:
@@ -348,15 +358,7 @@ def main() -> None:
 
             print(f"\n=== Horizon {horizon}, ADMM iters {admm_iters} ===")
             try:
-                cmd = [
-                    "python3",
-                    str(scripts_dir / "header_generator.py"),
-                    "--horizon",
-                    str(horizon),
-                    "--admm-iters",
-                    str(admm_iters),
-                ]
-                run_cmd(cmd, cwd=repo_root)
+                run_generation(repo_root, horizon=horizon, admm_iters=admm_iters)
 
                 # Rebuild from HLS export onward to ensure horizon-dependent IP/RTL is fresh.
                 run_cmd(["make", f"BOARD={args.board}", "vivado"], cwd=repo_root)

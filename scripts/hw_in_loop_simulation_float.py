@@ -8,6 +8,7 @@ import serial
 import struct
 import time
 import sys
+from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -18,6 +19,20 @@ SERIAL_PORT = '/dev/ttyUSB1'  # Change to COM port on Windows (e.g., 'COM3')
 BAUD_RATE = 921600
 N_STATE = 12   # Number of state elements
 N_VAR = 4    # Number of output variables
+
+
+def assert_float_runtime_config() -> None:
+    """Best-effort guard against using the float client with a fixed-point build."""
+    repo_root = Path(__file__).resolve().parents[1]
+    runtime_cfg = repo_root / "vitis_projects" / "ADMM" / "admm_runtime_config.h"
+    if not runtime_cfg.exists():
+        raise FileNotFoundError(f"Missing runtime config: {runtime_cfg}")
+    text = runtime_cfg.read_text()
+    if "#define ADMM_USE_FLOAT 1" not in text:
+        raise RuntimeError(
+            "Current generated runtime config is not in float mode. "
+            "Rebuild/program a float configuration before using this script."
+        )
 
 def float_to_word(f):
     """Convert Python float to IEEE754 float32 raw bytes (little-endian)."""
@@ -65,12 +80,15 @@ def receive_vector(ser, n):
 def get_control(ser, state):
     send_vector(ser, state)
     x_received = receive_vector(ser, N_VAR)
+    if x_received is None:
+        raise TimeoutError("UART timeout while receiving float control vector")
     
     control = np.array(x_received)
     print("Received control:", control)
     return control
 
 def main():
+    assert_float_runtime_config()
     # Open serial port
     print(f"Opening serial port {SERIAL_PORT} at {BAUD_RATE} baud...")
     ser = serial.Serial(

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 import struct
 import subprocess
 from pathlib import Path
@@ -33,6 +34,17 @@ def float_to_fixed(val: float) -> int:
 def run_cmd(cmd: list[str], cwd: Path) -> None:
     print(f"+ {' '.join(cmd)}")
     subprocess.run(cmd, cwd=cwd, check=True)
+
+
+def run_generation(repo_root: Path, horizon: int, admm_iters: int) -> None:
+    env = os.environ.copy()
+    env["ADMM_HORIZON_LENGTH"] = str(horizon)
+    env["ADMM_ITERATIONS"] = str(admm_iters)
+    scripts_dir = repo_root / "scripts"
+    for script_name in ["trajectory_generator.py", "header_generator.py"]:
+        cmd = ["python3", str(scripts_dir / script_name)]
+        print(f"+ {' '.join(cmd)}")
+        subprocess.run(cmd, cwd=repo_root, env=env, check=True)
 
 
 def send_state(ser: serial.Serial, state: list[float]) -> None:
@@ -143,17 +155,7 @@ def main() -> None:
     for horizon in horizons:
         print(f"\n=== Horizon {horizon} ===")
         try:
-            run_cmd(
-                [
-                    "python3",
-                    str(scripts_dir / "header_generator.py"),
-                    "--horizon",
-                    str(horizon),
-                    "--admm-iters",
-                    str(args.admm_iters),
-                ],
-                cwd=repo_root,
-            )
+            run_generation(repo_root, horizon, args.admm_iters)
             run_cmd(["make", f"BOARD={args.board}", "bit"], cwd=repo_root)
             run_cmd(["make", f"BOARD={args.board}", "program"], cwd=repo_root)
 

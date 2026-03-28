@@ -42,6 +42,7 @@ vitis_projects/_ide/
 # Script output files
 scripts/admm_results.txt*
 scripts/clockInfo.txt
+tight_setup_hold_pins.txt
 clockInfo.txt
 
 # Generated trajectory / analysis artifacts

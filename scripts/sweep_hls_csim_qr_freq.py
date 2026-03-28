@@ -353,13 +353,11 @@ def evaluate_candidate(task: tuple[CandidateEval, str, str]) -> dict[str, Any]:
         "data_types.h",
         "ADMM_closed_loop_tb.cpp",
         "hls_eval_config.cfg",
-        "traj_data.h",
-        "traj_data_raw.h",
     ]:
         shutil.copy2(src_admm_dir / filename, src_dir / filename)
 
     src_scripts_dir = repo_root / "scripts"
-    for filename in ["header_generator.py", "parameters.py", "crazyloihimodel.py"]:
+    for filename in ["header_generator.py", "trajectory_generator.py", "parameters.py", "crazyloihimodel.py"]:
         shutil.copy2(src_scripts_dir / filename, scripts_dir / filename)
 
     qdiag_str = ",".join(f"{v:.12g}" for v in cand.q_diag)
@@ -372,6 +370,17 @@ def evaluate_candidate(task: tuple[CandidateEval, str, str]) -> dict[str, Any]:
     header_env["ADMM_MODEL_FREQ"] = f"{cand.freq_hz:.12g}"
     header_env["ADMM_Q_DIAG"] = qdiag_str
     header_env["ADMM_R_SCALE"] = f"{cand.r_scale:.12g}"
+    traj_cmd = ["python3", str(scripts_dir / "trajectory_generator.py")]
+    traj_proc = run_cmd(traj_cmd, cwd=job_root, env=header_env)
+    (logs_dir / "traj.stdout.log").write_text(traj_proc.stdout)
+    (logs_dir / "traj.stderr.log").write_text(traj_proc.stderr)
+    if traj_proc.returncode != 0:
+        return {
+            "candidate_hash": cand.candidate_hash,
+            "status": "error",
+            "error": f"trajectory_generator failed ({traj_proc.returncode})",
+            "job_dir": str(job_root),
+        }
     header_cmd = ["python3", str(scripts_dir / "header_generator.py")]
     header_proc = run_cmd(header_cmd, cwd=job_root, env=header_env)
     (logs_dir / "header.stdout.log").write_text(header_proc.stdout)

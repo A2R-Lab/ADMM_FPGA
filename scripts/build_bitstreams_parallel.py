@@ -17,6 +17,7 @@ from pathlib import Path
 
 DEFAULT_RHO_VALUES = [1, 4, 8, 16, 32, 64, 128, 256]
 DEFAULT_Q_VALUES = [100, 200, 500, 1000, 2000, 5000, 10000, 20000]
+DEFAULT_Q_DIAG = [70.0, 70.0, 178.0, 0.4, 0.4, 40.0, 3.5, 3.5, 4.0, 0.2, 0.2, 25.0]
 
 
 def parse_int_list(text: str, what: str) -> list[int]:
@@ -38,9 +39,27 @@ def make_slug(rho: int, q: float) -> str:
     return f"r{rho}_q{qtxt}"
 
 
-def run_cmd(cmd: list[str], cwd: Path) -> None:
+def run_cmd(cmd: list[str], cwd: Path, env: dict[str, str] | None = None) -> None:
     print(f"[{cwd.name}] + {' '.join(cmd)}")
-    subprocess.run(cmd, cwd=cwd, check=True)
+    subprocess.run(cmd, cwd=cwd, env=env, check=True)
+
+
+def make_generation_env(*, horizon: int, admm_iters: int, rho: int, qxy: float) -> dict[str, str]:
+    q_diag = list(DEFAULT_Q_DIAG)
+    q_diag[0] = qxy
+    q_diag[1] = qxy
+    env = os.environ.copy()
+    env["ADMM_HORIZON_LENGTH"] = str(horizon)
+    env["ADMM_ITERATIONS"] = str(admm_iters)
+    env["ADMM_RHO_EQ_PARAM"] = str(rho)
+    env["ADMM_RHO_INEQ_PARAM"] = str(rho)
+    env["ADMM_Q_DIAG"] = ",".join(f"{v:.12g}" for v in q_diag)
+    return env
+
+
+def run_generators(repo: Path, env: dict[str, str]) -> None:
+    run_cmd(["python3", "scripts/trajectory_generator.py"], cwd=repo, env=env)
+    run_cmd(["python3", "scripts/header_generator.py"], cwd=repo, env=env)
 
 
 def worker_run(
@@ -64,23 +83,8 @@ def worker_run(
         status = "ok"
         error = ""
         try:
-            run_cmd(
-                [
-                    "python3",
-                    "scripts/header_generator.py",
-                    "--horizon",
-                    str(horizon),
-                    "--admm-iters",
-                    str(admm_iters),
-                    "--rho",
-                    str(rho),
-                    "--qx",
-                    str(q),
-                    "--qy",
-                    str(q),
-                ],
-                cwd=repo,
-            )
+            env = make_generation_env(horizon=horizon, admm_iters=admm_iters, rho=rho, qxy=q)
+            run_generators(repo, env)
             run_cmd(["make", f"BOARD={board}", "bit"], cwd=repo)
 
             bit_src = repo / "build" / f"{top_module}.bit"
