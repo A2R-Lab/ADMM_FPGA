@@ -156,6 +156,7 @@ void forward_substitution(
 #pragma HLS INLINE
 
     fp_t window[L_BANDED_COLS - 1] = {0};
+#pragma HLS ARRAY_PARTITION variable=window complete dim=1
     int traj_stage = 0;
     int traj_local = 0;
 
@@ -207,6 +208,7 @@ void backward_substitution(
 ) {
 #pragma HLS INLINE
     fp_t window[LT_BANDED_COLS - 1];
+#pragma HLS ARRAY_PARTITION variable=window complete dim=1
 
     INIT_WINDOW:
     for (int j = 0; j < LT_BANDED_COLS - 1; j++) {
