@@ -67,21 +67,37 @@ def _env_bool(name: str, default: bool) -> bool:
     raise ValueError(f"Invalid boolean for {name}: {raw}")
 
 
-HORIZON_LENGTH = _env_int("ADMM_HORIZON_LENGTH", 40)
-Q_DIAG =  [70.0, # x
-           70.0, # y
-           178.0,# z
-           0.4,  # roll
-           0.4,  # pitch
-           40.0, # yaw
-           3.5,  # vx
-           3.5,  # vy
-           4.0,  # vz
-           0.2,    # wx
-           0.2,    # wy
-           25.0] # wz
+def _env_float_list(name: str, default: list[float], expected_len: int) -> list[float]:
+    raw = os.environ.get(name)
+    if raw is None or raw.strip() == "":
+        return list(default)
+    vals = [float(tok.strip()) for tok in raw.split(",") if tok.strip()]
+    if len(vals) != expected_len:
+        raise ValueError(f"{name} expected {expected_len} values, got {len(vals)}")
+    return vals
 
-R_DIAG = [1.0, 1.0, 1.0, 1.0]
+
+HORIZON_LENGTH = _env_int("ADMM_HORIZON_LENGTH", 40)
+Q_DIAG = _env_float_list(
+    "ADMM_Q_DIAG",
+    [70.0,  # x
+     70.0,  # y
+     178.0, # z
+     0.4,   # roll
+     0.4,   # pitch
+     40.0,  # yaw
+     3.5,   # vx
+     3.5,   # vy
+     4.0,   # vz
+     0.2,   # wx
+     0.2,   # wy
+     25.0], # wz
+    expected_len=12,
+)
+
+_BASE_R_DIAG = _env_float_list("ADMM_R_DIAG", [1.0, 1.0, 1.0, 1.0], expected_len=4)
+R_SCALE = _env_float("ADMM_R_SCALE", 1.0)
+R_DIAG = [R_SCALE * v for v in _BASE_R_DIAG]
 
 # Solver implementation switches
 ADMM_USE_FLOAT = _env_bool("ADMM_USE_FLOAT", False)  # False: ap_fixed, True: float
@@ -126,3 +142,6 @@ U_ABS_MIN = _env_float("ADMM_U_ABS_MIN", 0.0)
 U_ABS_MAX = _env_float("ADMM_U_ABS_MAX", 1.0)
 XY_MIN = _env_float("ADMM_XY_MIN", -1.0)
 XY_MAX = _env_float("ADMM_XY_MAX", 1.0)
+
+# Linearization/model frequency used by header generation.
+MODEL_FREQ = _env_float("ADMM_MODEL_FREQ", 50.0)

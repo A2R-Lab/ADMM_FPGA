@@ -7,6 +7,7 @@ from parameters import (
     AMP_X,
     AMP_Y,
     HORIZON_LENGTH,
+    MODEL_FREQ,
     Q_DIAG,
     R_DIAG,
     RHO_EQ_PARAM,
@@ -25,9 +26,6 @@ from parameters import (
     XY_MIN,
     XY_MAX,
 )
-
-# Run controller at 50 Hz
-timer_period = 0.02  # seconds
 
 # Horizon length
 N = HORIZON_LENGTH
@@ -49,7 +47,7 @@ ABQR_OVERRIDE_PATH = os.environ.get("ADMM_ABQR_OVERRIDE_PATH", "").strip()
 xg = np.zeros(13)
 xg[3] = 1.0  # unit quaternion
 # Create quadrotor instance
-quad = CrazyLoihiModel(freq=1/timer_period)
+quad = CrazyLoihiModel(freq=MODEL_FREQ)
 ug = quad.hover_thrust
 mass_kg = quad.mass
 
@@ -84,9 +82,9 @@ else:
     A, B = quad.get_linearized_dynamics(xg, ug)
 
     # Match dominant plant non-ideality (linear drag) in the MPC model.
-    A[6, 6] -= timer_period * (MPC_LINEAR_DRAG_XY / mass_kg)
-    A[7, 7] -= timer_period * (MPC_LINEAR_DRAG_XY / mass_kg)
-    A[8, 8] -= timer_period * (MPC_LINEAR_DRAG_Z / mass_kg)
+    A[6, 6] -= (MPC_LINEAR_DRAG_XY / mass_kg) / MODEL_FREQ
+    A[7, 7] -= (MPC_LINEAR_DRAG_XY / mass_kg) / MODEL_FREQ
+    A[8, 8] -= (MPC_LINEAR_DRAG_Z / mass_kg) / MODEL_FREQ
 
     q_diag = Q_DIAG
     Q = np.diag(q_diag)
@@ -155,27 +153,27 @@ def build_Aeq_interleaved(Anp, Bnp, N):
     return A_eq, b_eq
 
 
-def compute_lqr_terminal_cost(
-    A: np.ndarray,
-    B: np.ndarray,
-    Q: np.ndarray,
-    R: np.ndarray,
-    *,
-    max_iter: int = 2000,
-    tol: float = 1e-10,
-) -> np.ndarray:
-    """Solve the discrete-time algebraic Riccati equation via fixed-point iteration."""
-    P = Q.astype(np.float64).copy()
-    for _ in range(max_iter):
-        bt_p = B.T @ P
-        s = R + bt_p @ B
-        k = np.linalg.solve(s, bt_p @ A)
-        p_next = Q + A.T @ P @ A - A.T @ P @ B @ k
-        p_next = 0.5 * (p_next + p_next.T)
-        if np.linalg.norm(p_next - P, ord="fro") < tol:
-            return p_next
-        P = p_next
-    raise RuntimeError("LQR terminal-cost Riccati iteration did not converge")
+# def compute_lqr_terminal_cost(
+#     A: np.ndarray,
+#     B: np.ndarray,
+#     Q: np.ndarray,
+#     R: np.ndarray,
+#     *,
+#     max_iter: int = 2000,
+#     tol: float = 1e-10,
+# ) -> np.ndarray:
+#     """Solve the discrete-time algebraic Riccati equation via fixed-point iteration."""
+#     P = Q.astype(np.float64).copy()
+#     for _ in range(max_iter):
+#         bt_p = B.T @ P
+#         s = R + bt_p @ B
+#         k = np.linalg.solve(s, bt_p @ A)
+#         p_next = Q + A.T @ P @ A - A.T @ P @ B @ k
+#         p_next = 0.5 * (p_next + p_next.T)
+#         if np.linalg.norm(p_next - P, ord="fro") < tol:
+#             return p_next
+#         P = p_next
+#     raise RuntimeError("LQR terminal-cost Riccati iteration did not converge")
 
 
 # Number of states and inputs
@@ -188,7 +186,7 @@ num_u = m * N
 num_var = num_x + num_u
 
 # Build Hessian matrix P
-Q_terminal = compute_lqr_terminal_cost(A, B, Q, R)
+# Q_terminal = compute_lqr_terminal_cost(A, B, Q, R)
 blocks = []
 for k in range(N):
     blocks.append(Q)     # Q_k
