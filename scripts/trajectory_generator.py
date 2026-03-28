@@ -567,20 +567,19 @@ def build_traj_q_packed(
     r_diag: np.ndarray,
     horizon: int,
 ) -> np.ndarray:
+    del u_ref
+    del r_diag
+    xyz_cols = 3
     if x_ref.shape[1] != q_diag.shape[0]:
         raise ValueError("x_ref width and q_diag length mismatch")
-    if u_ref.shape[1] != r_diag.shape[0]:
-        raise ValueError("u_ref width and r_diag length mismatch")
     if horizon <= 0:
         raise ValueError("horizon must be > 0")
 
-    q_state_ref = -(x_ref * q_diag[None, :])
-    q_input_ref = -(u_ref * r_diag[None, :])
+    q_state_ref = -(x_ref[:, :xyz_cols] * q_diag[None, :xyz_cols])
 
-    cols = x_ref.shape[1] + u_ref.shape[1]
+    cols = xyz_cols
     core = np.zeros((x_ref.shape[0], cols), dtype=np.float64)
-    core[:, : x_ref.shape[1]] = q_state_ref
-    core[:, x_ref.shape[1] :] = q_input_ref
+    core[:, :xyz_cols] = q_state_ref
 
     # Warmstart-friendly timeline with fixed pad so cross-horizon comparisons are aligned.
     pad = max(TRAJ_WARMSTART_PAD, 0)
@@ -599,13 +598,14 @@ def build_traj_q_packed(
 
 
 def build_traj_raw_packed(x_ref: np.ndarray, u_ref: np.ndarray, horizon: int) -> np.ndarray:
+    del u_ref
     if horizon <= 0:
         raise ValueError("horizon must be > 0")
 
-    cols = x_ref.shape[1] + u_ref.shape[1]
+    xyz_cols = 3
+    cols = xyz_cols
     core = np.zeros((x_ref.shape[0], cols), dtype=np.float64)
-    core[:, : x_ref.shape[1]] = x_ref
-    core[:, x_ref.shape[1] :] = u_ref
+    core[:, :xyz_cols] = x_ref[:, :xyz_cols]
 
     # Match q-packed timeline so both headers are drop-in equivalent in indexing.
     pad = max(TRAJ_WARMSTART_PAD, 0)
