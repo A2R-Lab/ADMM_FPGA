@@ -244,22 +244,13 @@ void AT_mul(
     fp_t prev_row_vals[STATE_SIZE] = {0};
 #pragma HLS ARRAY_PARTITION variable=prev_row_vals complete dim=1
 
-    AT_MUL_INIT:
-    for (int i = 0; i < N_VAR; i++) {
-        ATx[i] = 0;
-    }
-
-    AT_MUL_INIT_STATE:
-    for (int i = 0; i < STATE_SIZE; i++) {
-        ATx[i] = x[i];
-    }
-
     AT_MUL_DYN_STAGE_LOOP:
     for (int k = 0; k < HORIZON_LENGTH; k++) {
 #pragma HLS LOOP_FLATTEN off
         const int row_base = STATE_SIZE + k * STATE_SIZE;
         const int xk_col = k * STAGE_SIZE;
         const int uk_col = xk_col + STATE_SIZE;
+        const bool is_first_stage = (k == 0);
         fp_t row_vals[STATE_SIZE];
         acc_t acc_xk[STATE_SIZE];
         acc_t acc_uk[INPUT_SIZE];
@@ -270,7 +261,7 @@ void AT_mul(
         AT_MUL_DYN_INIT_X:
         for (int i = 0; i < STATE_SIZE; i++) {
             row_vals[i] = x[row_base + i];
-            acc_xk[i] = (acc_t)prev_row_vals[i];
+            acc_xk[i] = is_first_stage ? (acc_t)x[i] : (acc_t)prev_row_vals[i];
         }
 
         AT_MUL_DYN_INIT_U:
@@ -295,19 +286,19 @@ void AT_mul(
 
         AT_MUL_DYN_WRITE_XK:
         for (int i = 0; i < STATE_SIZE; i++) {
-            ATx[xk_col + i] += (fp_t)acc_xk[i];
+            ATx[xk_col + i] = (fp_t)acc_xk[i];
             prev_row_vals[i] = row_vals[i];
         }
 
         AT_MUL_DYN_WRITE_U:
         for (int i = 0; i < INPUT_SIZE; i++) {
-            ATx[uk_col + i] += (fp_t)acc_uk[i];
+            ATx[uk_col + i] = (fp_t)acc_uk[i];
         }
     }
 
     AT_MUL_DYN_FINAL_XN:
     for (int i = 0; i < STATE_SIZE; i++) {
-        ATx[HORIZON_LENGTH * STAGE_SIZE + i] += prev_row_vals[i];
+        ATx[HORIZON_LENGTH * STAGE_SIZE + i] = prev_row_vals[i];
     }
 
     AT_MUL_U_INEQ_STAGE_LOOP:
@@ -381,6 +372,7 @@ void ADMM_iteration(
 
         ADMM_IT_DYN_ROW_LOOP:
         for (int r = 0; r < STATE_SIZE; r++) {
+#pragma HLS UNROLL factor=2
             acc_t Axi_acc = (acc_t)xkp1[r];
 
             ADMM_IT_DYN_A_LOOP:
