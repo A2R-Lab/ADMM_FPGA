@@ -179,6 +179,8 @@ def build_Aeq_interleaved(Anp, Bnp, N):
 # Number of states and inputs
 n = A.shape[0]
 m = B.shape[1]
+A_stage = A.copy()
+B_stage = B.copy()
 
 # Total number of variables
 num_x = n * (N + 1)
@@ -240,7 +242,6 @@ if row != n_ineq:
     raise RuntimeError(f"Internal inequality row mismatch: row={row}, n_ineq={n_ineq}")
 
 A = np.vstack([A_eq, A_ineq])
-
 
 # Keep constraints aligned with trajectory frame for the rotated-square mode:
 # midpoint of one side is treated as origin, so shift XY bounds equally.
@@ -490,8 +491,6 @@ def testOSQP(l,u, iter):
 
 L_banded = convert_chol_to_banded_storage(L)
 LT_banded = convert_chol_transposed_to_banded_storage(L.T)
-A_sparse_data, A_sparse_indexes, A_n_bits_idx = convert_matrix_to_sparse_storage(A)
-AT_sparse_data, AT_sparse_indexes, AT_n_bits_idx = convert_matrix_to_sparse_storage(A.T)
 constants = {}
 constants["HORIZON_LENGTH"] = N
 constants["STATE_SIZE"] = n
@@ -523,10 +522,8 @@ data = []
 data.append(generate_constants_header(constants))
 data.append(generate_matrix_header(L_banded, "L_banded"))
 data.append(generate_matrix_header(LT_banded, "LT_banded"))
-data.append(generate_matrix_header(A_sparse_data, "A_sparse_data"))
-data.append(generate_matrix_header(A_sparse_indexes, "A_sparse_indexes", type=f"ap_uint<{A_n_bits_idx}>"))
-data.append(generate_matrix_header(AT_sparse_data, "AT_sparse_data"))
-data.append(generate_matrix_header(AT_sparse_indexes, "AT_sparse_indexes", type=f"ap_uint<{AT_n_bits_idx}>"))
+data.append(generate_matrix_header(A_stage, "A_stage"))
+data.append(generate_matrix_header(B_stage, "B_stage"))
 
 generate_full_header(data, filename=str(DATA_HEADER_PATH))
 RTL_PARAMS_HEADER_PATH.write_text(generate_verilog_params_header(constants))
