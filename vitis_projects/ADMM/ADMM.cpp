@@ -156,6 +156,8 @@ void forward_substitution(
 #pragma HLS INLINE
 
     fp_t window[L_BANDED_COLS - 1] = {0};
+    int traj_stage = 0;
+    int traj_local = 0;
 
     FORW_SUBST_EXTERN_LOOP:
     for (int i = 0; i < N_VAR; i++) {
@@ -163,7 +165,15 @@ void forward_substitution(
         fp_t q_i = 0;
 
         if (use_traj_q && (traj_idx < TRAJ_LENGTH)) {
-            q_i = traj_q_packed[traj_idx][i];
+            if (traj_stage < HORIZON_LENGTH) {
+                if (traj_local < 3) {
+                    q_i = traj_q_packed[traj_idx + traj_stage][traj_local];
+                }
+            } else {
+                if (traj_local < 3) {
+                    q_i = traj_q_packed[traj_idx + HORIZON_LENGTH][traj_local];
+                }
+            }
         }
 
         FORW_SUBST_DOT_PRODUCT_LOOP:
@@ -180,6 +190,14 @@ void forward_substitution(
             window[k] = window[k + 1];
         }
         window[L_BANDED_COLS - 2] = (fp_t)new_x;
+
+        traj_local++;
+        if (traj_stage < HORIZON_LENGTH) {
+            if (traj_local == STAGE_SIZE) {
+                traj_local = 0;
+                traj_stage++;
+            }
+        }
     }
 }
 
