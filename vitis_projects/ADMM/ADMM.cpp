@@ -240,7 +240,9 @@ void AT_mul(
     fp_t ATx[N_VAR]
 ) {
 #pragma HLS INLINE
-#pragma HLS ARRAY_PARTITION variable=A_stage complete dim=2
+#pragma HLS ARRAY_PARTITION variable=A_stage_col_counts complete dim=1
+#pragma HLS ARRAY_PARTITION variable=A_stage_col_rows complete dim=2
+#pragma HLS ARRAY_PARTITION variable=A_stage_col_vals complete dim=2
 #pragma HLS ARRAY_PARTITION variable=B_stage complete dim=2
 
     fp_t prev_row_vals[STATE_SIZE] = {0};
@@ -254,47 +256,35 @@ void AT_mul(
         const int uk_col = xk_col + STATE_SIZE;
         const bool is_first_stage = (k == 0);
         fp_t row_vals[STATE_SIZE];
-        acc_t acc_xk[STATE_SIZE];
-        acc_t acc_uk[INPUT_SIZE];
 #pragma HLS ARRAY_PARTITION variable=row_vals complete dim=1
-#pragma HLS ARRAY_PARTITION variable=acc_xk complete dim=1
-#pragma HLS ARRAY_PARTITION variable=acc_uk complete dim=1
 
         AT_MUL_DYN_INIT_X:
         for (int i = 0; i < STATE_SIZE; i++) {
             row_vals[i] = x[row_base + i];
-            acc_xk[i] = is_first_stage ? (acc_t)x[i] : (acc_t)prev_row_vals[i];
-        }
-
-        AT_MUL_DYN_INIT_U:
-        for (int i = 0; i < INPUT_SIZE; i++) {
-            acc_uk[i] = 0;
-        }
-
-        AT_MUL_DYN_ROW_LOOP:
-        for (int r = 0; r < STATE_SIZE; r++) {
-            const fp_t row_val = row_vals[r];
-
-            AT_MUL_DYN_A_LOOP:
-            for (int c = 0; c < STATE_SIZE; c++) {
-                acc_xk[c] -= (acc_t)A_stage[r][c] * (acc_t)row_val;
-            }
-
-            AT_MUL_DYN_B_LOOP:
-            for (int c = 0; c < INPUT_SIZE; c++) {
-                acc_uk[c] -= (acc_t)B_stage[r][c] * (acc_t)row_val;
-            }
         }
 
         AT_MUL_DYN_WRITE_XK:
         for (int i = 0; i < STATE_SIZE; i++) {
-            ATx[xk_col + i] = (fp_t)acc_xk[i];
+            acc_t acc_xk = is_first_stage ? (acc_t)x[i] : (acc_t)prev_row_vals[i];
+            AT_MUL_DYN_A_COL_LOOP:
+            for (int nz = 0; nz < A_STAGE_T_NNZ_MAX; nz++) {
+                if (nz < A_stage_col_counts[i]) {
+                    const int r = A_stage_col_rows[i][nz];
+                    acc_xk -= (acc_t)A_stage_col_vals[i][nz] * (acc_t)row_vals[r];
+                }
+            }
+            ATx[xk_col + i] = (fp_t)acc_xk;
             prev_row_vals[i] = row_vals[i];
         }
 
         AT_MUL_DYN_WRITE_U:
         for (int i = 0; i < INPUT_SIZE; i++) {
-            ATx[uk_col + i] = (fp_t)acc_uk[i];
+            acc_t acc_uk = 0;
+            AT_MUL_DYN_B_COL_LOOP:
+            for (int r = 0; r < STATE_SIZE; r++) {
+                acc_uk -= (acc_t)B_stage[r][i] * (acc_t)row_vals[r];
+            }
+            ATx[uk_col + i] = (fp_t)acc_uk;
         }
     }
 
@@ -330,7 +320,9 @@ void ADMM_iteration(
     int traj_idx
 ) {
 #pragma HLS INLINE
-#pragma HLS ARRAY_PARTITION variable=A_stage complete dim=2
+#pragma HLS ARRAY_PARTITION variable=A_stage_row_counts complete dim=1
+#pragma HLS ARRAY_PARTITION variable=A_stage_row_cols complete dim=2
+#pragma HLS ARRAY_PARTITION variable=A_stage_row_vals complete dim=2
 #pragma HLS ARRAY_PARTITION variable=B_stage complete dim=2
     fp_t tmp[N_VAR];
     fp_t b_tmp[N_CONSTR];
@@ -378,8 +370,11 @@ void ADMM_iteration(
             acc_t Axi_acc = (acc_t)xkp1[r];
 
             ADMM_IT_DYN_A_LOOP:
-            for (int c = 0; c < STATE_SIZE; c++) {
-                Axi_acc -= (acc_t)A_stage[r][c] * (acc_t)xk[c];
+            for (int nz = 0; nz < A_STAGE_NNZ_MAX; nz++) {
+                if (nz < A_stage_row_counts[r]) {
+                    const int c = A_stage_row_cols[r][nz];
+                    Axi_acc -= (acc_t)A_stage_row_vals[r][nz] * (acc_t)xk[c];
+                }
             }
 
             ADMM_IT_DYN_B_LOOP:

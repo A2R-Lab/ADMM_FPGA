@@ -420,6 +420,24 @@ def generate_vector_header(v, name, type="fp_t"):
     lines.append(f"}};\n// end Vector {name}\n")
     return "".join(lines)
 
+
+def build_sparse_rows(M: np.ndarray, tol: float = 1e-12):
+    rows, cols = M.shape
+    counts = np.count_nonzero(np.abs(M) > tol, axis=1).astype(np.int32)
+    max_nnz = int(counts.max()) if rows else 0
+    idx = np.zeros((rows, max_nnz), dtype=np.int32)
+    vals = np.zeros((rows, max_nnz), dtype=np.float64)
+    for r in range(rows):
+        nz_cols = np.flatnonzero(np.abs(M[r, :]) > tol)
+        for k, c in enumerate(nz_cols):
+            idx[r, k] = int(c)
+            vals[r, k] = float(M[r, c])
+    return counts, idx, vals, max_nnz
+
+
+def build_sparse_cols(M: np.ndarray, tol: float = 1e-12):
+    return build_sparse_rows(M.T, tol)
+
 def generate_full_header(data, filename="data.h", guard="DATA_H"):
     with open(filename, "w") as f:
         f.write(f"#ifndef {guard}\n")
@@ -518,11 +536,21 @@ constants["TRAJ_LENGTH"] = load_traj_length_from_header(TRAJ_DATA_HEADER_PATH, h
 constants["TRAJ_TICK_DIV"] = TRAJ_TICK_DIV
 constants["TRAJ_WARMSTART_PAD"] = TRAJ_WARMSTART_PAD
 
+A_stage_row_counts, A_stage_row_cols, A_stage_row_vals, A_stage_nnz_max = build_sparse_rows(A_stage)
+A_stage_col_counts, A_stage_col_rows, A_stage_col_vals, A_stage_t_nnz_max = build_sparse_cols(A_stage)
+constants["A_STAGE_NNZ_MAX"] = A_stage_nnz_max
+constants["A_STAGE_T_NNZ_MAX"] = A_stage_t_nnz_max
+
 data = []
 data.append(generate_constants_header(constants))
 data.append(generate_matrix_header(L_banded, "L_banded"))
 data.append(generate_matrix_header(LT_banded, "LT_banded"))
-data.append(generate_matrix_header(A_stage, "A_stage"))
+data.append(generate_vector_header(A_stage_row_counts, "A_stage_row_counts", type="int"))
+data.append(generate_matrix_header(A_stage_row_cols, "A_stage_row_cols", type="int"))
+data.append(generate_matrix_header(A_stage_row_vals, "A_stage_row_vals"))
+data.append(generate_vector_header(A_stage_col_counts, "A_stage_col_counts", type="int"))
+data.append(generate_matrix_header(A_stage_col_rows, "A_stage_col_rows", type="int"))
+data.append(generate_matrix_header(A_stage_col_vals, "A_stage_col_vals"))
 data.append(generate_matrix_header(B_stage, "B_stage"))
 
 generate_full_header(data, filename=str(DATA_HEADER_PATH))
