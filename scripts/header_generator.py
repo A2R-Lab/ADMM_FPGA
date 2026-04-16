@@ -15,6 +15,7 @@ from parameters import (
     DELAY_STEPS,
     ADMM_USE_FLOAT,
     ADMM_ITERATIONS,
+    ADMM_ENABLE_TRAJECTORY,
     MPC_LINEAR_DRAG_XY,
     MPC_LINEAR_DRAG_Z,
     STAR_INNER_RATIO,
@@ -153,6 +154,90 @@ def build_Aeq_interleaved(Anp, Bnp, N):
     return A_eq, b_eq
 
 
+def add_block(mat, row_start, col_start, block):
+    rows, cols = block.shape
+    mat[row_start:row_start + rows, col_start:col_start + cols] += block
+
+
+def idx_x_interleaved(k, n, m):
+    return k * (n + m)
+
+
+def idx_u_interleaved(k, n, m):
+    return k * (n + m) + n
+
+
+def build_kkt_direct(Anp, Bnp, Pmat, horizon, rho_eq_val, rho_ineq_val):
+    n = Anp.shape[0]
+    m = Bnp.shape[1]
+    KKT = Pmat.copy()
+
+    aTa = Anp.T @ Anp
+    aTb = Anp.T @ Bnp
+    bTa = Bnp.T @ Anp
+    bTb = Bnp.T @ Bnp
+    eye_n = np.eye(n)
+
+    # Initial condition row: x0 = x_init
+    x0 = idx_x_interleaved(0, n, m)
+    add_block(KKT, x0, x0, rho_eq_val * eye_n)
+
+    # Dynamics rows: x_{k+1} - A x_k - B u_k = 0
+    for k in range(horizon):
+        xk = idx_x_interleaved(k, n, m)
+        uk = idx_u_interleaved(k, n, m)
+        xkp1 = idx_x_interleaved(k + 1, n, m)
+
+        add_block(KKT, xk, xk, rho_eq_val * aTa)
+        add_block(KKT, xk, uk, rho_eq_val * aTb)
+        add_block(KKT, xk, xkp1, -rho_eq_val * Anp.T)
+
+        add_block(KKT, uk, xk, rho_eq_val * bTa)
+        add_block(KKT, uk, uk, rho_eq_val * bTb)
+        add_block(KKT, uk, xkp1, -rho_eq_val * Bnp.T)
+
+        add_block(KKT, xkp1, xk, -rho_eq_val * Anp)
+        add_block(KKT, xkp1, uk, -rho_eq_val * Bnp)
+        add_block(KKT, xkp1, xkp1, rho_eq_val * eye_n)
+
+    # Input box constraints.
+    for k in range(horizon):
+        uk = idx_u_interleaved(k, n, m)
+        KKT[uk:uk + m, uk:uk + m] += rho_ineq_val * np.eye(m)
+
+    # x/y state box constraints for predicted states k=1..N.
+    for k in range(1, horizon + 1):
+        xk = idx_x_interleaved(k, n, m)
+        KKT[xk + 0, xk + 0] += rho_ineq_val
+        KKT[xk + 1, xk + 1] += rho_ineq_val
+
+    return KKT
+
+
+def build_full_constraint_matrix(Anp, Bnp, horizon, n, m, n_ineq, num_var):
+    A_eq, _ = build_Aeq_interleaved(Anp, Bnp, horizon)
+    A_ineq = np.zeros((n_ineq, num_var))
+    row = 0
+
+    for k in range(horizon):
+        u_start = k * (n + m) + n
+        u_end = u_start + m
+        A_ineq[row : row + m, u_start:u_end] = np.eye(m)
+        row += m
+
+    for k in range(1, horizon + 1):
+        xk_start = k * (n + m)
+        A_ineq[row, xk_start + 0] = 1.0
+        row += 1
+        A_ineq[row, xk_start + 1] = 1.0
+        row += 1
+
+    if row != n_ineq:
+        raise RuntimeError(f"Internal inequality row mismatch: row={row}, n_ineq={n_ineq}")
+
+    return A_eq, A_ineq, np.vstack([A_eq, A_ineq])
+
+
 # def compute_lqr_terminal_cost(
 #     A: np.ndarray,
 #     B: np.ndarray,
@@ -208,40 +293,12 @@ for block in blocks:
     P[start:start+size, start:start+size] = block
     start += size
 
-A_eq, b_eq = build_Aeq_interleaved(A, B, N)
-
-# Input + state box constraints
+num_eq_rows = n * (N + 1)
 num_input_ineq = m * N
 num_state_box_ineq = 2 * N  # x and y for predicted states k=1..N
 n_ineq = num_input_ineq + num_state_box_ineq
-A_ineq = np.zeros((n_ineq, num_var))
 START_U_INEQ = 0
 START_XY_INEQ = num_input_ineq
-
-row = 0
-# Input box constraints: u_min <= u_k <= u_max
-for k in range(N):
-    u_start = k * (n + m) + n
-    u_end = u_start + m
-    A_ineq[row : row + m, u_start:u_end] = np.eye(m)
-    row += m
-
-# State box constraints: -1 <= x_k <= 1 and -1 <= y_k <= 1
-# Apply only to predicted states (k=1..N). k=0 is measured/current state and
-# is already enforced by the equality constraint x0 = current_state.
-for k in range(1, N + 1):
-    xk_start = k * (n + m)
-    # x position
-    A_ineq[row, xk_start + 0] = 1.0
-    row += 1
-    # y position
-    A_ineq[row, xk_start + 1] = 1.0
-    row += 1
-
-if row != n_ineq:
-    raise RuntimeError(f"Internal inequality row mismatch: row={row}, n_ineq={n_ineq}")
-
-A = np.vstack([A_eq, A_ineq])
 
 # Keep constraints aligned with trajectory frame for the rotated-square mode:
 # midpoint of one side is treated as origin, so shift XY bounds equally.
@@ -263,17 +320,16 @@ else:
     xy_max_eff = xy_bound_halfspan - xy_bound_shift
 l_u = np.hstack([np.tile(u_min, N), np.full(num_state_box_ineq, xy_min_eff)])
 u_u = np.hstack([np.tile(u_max, N), np.full(num_state_box_ineq, xy_max_eff)])
+b_eq = np.zeros(num_eq_rows)
 l = np.hstack([b_eq, l_u])
 u = np.hstack([b_eq, u_u])
 
 
-rho_vect = rho_ineq * np.ones(A.shape[0])
+num_constraints = num_eq_rows + n_ineq
+rho_vect = rho_ineq * np.ones(num_constraints)
 rho_vect[np.where(l == u)[0]] = rho_eq
-rho_diag = np.diag(rho_vect)
-
-eq_indices = np.arange(n * (N + 1))
-
-KKT = P + A.T @ rho_diag @ A
+KKT = build_kkt_direct(A, B, P, N, rho_eq, rho_ineq)
+A_eq, A_ineq, A_full = build_full_constraint_matrix(A, B, N, n, m, n_ineq, num_var)
 
 L = np.linalg.cholesky(KKT)
 
@@ -394,6 +450,7 @@ def generate_runtime_config_header() -> str:
     lines.append("#define ADMM_RUNTIME_CONFIG_H\n\n")
     lines.append(f"#define ADMM_USE_FLOAT {1 if ADMM_USE_FLOAT else 0}\n")
     lines.append(f"#define ADMM_ITERATIONS {int(ADMM_ITERATIONS)}\n")
+    lines.append(f"#define ADMM_ENABLE_TRAJECTORY {1 if ADMM_ENABLE_TRAJECTORY else 0}\n")
     lines.append("\n#endif // ADMM_RUNTIME_CONFIG_H\n")
     return "".join(lines)
 
@@ -462,8 +519,8 @@ def _checked_pow2_shift(name: str, value: int) -> int:
 
 def ADMM_iteration(l, u, iter):
     x = np.zeros(P.shape[0])
-    z = np.zeros(A.shape[0])
-    y = np.zeros(A.shape[0])
+    z = np.zeros(A_full.shape[0])
+    y = np.zeros(A_full.shape[0])
     q_vec = np.zeros(P.shape[0])
     state_rows = n
     ineq_start = A_eq.shape[0]
@@ -471,11 +528,11 @@ def ADMM_iteration(l, u, iter):
     xy_ineq_start = A_eq.shape[0] + START_XY_INEQ
 
     for _ in range(iter):
-        x = np.linalg.solve(KKT, A.T @ ((rho_vect * z) - y) - q_vec)
-        Ax = A @ x
+        x = np.linalg.solve(KKT, A_full.T @ ((rho_vect * z) - y) - q_vec)
+        Ax = A_full @ x
 
         z_new = np.zeros_like(z)
-        for idx in range(A.shape[0]):
+        for idx in range(A_full.shape[0]):
             if idx < state_rows:
                 z_new[idx] = l[idx]
             elif idx < ineq_start:
@@ -499,7 +556,7 @@ def testOSQP(l,u, iter):
     from scipy import sparse
 
     P_csc = sparse.csc_matrix(P)
-    A_csc = sparse.csc_matrix(A)
+    A_csc = sparse.csc_matrix(A_full)
 
     prob = osqp.OSQP()
     prob.setup(P_csc, np.zeros(P.shape[0]), A_csc, l, u, verbose=False, rho=rho_eq, adaptive_rho = False, max_iter=iter)
@@ -515,11 +572,11 @@ constants["STATE_SIZE"] = n
 constants["INPUT_SIZE"] = m
 constants["STAGE_SIZE"] = n + m
 constants["N_VAR"] = num_var
-constants["N_CONSTR"] = A.shape[0]
+constants["N_CONSTR"] = num_constraints
 constants["N_INEQ"] = n_ineq
-constants["START_INEQ"] = A_eq.shape[0]
-constants["START_U_INEQ"] = A_eq.shape[0] + START_U_INEQ
-constants["START_XY_INEQ"] = A_eq.shape[0] + START_XY_INEQ
+constants["START_INEQ"] = num_eq_rows
+constants["START_U_INEQ"] = num_eq_rows + START_U_INEQ
+constants["START_XY_INEQ"] = num_eq_rows + START_XY_INEQ
 constants["DELAY_STEPS"] = DELAY_STEPS
 rho_shift_ineq = _checked_pow2_shift("rho_ineq", int(rho_ineq))
 rho_shift_eq = _checked_pow2_shift("rho_eq", int(rho_eq))
@@ -532,9 +589,14 @@ constants["U_MAX"] = u_max[0]
 constants["XY_MIN"] = xy_min_eff
 constants["XY_MAX"] = xy_max_eff
 constants["U_HOVER"] = ug[0]
-constants["TRAJ_LENGTH"] = load_traj_length_from_header(TRAJ_DATA_HEADER_PATH, horizon=N)
-constants["TRAJ_TICK_DIV"] = TRAJ_TICK_DIV
-constants["TRAJ_WARMSTART_PAD"] = TRAJ_WARMSTART_PAD
+if ADMM_ENABLE_TRAJECTORY:
+    constants["TRAJ_LENGTH"] = load_traj_length_from_header(TRAJ_DATA_HEADER_PATH, horizon=N)
+    constants["TRAJ_TICK_DIV"] = TRAJ_TICK_DIV
+    constants["TRAJ_WARMSTART_PAD"] = TRAJ_WARMSTART_PAD
+else:
+    constants["TRAJ_LENGTH"] = 0
+    constants["TRAJ_TICK_DIV"] = 1
+    constants["TRAJ_WARMSTART_PAD"] = 0
 
 A_stage_row_counts, A_stage_row_cols, A_stage_row_vals, A_stage_nnz_max = build_sparse_rows(A_stage)
 A_stage_col_counts, A_stage_col_rows, A_stage_col_vals, A_stage_t_nnz_max = build_sparse_cols(A_stage)

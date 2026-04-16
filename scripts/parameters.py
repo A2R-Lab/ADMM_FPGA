@@ -4,6 +4,7 @@ Environment overrides are supported to simplify scripted sweeps:
 - ADMM_HORIZON_LENGTH
 - ADMM_ITERATIONS
 - ADMM_USE_FLOAT
+- ADMM_ENABLE_TRAJECTORY
 - ADMM_MPC_LINEAR_DRAG_XY
 - ADMM_MPC_LINEAR_DRAG_Z
 - ADMM_RHO_EQ_PARAM
@@ -102,6 +103,7 @@ R_DIAG = [R_SCALE * v for v in _BASE_R_DIAG]
 # Solver implementation switches
 ADMM_USE_FLOAT = _env_bool("ADMM_USE_FLOAT", False)  # False: ap_fixed, True: float
 ADMM_ITERATIONS = _env_int("ADMM_ITERATIONS", 10)
+ADMM_ENABLE_TRAJECTORY = _env_bool("ADMM_ENABLE_TRAJECTORY", True)
 
 # Linear drag terms used to bias the MPC linear model (header_generator.py).
 MPC_LINEAR_DRAG_XY = _env_float("ADMM_MPC_LINEAR_DRAG_XY", 0.12)

@@ -1,5 +1,4 @@
 #include "data.h"
-#include "traj_data.h"
 #include "ADMM.h"
 #include "data_types.h"
 #include "admm_runtime_config.h"
@@ -7,6 +6,10 @@
 #include <cstdint>
 #include <cmath>
 #include <type_traits>
+
+#if ADMM_ENABLE_TRAJECTORY
+#include "traj_data.h"
+#endif
 
 #ifndef TRAJ_TICK_DIV
 #define TRAJ_TICK_DIV 1
@@ -165,6 +168,7 @@ void forward_substitution(
         acc_t sum_val = 0;
         fp_t q_i = 0;
 
+#if ADMM_ENABLE_TRAJECTORY
         if (use_traj_q && (traj_idx < TRAJ_LENGTH)) {
             if (traj_stage < HORIZON_LENGTH) {
                 if (traj_local < 3) {
@@ -176,6 +180,7 @@ void forward_substitution(
                 }
             }
         }
+#endif
 
         FORW_SUBST_DOT_PRODUCT_LOOP:
         for (int j = 0; j < L_BANDED_COLS - 1; j++) {
@@ -439,15 +444,18 @@ static void ADMM_solver_core(
     static fp_t x[N_VAR] = {0};
     static fp_t b[N_VAR] = {0};
     static fp_t y[N_CONSTR] = {0};
+#if ADMM_ENABLE_TRAJECTORY
     static bool traj_started = false;
     static int traj_idx = 0;
     static int traj_tick_div_ctr = 0;
+#endif
     fp_t current_state_vec[12];
 
     for (int i = 0; i < 12; i++) {
         current_state_vec[i] = current_in.state[i];
     }
 
+#if ADMM_ENABLE_TRAJECTORY
     if (traj_reset_cmd(current_in)) {
         traj_started = false;
         traj_idx = 0;
@@ -458,12 +466,17 @@ static void ADMM_solver_core(
     }
 
     const bool use_traj_q = traj_started && (traj_idx < TRAJ_LENGTH);
+#else
+    const bool use_traj_q = false;
+    const int traj_idx = 0;
+#endif
 
 ADMM_MAIN_LOOP:
     for (int iter = 0; iter < ADMM_ITERATIONS; iter++) {
         ADMM_iteration(x, b, y, current_state_vec, use_traj_q, traj_idx);
     }
 
+#if ADMM_ENABLE_TRAJECTORY
     if (traj_started && (traj_idx < TRAJ_LENGTH)) {
         traj_tick_div_ctr++;
         if (traj_tick_div_ctr >= TRAJ_TICK_DIV) {
@@ -471,6 +484,7 @@ ADMM_MAIN_LOOP:
             traj_idx++;
         }
     }
+#endif
 
     command_out.u0 = x[12] + (fp_t)U_HOVER;
     command_out.u1 = x[13] + (fp_t)U_HOVER;

@@ -46,12 +46,20 @@ def run_cmd(cmd: list[str], cwd: Path, env: dict[str, str] | None = None) -> Non
     subprocess.run(cmd, cwd=cwd, env=env, check=True)
 
 
-def run_generation(repo_root: Path, *, horizon: int, admm_iters: int) -> None:
+def run_generation(
+    repo_root: Path,
+    *,
+    horizon: int,
+    admm_iters: int,
+    enable_trajectory: bool,
+) -> None:
     env = os.environ.copy()
     env["ADMM_HORIZON_LENGTH"] = str(horizon)
     env["ADMM_ITERATIONS"] = str(admm_iters)
+    env["ADMM_ENABLE_TRAJECTORY"] = "1" if enable_trajectory else "0"
     scripts_dir = repo_root / "scripts"
-    run_cmd(["python3", str(scripts_dir / "trajectory_generator.py")], cwd=repo_root, env=env)
+    if enable_trajectory:
+        run_cmd(["python3", str(scripts_dir / "trajectory_generator.py")], cwd=repo_root, env=env)
     run_cmd(["python3", str(scripts_dir / "header_generator.py")], cwd=repo_root, env=env)
 
 
@@ -59,6 +67,46 @@ def read_text(path: Path) -> str:
     if not path.exists():
         raise FileNotFoundError(f"Missing report file: {path}")
     return path.read_text(errors="replace")
+
+
+def _expect_define(text: str, name: str) -> int:
+    m = re.search(rf"#define\s+{re.escape(name)}\s+([0-9]+)", text)
+    if not m:
+        raise ValueError(f"Could not find #define {name}")
+    return int(m.group(1))
+
+
+def _expect_verilog_define(text: str, name: str) -> int:
+    m = re.search(rf"`define\s+{re.escape(name)}\s+([0-9]+)", text)
+    if not m:
+        raise ValueError(f"Could not find `define {name}")
+    return int(m.group(1))
+
+
+def verify_generated_config(repo_root: Path, *, horizon: int, admm_iters: int, enable_trajectory: bool) -> None:
+    data_h = read_text(repo_root / "vitis_projects" / "ADMM" / "data.h")
+    runtime_h = read_text(repo_root / "vitis_projects" / "ADMM" / "admm_runtime_config.h")
+    rtl_vh = read_text(
+        repo_root / "vivado_project" / "vivado_project.srcs" / "sources_1" / "new" / "admm_autogen_params.vh"
+    )
+
+    got_h_data = _expect_define(data_h, "HORIZON_LENGTH")
+    got_h_rtl = _expect_verilog_define(rtl_vh, "ADMM_HORIZON_LENGTH")
+    got_iters = _expect_define(runtime_h, "ADMM_ITERATIONS")
+    got_traj = _expect_define(runtime_h, "ADMM_ENABLE_TRAJECTORY")
+
+    expected_traj = 1 if enable_trajectory else 0
+    problems: list[str] = []
+    if got_h_data != horizon:
+        problems.append(f"data.h HORIZON_LENGTH={got_h_data}, expected {horizon}")
+    if got_h_rtl != horizon:
+        problems.append(f"admm_autogen_params.vh ADMM_HORIZON_LENGTH={got_h_rtl}, expected {horizon}")
+    if got_iters != admm_iters:
+        problems.append(f"admm_runtime_config.h ADMM_ITERATIONS={got_iters}, expected {admm_iters}")
+    if got_traj != expected_traj:
+        problems.append(f"admm_runtime_config.h ADMM_ENABLE_TRAJECTORY={got_traj}, expected {expected_traj}")
+    if problems:
+        raise RuntimeError("Generated configuration mismatch after run_generation: " + "; ".join(problems))
 
 
 def parse_utilization(report_text: str) -> dict[str, float | int]:
@@ -86,7 +134,7 @@ def parse_utilization(report_text: str) -> dict[str, float | int]:
 
     out: dict[str, float | int] = {}
     for m in row_pattern.finditer(report_text):
-        name = " ".join(m.group("name").split())
+        name = " ".join(m.group("name").split()).rstrip("*")
         if name not in wanted:
             continue
 
@@ -195,6 +243,7 @@ def archive_reports(reports_dir: Path, archive_root: Path, horizon: int, admm_it
     for name in [
         "post_synth_utilization.rpt",
         "post_synth_timing.rpt",
+        "post_synth_power.rpt",
         "post_place_utilization.rpt",
         "post_place_timing.rpt",
         "post_route_utilization.rpt",
@@ -270,6 +319,11 @@ def main() -> None:
         action="store_true",
         help="Continue with next horizon if one horizon fails.",
     )
+    parser.add_argument(
+        "--with-trajectory",
+        action="store_true",
+        help="Opt in to the trajectory-enabled build flow. Benchmark sweeps disable trajectory by default.",
+    )
     args = parser.parse_args()
 
     horizons = parse_horizons(args.horizons)
@@ -317,6 +371,9 @@ def main() -> None:
         "synth_clk_period_ns",
         "synth_clk_freq_mhz",
         "synth_fmax_est_mhz",
+        "synth_power_total_w",
+        "synth_power_dynamic_w",
+        "synth_power_static_w",
         "route_wns_ns",
         "route_tns_ns",
         "route_clk_period_ns",
@@ -358,9 +415,22 @@ def main() -> None:
 
             print(f"\n=== Horizon {horizon}, ADMM iters {admm_iters} ===")
             try:
-                run_generation(repo_root, horizon=horizon, admm_iters=admm_iters)
+                run_generation(
+                    repo_root,
+                    horizon=horizon,
+                    admm_iters=admm_iters,
+                    enable_trajectory=args.with_trajectory,
+                )
+                verify_generated_config(
+                    repo_root,
+                    horizon=horizon,
+                    admm_iters=admm_iters,
+                    enable_trajectory=args.with_trajectory,
+                )
 
-                # Rebuild from HLS export onward to ensure horizon-dependent IP/RTL is fresh.
+                # Rebuild HLS first so the csynth timing report and exported RTL
+                # both match the current horizon/iteration configuration.
+                run_cmd(["make", f"BOARD={args.board}", "hls"], cwd=repo_root)
                 run_cmd(["make", f"BOARD={args.board}", "vivado"], cwd=repo_root)
 
                 util = parse_utilization(read_text(reports_dir / "post_route_utilization.rpt"))
@@ -368,8 +438,9 @@ def main() -> None:
                 hls_timing = parse_hls_timing(hls_report_text)
                 hls_latency_cycles = parse_hls_latency_cycles(hls_report_text)
                 synth_timing_raw = parse_vivado_timing(read_text(reports_dir / "post_synth_timing.rpt"))
+                synth_power_raw = parse_power(read_text(reports_dir / "post_synth_power.rpt"))
                 route_timing_raw = parse_vivado_timing(read_text(reports_dir / "post_route_timing.rpt"))
-                power_raw = parse_power(read_text(reports_dir / "post_route_power.rpt"))
+                route_power_raw = parse_power(read_text(reports_dir / "post_route_power.rpt"))
 
                 synth_timing = {
                     "synth_wns_ns": synth_timing_raw["wns_ns"],
@@ -377,6 +448,9 @@ def main() -> None:
                     "synth_clk_period_ns": synth_timing_raw["clk_period_ns"],
                     "synth_clk_freq_mhz": synth_timing_raw["clk_freq_mhz"],
                     "synth_fmax_est_mhz": synth_timing_raw["fmax_est_mhz"],
+                    "synth_power_total_w": synth_power_raw["power_total_w"],
+                    "synth_power_dynamic_w": synth_power_raw["power_dynamic_w"],
+                    "synth_power_static_w": synth_power_raw["power_static_w"],
                 }
                 route_timing = {
                     "route_wns_ns": route_timing_raw["wns_ns"],
@@ -386,9 +460,9 @@ def main() -> None:
                     "route_fmax_est_mhz": route_timing_raw["fmax_est_mhz"],
                 }
                 power = {
-                    "route_power_total_w": power_raw["power_total_w"],
-                    "route_power_dynamic_w": power_raw["power_dynamic_w"],
-                    "route_power_static_w": power_raw["power_static_w"],
+                    "route_power_total_w": route_power_raw["power_total_w"],
+                    "route_power_dynamic_w": route_power_raw["power_dynamic_w"],
+                    "route_power_static_w": route_power_raw["power_static_w"],
                 }
                 est_solve_us_cfg_clk = safe_div(float(hls_latency_cycles), float(route_timing["route_clk_freq_mhz"]))
                 est_solve_us_route_fmax = safe_div(float(hls_latency_cycles), float(route_timing["route_fmax_est_mhz"]))

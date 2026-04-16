@@ -60,7 +60,7 @@ XDC_DIR       := $(PROJ_ROOT)/vivado_project/vivado_project.srcs/constrs_1/new
 IP_DIR        := $(PROJ_ROOT)/vivado_project/vivado_project.gen/sources_1/ip/ADMM_solver_0
 
 # Source files
-HLS_SOURCES   := $(HLS_DIR)/ADMM.cpp $(HLS_DIR)/ADMM.h $(HLS_DIR)/data_types.h
+HLS_SOURCES   := $(HLS_DIR)/ADMM.cpp $(HLS_DIR)/ADMM.h $(HLS_DIR)/data_types.h $(HLS_DIR)/admm_runtime_config.h
 RTL_SOURCES   := $(wildcard $(RTL_DIR)/*.v) $(wildcard $(RTL_DIR)/*.vh)
 ifeq ($(BOARD),arty)
 XDC_SOURCES   := $(XDC_DIR)/constraints_arty_a7.xdc

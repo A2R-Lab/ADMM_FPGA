@@ -81,11 +81,17 @@ synth_design -top $top_module -part $part \
 #------------------------------------------------------------------------------
 report_utilization -file "$reports_dir/post_synth_utilization.rpt"
 report_timing_summary -file "$reports_dir/post_synth_timing.rpt"
+report_power -file "$reports_dir/post_synth_power.rpt"
 
 #------------------------------------------------------------------------------
 # Save Checkpoint
 #------------------------------------------------------------------------------
 write_checkpoint -force "$build_dir/$synth_dcp"
+
+set synth_root [file rootname $synth_dcp]
+set funcsim_netlist "$build_dir/${synth_root}_funcsim.v"
+puts "Writing functional simulation netlist: $funcsim_netlist"
+write_verilog -mode funcsim -force $funcsim_netlist
 
 puts "========================================"
 puts "Synthesis complete!"
