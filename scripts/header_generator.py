@@ -528,7 +528,7 @@ def ADMM_iteration(l, u, iter):
     xy_ineq_start = A_eq.shape[0] + START_XY_INEQ
 
     for _ in range(iter):
-        x = np.linalg.solve(KKT, A_full.T @ ((rho_vect * z) - y) - q_vec)
+        x = np.linalg.solve(KKT, A_full.T @ (rho_vect * (z - y)) - q_vec)
         Ax = A_full @ x
 
         z_new = np.zeros_like(z)
@@ -538,7 +538,7 @@ def ADMM_iteration(l, u, iter):
             elif idx < ineq_start:
                 z_new[idx] = 0.0
             else:
-                zi = Ax[idx] + (y[idx] / rho_vect[idx])
+                zi = Ax[idx] + y[idx]
                 if idx >= xy_ineq_start:
                     z_new[idx] = np.clip(zi, l[idx], u[idx])
                 elif idx >= u_ineq_start:
@@ -546,7 +546,7 @@ def ADMM_iteration(l, u, iter):
                 else:
                     z_new[idx] = np.clip(zi, l[idx], u[idx])
 
-        y = y + rho_vect * (Ax - z_new)
+        y = y + (Ax - z_new)
         z = z_new
     
     return x, z, y

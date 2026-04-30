@@ -335,13 +335,14 @@ void ADMM_iteration(
     forward_substitution(b, use_traj_q, traj_idx, tmp);
     backward_substitution(tmp, x);
 
+    // `y` stores the scaled dual variable u = lambda / rho.
     ADMM_IT_INIT_STATE_LOOP:
     for (int i = 0; i < STATE_SIZE; i++) {
         const fp_t Axi = x[i];
         const fp_t zi = current_state[i];
-        const fp_t yi = y[i] + rho_mul(Axi - zi, false);
+        const fp_t yi = y[i] + (Axi - zi);
         y[i] = yi;
-        b_tmp[i] = rho_mul(zi, false) - yi;
+        b_tmp[i] = rho_mul(zi - yi, false);
     }
 
     ADMM_IT_DYN_STAGE_LOOP:
@@ -389,9 +390,9 @@ void ADMM_iteration(
 
             const int i = row_base + r;
             const fp_t Axi = (fp_t)Axi_acc;
-            const fp_t yi = y[i] + rho_mul(Axi, false);
+            const fp_t yi = y[i] + Axi;
             y[i] = yi;
-            b_tmp[i] = -yi;
+            b_tmp[i] = rho_mul(-yi, false);
         }
     }
 
@@ -402,15 +403,15 @@ void ADMM_iteration(
         for (int u = 0; u < INPUT_SIZE; u++) {
             const int i = row_base + u;
             const fp_t Axi = x[uk_col + u];
-            fp_t zi = Axi + rho_div(y[i], true);
+            fp_t zi = Axi + y[i];
             if (zi < (fp_t)U_MIN) {
                 zi = (fp_t)U_MIN;
             } else if (zi > (fp_t)U_MAX) {
                 zi = (fp_t)U_MAX;
             }
-            const fp_t yi = y[i] + rho_mul(Axi - zi, true);
+            const fp_t yi = y[i] + (Axi - zi);
             y[i] = yi;
-            b_tmp[i] = rho_mul(zi, true) - yi;
+            b_tmp[i] = rho_mul(zi - yi, true);
         }
     }
 
@@ -421,15 +422,15 @@ void ADMM_iteration(
         for (int axis = 0; axis < 2; axis++) {
             const int i = row_base + axis;
             const fp_t Axi = x[xk_col + axis];
-            fp_t zi = Axi + rho_div(y[i], true);
+            fp_t zi = Axi + y[i];
             if (zi < (fp_t)XY_MIN) {
                 zi = (fp_t)XY_MIN;
             } else if (zi > (fp_t)XY_MAX) {
                 zi = (fp_t)XY_MAX;
             }
-            const fp_t yi = y[i] + rho_mul(Axi - zi, true);
+            const fp_t yi = y[i] + (Axi - zi);
             y[i] = yi;
-            b_tmp[i] = rho_mul(zi, true) - yi;
+            b_tmp[i] = rho_mul(zi - yi, true);
         }
     }
     AT_mul(b_tmp, b);
