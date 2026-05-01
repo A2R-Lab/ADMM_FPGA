@@ -48,6 +48,20 @@ struct SimConfig {
     double quadratic_drag = 0.03;
     double angular_damping = 1.2e-6;
     double rotor_imbalance = 0.03;
+    double control_min = -0.02;
+    double control_max = 1.02;
+    double max_abs_x = 3.0;
+    double max_abs_y = 3.0;
+    double max_abs_z = 1.0;
+    double max_abs_rp = 0.45;
+    double max_abs_rate = 8.0;
+    double max_control_step = 0.45;
+    double late_check_after_s = -1.0;
+    double late_max_abs_x = 0.5;
+    double late_max_abs_y = 0.5;
+    double late_max_abs_z = 0.5;
+    double late_max_control_hover_error = 0.2;
+    int fail_on_early_stop = 0;
     std::string traj_path = "trajectory.csv";
 };
 
@@ -104,6 +118,20 @@ SimConfig load_config() {
     cfg.quadratic_drag = getenv_double("ADMM_QUADRATIC_DRAG", cfg.quadratic_drag);
     cfg.angular_damping = getenv_double("ADMM_ANGULAR_DAMPING", cfg.angular_damping);
     cfg.rotor_imbalance = getenv_double("ADMM_ROTOR_IMBALANCE", cfg.rotor_imbalance);
+    cfg.control_min = getenv_double("ADMM_CONTROL_MIN", cfg.control_min);
+    cfg.control_max = getenv_double("ADMM_CONTROL_MAX", cfg.control_max);
+    cfg.max_abs_x = getenv_double("ADMM_MAX_ABS_X", cfg.max_abs_x);
+    cfg.max_abs_y = getenv_double("ADMM_MAX_ABS_Y", cfg.max_abs_y);
+    cfg.max_abs_z = getenv_double("ADMM_MAX_ABS_Z", cfg.max_abs_z);
+    cfg.max_abs_rp = getenv_double("ADMM_MAX_ABS_RP", cfg.max_abs_rp);
+    cfg.max_abs_rate = getenv_double("ADMM_MAX_ABS_RATE", cfg.max_abs_rate);
+    cfg.max_control_step = getenv_double("ADMM_MAX_CONTROL_STEP", cfg.max_control_step);
+    cfg.late_check_after_s = getenv_double("ADMM_LATE_CHECK_AFTER_S", cfg.late_check_after_s);
+    cfg.late_max_abs_x = getenv_double("ADMM_LATE_MAX_ABS_X", cfg.late_max_abs_x);
+    cfg.late_max_abs_y = getenv_double("ADMM_LATE_MAX_ABS_Y", cfg.late_max_abs_y);
+    cfg.late_max_abs_z = getenv_double("ADMM_LATE_MAX_ABS_Z", cfg.late_max_abs_z);
+    cfg.late_max_control_hover_error = getenv_double("ADMM_LATE_MAX_CONTROL_HOVER_ERROR", cfg.late_max_control_hover_error);
+    cfg.fail_on_early_stop = getenv_int("ADMM_FAIL_ON_EARLY_STOP", cfg.fail_on_early_stop);
     cfg.traj_path = getenv_string("ADMM_CSIM_TRAJ_PATH", cfg.traj_path);
     return cfg;
 }
@@ -369,6 +397,7 @@ int main() {
     state[2] = cfg.step_z;
     state[5] = cfg.step_yaw;
     std::array<double, 4> control = {kUHover, kUHover, kUHover, kUHover};
+    std::array<double, 4> prev_control = control;
     std::array<double, 4> actuator = control;
     const std::array<double, 4> motor_gains = {
         1.0 - cfg.rotor_imbalance,
@@ -420,34 +449,45 @@ int main() {
         control[2] = static_cast<double>(cmd_out.u2);
         control[3] = static_cast<double>(cmd_out.u3);
 
-        // Prune unstable candidates early:
-        // stop immediately if any control exits [0, 1].
-        // if (
-        //     control[0] < -0.01 || control[0] > 1.01 ||
-        //     control[1] < -0.01 || control[1] > 1.01 ||
-        //     control[2] < -0.01 || control[2] > 1.01 ||
-        //     control[3] < -0.01 || control[3] > 1.01
-        // ) {
-        //     terminated_early = true;
-        //     terminate_reason = "control_out_of_bounds_[0,1]";
-        //     terminate_step = step;
-        //     break;
-        // }
+        const double t_now = (step + 1) * dt;
+        for (int i = 0; i < kInputSize; ++i) {
+            if (!std::isfinite(control[i])) {
+                terminated_early = true;
+                terminate_reason = "control_non_finite";
+                terminate_step = step;
+                break;
+            }
+            if (control[i] < cfg.control_min || control[i] > cfg.control_max) {
+                terminated_early = true;
+                terminate_reason = "control_out_of_bounds";
+                terminate_step = step;
+                break;
+            }
+            if (std::abs(control[i] - prev_control[i]) > cfg.max_control_step) {
+                terminated_early = true;
+                terminate_reason = "control_step_too_large";
+                terminate_step = step;
+                break;
+            }
+        }
+        if (terminated_early) {
+            break;
+        }
+        prev_control = control;
 
-        // // After 3s, controls must stay near hover, otherwise prune candidate.
-        // const double t_now = (step + 1) * dt;
-        // if (
-        //     t_now >= 4.0 &&
-        //     (std::abs(control[0] - U_HOVER) > 0.09 ||
-        //      std::abs(control[1] - U_HOVER) > 0.09 ||
-        //      std::abs(control[2] - U_HOVER) > 0.09 ||
-        //      std::abs(control[3] - U_HOVER) > 0.09)
-        // ) {
-        //     terminated_early = true;
-        //     terminate_reason = "late_control_not_hover_abs_gt_0p09";
-        //     terminate_step = step;
-        //     break;
-        // }
+        if (cfg.late_check_after_s >= 0.0 && t_now >= cfg.late_check_after_s) {
+            for (int i = 0; i < kInputSize; ++i) {
+                if (std::abs(control[i] - kUHover) > cfg.late_max_control_hover_error) {
+                    terminated_early = true;
+                    terminate_reason = "late_control_far_from_hover";
+                    terminate_step = step;
+                    break;
+                }
+            }
+            if (terminated_early) {
+                break;
+            }
+        }
 
         const double tau = cfg.motor_time_constant_s;
         const double alpha = (tau > 0.0) ? (dt / (tau + dt)) : 1.0;
@@ -459,46 +499,48 @@ int main() {
         // Inject a slow yaw drift disturbance for tuning.
         state[5] += cfg.yaw_drift_rate_rad_s * dt;
 
+        for (int i = 0; i < kStateSize; ++i) {
+            if (!std::isfinite(state[i])) {
+                terminated_early = true;
+                terminate_reason = "state_non_finite";
+                terminate_step = step + 1;
+                break;
+            }
+        }
+        if (terminated_early) {
+            break;
+        }
+
         t_hist.push_back((step + 1) * dt);
         x_hist.push_back(state);
         u_hist.push_back(actuator);
         primal_res_hist.push_back(primal_residual_fp);
         dual_res_hist.push_back(dual_residual_fp);
 
-        // // Stop if position diverges.
-        // if (std::abs(state[0]) > 3.0 || std::abs(state[1]) > 1.0) {
-        //     terminated_early = true;
-        //     terminate_reason = "xy_out_of_bounds_abs_gt_3";
-        //     terminate_step = step + 1;
-        //     break;
-        // }
-        // if (std::abs(state[2]) > .3) {
-        //     terminated_early = true;
-        //     terminate_reason = "z_out_of_bounds_abs_gt_03";
-        //     terminate_step = step + 1;
-        //     break;
-        // }
-
-        // if (t_now >= 4.0 &&
-        //    (std::abs(state[3])  > .1 || 
-        //     std::abs(state[4])  > .1 ||
-        //     std::abs(state[9])  > .3 ||
-        //     std::abs(state[10]) > .3)) {
-        //     terminated_early = true;
-        //     terminate_reason = "late_angle_out_of_bounds_abs_gt_01";
-        //     terminate_step = step + 1;
-        //     break;
-        // }
-
-
-        // if (t_now >= 4.0 &&
-        //    (std::abs(state[1])  > .3 || 
-        //     std::abs(state[0])  > .3 )) {
-        //     terminated_early = true;
-        //     terminate_reason = "late_position_abs_gt_03";
-        //     terminate_step = step + 1;
-        //     break;
-        // }
+        if (std::abs(state[0]) > cfg.max_abs_x || std::abs(state[1]) > cfg.max_abs_y ||
+            std::abs(state[2]) > cfg.max_abs_z) {
+            terminated_early = true;
+            terminate_reason = "position_diverged";
+            terminate_step = step + 1;
+            break;
+        }
+        if (std::abs(state[3]) > cfg.max_abs_rp || std::abs(state[4]) > cfg.max_abs_rp ||
+            std::abs(state[9]) > cfg.max_abs_rate || std::abs(state[10]) > cfg.max_abs_rate ||
+            std::abs(state[11]) > cfg.max_abs_rate) {
+            terminated_early = true;
+            terminate_reason = "attitude_or_rate_diverged";
+            terminate_step = step + 1;
+            break;
+        }
+        if (cfg.late_check_after_s >= 0.0 && t_now >= cfg.late_check_after_s &&
+            (std::abs(state[0]) > cfg.late_max_abs_x ||
+             std::abs(state[1]) > cfg.late_max_abs_y ||
+             std::abs(state[2]) > cfg.late_max_abs_z)) {
+            terminated_early = true;
+            terminate_reason = "late_position_error_too_large";
+            terminate_step = step + 1;
+            break;
+        }
         if(step % 10 == 0)
          std::cout << step << "/" << sim_steps << std::endl;
     }
@@ -506,6 +548,7 @@ int main() {
     write_traj_csv(cfg.traj_path, t_hist, x_hist, u_hist, primal_res_hist, dual_res_hist);
     if (terminated_early) {
         std::cerr << "EARLY_STOP step=" << terminate_step << " reason=" << terminate_reason << "\n";
+        return cfg.fail_on_early_stop ? 1 : 0;
     } else {
         std::cerr << "EARLY_STOP step=-1 reason=completed\n";
     }

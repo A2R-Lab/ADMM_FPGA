@@ -18,8 +18,12 @@ help:
 	@echo "  csim    - Run C simulation"
 	@echo "  csim-rho - Run rho/accumulator C simulation testbench"
 	@echo "  csim-uart-smoke - Run one-shot ADMM_solver smoke testbench"
+	@echo "  csim-closed-loop - Run fixed-point closed-loop C simulation"
+	@echo "  csim-closed-loop-strict - Run fixed-point closed-loop C simulation and fail on early stop"
 	@echo "  build-uart-smoke - Run HLS synthesis for one-shot ADMM_solver smoke testbench"
 	@echo "  cosim-uart-smoke - Run one-shot ADMM_solver RTL co-simulation smoke testbench"
+	@echo "  build-closed-loop - Run HLS synthesis for closed-loop testbench"
+	@echo "  cosim-closed-loop - Run fixed-point closed-loop RTL co-simulation"
 	@echo "  build   - Run C synthesis"
 	@echo "  cosim   - Run C/RTL co-simulation"
 	@echo "  export  - Package/export RTL"
@@ -37,11 +41,23 @@ csim-rho:
 csim-uart-smoke:
 	vitis-run --mode hls --csim --config ./hls_uart_smoke_config.cfg --work_dir ADMM_uart_smoke
 
+csim-closed-loop:
+	ADMM_SIM_FREQ=100 ADMM_SIM_DURATION_S=2 ADMM_TRAJ_START_STEP=50 ADMM_CSIM_TRAJ_PATH=trajectory_csim.csv vitis-run --mode hls --csim --config ./hls_eval_config.cfg --work_dir ADMM_closed_loop
+
+csim-closed-loop-strict:
+	ADMM_FAIL_ON_EARLY_STOP=1 ADMM_SIM_FREQ=100 ADMM_SIM_DURATION_S=2 ADMM_TRAJ_START_STEP=50 ADMM_CSIM_TRAJ_PATH=trajectory_csim.csv vitis-run --mode hls --csim --config ./hls_eval_config.cfg --work_dir ADMM_closed_loop
+
 build-uart-smoke:
 	v++ -c --mode hls --config ./hls_uart_smoke_config.cfg --work_dir ADMM_uart_smoke
 
 cosim-uart-smoke: build-uart-smoke
 	vitis-run --mode hls --cosim --config ./hls_uart_smoke_config.cfg --work_dir ADMM_uart_smoke
+
+build-closed-loop:
+	v++ -c --mode hls --config ./hls_eval_config.cfg --work_dir ADMM_closed_loop
+
+cosim-closed-loop: build-closed-loop
+	ADMM_SIM_FREQ=100 ADMM_SIM_DURATION_S=2 ADMM_TRAJ_START_STEP=50 ADMM_CSIM_TRAJ_PATH=trajectory_cosim.csv vitis-run --mode hls --cosim --config ./hls_eval_config.cfg --work_dir ADMM_closed_loop
 
 # C Synthesis - use v++ instead
 build:

@@ -17,7 +17,7 @@
 
 static_assert(TRAJ_TICK_DIV > 0, "TRAJ_TICK_DIV must be > 0");
 
-constexpr int ACC_GUARD_BITS = 0;
+constexpr int ACC_GUARD_BITS = 2;
 
 #ifndef RHO_SHIFT_EQ
 #error "RHO_SHIFT_EQ must be generated in data.h by scripts/header_generator.py"

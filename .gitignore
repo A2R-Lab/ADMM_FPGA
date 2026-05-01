@@ -5,6 +5,7 @@ plots/
 # HLS project output
 vitis_projects/ADMM/ADMM/
 vitis_projects/ADMM/ADMM_uart_smoke/
+vitis_projects/ADMM/ADMM_closed_loop/
 vitis_projects/ADMM/data.h
 vitis_projects/ADMM/test_data.h
 vitis_projects/ADMM/traj_data.h
