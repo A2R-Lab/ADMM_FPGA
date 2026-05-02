@@ -102,7 +102,7 @@ R_DIAG = [R_SCALE * v for v in _BASE_R_DIAG]
 
 # Solver implementation switches
 ADMM_USE_FLOAT = _env_bool("ADMM_USE_FLOAT", False)  # False: ap_fixed, True: float
-ADMM_ITERATIONS = _env_int("ADMM_ITERATIONS", 10)
+ADMM_ITERATIONS = _env_int("ADMM_ITERATIONS", 6)
 ADMM_ENABLE_TRAJECTORY = _env_bool("ADMM_ENABLE_TRAJECTORY", True)
 
 # Linear drag terms used to bias the MPC linear model (header_generator.py).

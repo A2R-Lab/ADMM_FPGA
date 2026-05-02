@@ -27,11 +27,13 @@ void ADMM_iteration(
     fp_t y[N_CONSTR],
     fp_t current_state[12],
     bool use_traj_q,
-    int traj_idx
+    int traj_idx,
+    fp_t dynamic_xy_min,
+    fp_t dynamic_xy_max
 );
 
 void ADMM_solver(
-    ap_uint<386> current_in_bits,
+    ap_uint<418> current_in_bits,
     ap_uint<128> &command_out_bits
 );
 

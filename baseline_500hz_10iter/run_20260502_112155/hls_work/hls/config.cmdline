@@ -1,0 +1,3 @@
+relativeroot=/home/andrea/projects/ADMM_FPGA/vitis_projects/ADMM
+original_argv=--mode hls --csim --config ./hls_eval_config.cfg --work_dir /home/andrea/projects/ADMM_FPGA/baseline_500hz_10iter/run_20260502_112155/hls_work 
+

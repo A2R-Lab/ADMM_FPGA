@@ -1,0 +1,106 @@
+<ENTRY>
+{
+ "thisFile": "/home/andrea/projects/ADMM_FPGA/baseline_500hz_10iter/run_20260502_112440/hls_work/hls_work.hlsrun_csim_summary",
+ "connectId": "",
+ "serverToken": "",
+ "timestamp": "0"
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_CmdStep",
+ "dateTimestamp": "Sat May  2 11:24:47 2026",
+ "timestampMillis": "1777735487147",
+ "buildStep": {
+  "cmdId": "13f92ac7-a357-4de7-9f34-76cc4d30d633",
+  "name": "vitis-run",
+  "logFile": "/home/andrea/projects/ADMM_FPGA/baseline_500hz_10iter/run_20260502_112440/hls_work/logs/hls_work.steps.log",
+  "commandLine": "/media/andrea/48a1bd03-3653-4c55-8d37-cd7d804e2212/amdfpga/2025.2/Vitis/bin/unwrapped/lnx64.o/vitis-run  --mode hls --csim --config ./hls_eval_config.cfg --work_dir /home/andrea/projects/ADMM_FPGA/baseline_500hz_10iter/run_20260502_112440/hls_work ",
+  "args": [
+   "--mode",
+   "hls",
+   "--csim",
+   "--config",
+   "./hls_eval_config.cfg",
+   "--work_dir",
+   "/home/andrea/projects/ADMM_FPGA/baseline_500hz_10iter/run_20260502_112440/hls_work"
+  ],
+  "iniFiles": [],
+  "cwd": "/home/andrea/projects/ADMM_FPGA/vitis_projects/ADMM"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Sat May  2 11:24:47 2026",
+ "timestampMillis": "1777735487243",
+ "status": {
+  "cmdId": "13f92ac7-a357-4de7-9f34-76cc4d30d633",
+  "state": "CS_RUNNING"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_FlowMetaData",
+ "dateTimestamp": "Sat May  2 11:24:59 2026",
+ "timestampMillis": "1777735499896",
+ "buildSummary": {
+  "hardwarePlatform": "",
+  "hardwareDsa": "",
+  "platformDirectory": "",
+  "runtime": "",
+  "systemConfig": "",
+  "flow": "BF_RUN",
+  "target": "TT_HLS_C_SIM",
+  "kernels": [
+   {
+    "base": {
+     "type": "KERNEL",
+     "name": "ADMM_solver",
+     "file": "",
+     "reports": [],
+     "uuid": ""
+    },
+    "sources": [
+     "/home/andrea/projects/ADMM_FPGA/vitis_projects/ADMM/ADMM.cpp"
+    ],
+    "psSources": [],
+    "cuNames": [],
+    "type": "HLS",
+    "frequency": 0,
+    "freqUnits": ""
+   }
+  ],
+  "toolVersion": "2025.2"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_SubCmdStep",
+ "dateTimestamp": "Sat May  2 11:24:59 2026",
+ "timestampMillis": "1777735499897",
+ "buildStep": {
+  "cmdId": "91fdff93-ee50-40d2-b47f-0300ce907035",
+  "name": "",
+  "logFile": "/home/andrea/projects/ADMM_FPGA/baseline_500hz_10iter/run_20260502_112440/hls_work/hls/hls.log",
+  "commandLine": "",
+  "args": [],
+  "iniFiles": [],
+  "cwd": "/home/andrea/projects/ADMM_FPGA/baseline_500hz_10iter/run_20260502_112440"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Sat May  2 11:24:59 2026",
+ "timestampMillis": "1777735499934",
+ "status": {
+  "cmdId": "91fdff93-ee50-40d2-b47f-0300ce907035",
+  "state": "CS_RUNNING"
+ }
+}
+</ENTRY>
