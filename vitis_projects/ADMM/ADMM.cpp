@@ -128,14 +128,15 @@ static inline bool traj_reset_cmd(const current_state_t &current_in) {
     return current_in.traj_cmd[1] != 0;
 }
 
-static inline current_state_t unpack_current_state(ap_uint<386> current_in_bits) {
+static inline current_state_t unpack_current_state(ap_uint<418> current_in_bits) {
 #pragma HLS INLINE
 
 current_state_t current_in = {};
     for (int i = 0; i < 12; ++i) {
         current_in.state[i] = bits_to_fp(current_in_bits.range(i * 32 + 31, i * 32));
     }
-    current_in.traj_cmd = current_in_bits.range(385, 384);
+    current_in.constraints = current_in_bits.range(415, 384);
+    current_in.traj_cmd = current_in_bits.range(417, 416);
     return current_in;
 }
 
@@ -322,7 +323,9 @@ void ADMM_iteration(
     fp_t y[N_CONSTR],
     fp_t current_state[12],
     bool use_traj_q,
-    int traj_idx
+    int traj_idx,
+    fp_t dynamic_xy_min,
+    fp_t dynamic_xy_max
 ) {
 #pragma HLS INLINE
 #pragma HLS ARRAY_PARTITION variable=A_stage_row_counts complete dim=1
@@ -423,10 +426,10 @@ void ADMM_iteration(
             const int i = row_base + axis;
             const fp_t Axi = x[xk_col + axis];
             fp_t zi = Axi + y[i];
-            if (zi < (fp_t)XY_MIN) {
-                zi = (fp_t)XY_MIN;
-            } else if (zi > (fp_t)XY_MAX) {
-                zi = (fp_t)XY_MAX;
+            if (zi < dynamic_xy_min) {
+                zi = dynamic_xy_min;
+            } else if (zi > dynamic_xy_max) {
+                zi = dynamic_xy_max;
             }
             const fp_t yi = y[i] + (Axi - zi);
             y[i] = yi;
@@ -472,9 +475,21 @@ static void ADMM_solver_core(
     const int traj_idx = 0;
 #endif
 
+    // Decode dynamic constraints: Value 1 (lower 16 bits): new XY_MIN, Value 2 (upper 16 bits): new XY_MAX.
+    // Constraints are encoded as int16_t (mm resolution). 0 means use defaults.
+    fp_t dynamic_xy_min = (fp_t)XY_MIN;
+    fp_t dynamic_xy_max = (fp_t)XY_MAX;
+
+    if (current_in.constraints != 0) {
+        int16_t min_16 = (int16_t)current_in.constraints.range(15, 0);
+        int16_t max_16 = (int16_t)current_in.constraints.range(31, 16);
+        dynamic_xy_min = (fp_t)min_16 / 1000.0f;
+        dynamic_xy_max = (fp_t)max_16 / 1000.0f;
+    }
+
 ADMM_MAIN_LOOP:
     for (int iter = 0; iter < ADMM_ITERATIONS; iter++) {
-        ADMM_iteration(x, b, y, current_state_vec, use_traj_q, traj_idx);
+        ADMM_iteration(x, b, y, current_state_vec, use_traj_q, traj_idx, dynamic_xy_min, dynamic_xy_max);
     }
 
 #if ADMM_ENABLE_TRAJECTORY
@@ -494,7 +509,7 @@ ADMM_MAIN_LOOP:
 }
 
 void ADMM_solver(
-    ap_uint<386> current_in_bits,
+    ap_uint<418> current_in_bits,
     ap_uint<128> &command_out_bits
 ) {
     current_state_t current_in = unpack_current_state(current_in_bits);

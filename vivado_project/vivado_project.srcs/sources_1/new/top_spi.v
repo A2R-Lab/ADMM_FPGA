@@ -17,7 +17,8 @@ module top_spi (
     localparam N_CMD = 4;
     localparam DATA_WIDTH = 32;
     localparam TRAJ_CMD_WIDTH = 2;
-    localparam CURRENT_IN_WIDTH = N_STATE * DATA_WIDTH + TRAJ_CMD_WIDTH;
+    localparam N_CONSTRAINTS = 1;
+    localparam CURRENT_IN_WIDTH = N_STATE * DATA_WIDTH + N_CONSTRAINTS * DATA_WIDTH + TRAJ_CMD_WIDTH;
 
     localparam RX_HEADER = 32'h000000AA;
     localparam START_TRAJ_MASK = 32'h00000100;
@@ -117,8 +118,8 @@ module top_spi (
                     CHECK_HEADER: begin
                         if (spi_rx_valid) begin
                             if ((spi_rx_data & 32'h000000FF) == RX_HEADER) begin
-                                current_in_reg[N_STATE * DATA_WIDTH + 0] <= ((spi_rx_data & START_TRAJ_MASK) != 0);
-                                current_in_reg[N_STATE * DATA_WIDTH + 1] <= ((spi_rx_data & RESET_TRAJ_MASK) != 0);
+                                current_in_reg[CURRENT_IN_WIDTH-2] <= ((spi_rx_data & START_TRAJ_MASK) != 0);
+                                current_in_reg[CURRENT_IN_WIDTH-1] <= ((spi_rx_data & RESET_TRAJ_MASK) != 0);
                                 state <= RX_DATA;
                                 rx_word_count <= 0;
                             end else begin
@@ -130,7 +131,7 @@ module top_spi (
                     RX_DATA: begin
                         if (spi_rx_valid) begin
                             current_in_reg[rx_word_count * DATA_WIDTH +: DATA_WIDTH] <= spi_rx_data;
-                            if (rx_word_count == N_STATE - 1) begin
+                            if (rx_word_count == N_STATE + N_CONSTRAINTS - 1) begin
                                 state <= COMPUTE;
                             end else begin
                                 rx_word_count <= rx_word_count + 1;

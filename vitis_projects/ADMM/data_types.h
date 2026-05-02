@@ -15,6 +15,7 @@ typedef ap_fixed<32,10, AP_RND, AP_SAT> fp_t;
 typedef struct {
     fp_t state[12];
     ap_uint<2> traj_cmd;
+    ap_uint<32> constraints;
 } current_state_t;
 
 typedef struct {
