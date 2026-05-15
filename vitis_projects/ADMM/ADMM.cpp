@@ -15,7 +15,13 @@
 #define TRAJ_TICK_DIV 1
 #endif
 
+#ifndef DYNAMIC_CONSTRAINT_AXIS
+#define DYNAMIC_CONSTRAINT_AXIS 0
+#endif
+
 static_assert(TRAJ_TICK_DIV > 0, "TRAJ_TICK_DIV must be > 0");
+static_assert(DYNAMIC_CONSTRAINT_AXIS == 0 || DYNAMIC_CONSTRAINT_AXIS == 1,
+              "DYNAMIC_CONSTRAINT_AXIS must be 0 (x) or 1 (y)");
 
 constexpr int ACC_GUARD_BITS = 2;
 
@@ -166,7 +172,6 @@ void forward_substitution(
 
     FORW_SUBST_EXTERN_LOOP:
     for (int i = 0; i < N_VAR; i++) {
-#pragma HLS UNROLL factor=2
         acc_t sum_val = 0;
         fp_t q_i = 0;
 
@@ -224,7 +229,6 @@ void backward_substitution(
 
     BACK_SUBST_EXTERN_LOOP:
     for (int i = LT_BANDED_ROWS - 1; i >= 0; i--) {
-#pragma HLS UNROLL factor=2
         acc_t sum_val = 0;
 
         DOT_PRODUCT:
@@ -243,36 +247,21 @@ void backward_substitution(
     }
 }
 
-static acc_t sparse_dot_product(
-    int count,
-    const int rows[A_STAGE_T_NNZ_MAX],
-    const fp_t vals[A_STAGE_T_NNZ_MAX],
-    const fp_t vec[STATE_SIZE]
-) {
-#pragma HLS INLINE off
-    acc_t acc = 0;
-    for (int i = 0; i < A_STAGE_T_NNZ_MAX; i++) {
-#pragma HLS PIPELINE II=1
-        if (i < count) {
-            acc += (acc_t)vals[i] * (acc_t)vec[rows[i]];
-        }
-    }
-    return acc;
-}
-
 void AT_mul(
     const fp_t x[N_CONSTR],
     fp_t ATx[N_VAR]
 ) {
 #pragma HLS INLINE
-#pragma HLS ALLOCATION function instances=sparse_dot_product limit=2
+#pragma HLS ARRAY_PARTITION variable=A_stage_col_counts complete dim=1
+#pragma HLS ARRAY_PARTITION variable=A_stage_col_rows complete dim=2
+#pragma HLS ARRAY_PARTITION variable=A_stage_col_vals complete dim=2
+#pragma HLS ARRAY_PARTITION variable=B_stage complete dim=2
 
     fp_t prev_row_vals[STATE_SIZE] = {0};
 #pragma HLS ARRAY_PARTITION variable=prev_row_vals complete dim=1
 
     AT_MUL_DYN_STAGE_LOOP:
     for (int k = 0; k < HORIZON_LENGTH; k++) {
-#pragma HLS PIPELINE II=4
 #pragma HLS LOOP_FLATTEN off
         const int row_base = STATE_SIZE + k * STATE_SIZE;
         const int xk_col = k * STAGE_SIZE;
@@ -289,7 +278,13 @@ void AT_mul(
         AT_MUL_DYN_WRITE_XK:
         for (int i = 0; i < STATE_SIZE; i++) {
             acc_t acc_xk = is_first_stage ? (acc_t)x[i] : (acc_t)prev_row_vals[i];
-            acc_xk -= sparse_dot_product(A_stage_col_counts[i], A_stage_col_rows[i], A_stage_col_vals[i], row_vals);
+            AT_MUL_DYN_A_COL_LOOP:
+            for (int nz = 0; nz < A_STAGE_T_NNZ_MAX; nz++) {
+                if (nz < A_stage_col_counts[i]) {
+                    const int r = A_stage_col_rows[i][nz];
+                    acc_xk -= (acc_t)A_stage_col_vals[i][nz] * (acc_t)row_vals[r];
+                }
+            }
             ATx[xk_col + i] = (fp_t)acc_xk;
             prev_row_vals[i] = row_vals[i];
         }
@@ -328,35 +323,6 @@ void AT_mul(
     }
 }
 
-static void dynamic_stage_compute(
-    int r,
-    const fp_t xk[STATE_SIZE],
-    const fp_t uk[INPUT_SIZE],
-    const fp_t xkp1[STATE_SIZE],
-    fp_t &Axi_val,
-    const int row_counts[STATE_SIZE],
-    const int row_cols[STATE_SIZE][A_STAGE_NNZ_MAX],
-    const fp_t row_vals[STATE_SIZE][A_STAGE_NNZ_MAX],
-    const fp_t B_matrix[STATE_SIZE][INPUT_SIZE]
-) {
-#pragma HLS INLINE off
-    acc_t Axi_acc = (acc_t)xkp1[r];
-
-    for (int nz = 0; nz < A_STAGE_NNZ_MAX; nz++) {
-#pragma HLS PIPELINE II=1
-        if (nz < row_counts[r]) {
-            const int c = row_cols[r][nz];
-            Axi_acc -= (acc_t)row_vals[r][nz] * (acc_t)xk[c];
-        }
-    }
-
-    for (int c = 0; c < INPUT_SIZE; c++) {
-#pragma HLS PIPELINE II=1
-        Axi_acc -= (acc_t)B_matrix[r][c] * (acc_t)uk[c];
-    }
-    Axi_val = (fp_t)Axi_acc;
-}
-
 void ADMM_iteration(
     fp_t x[N_VAR],
     fp_t b[N_VAR],
@@ -364,11 +330,10 @@ void ADMM_iteration(
     fp_t current_state[12],
     bool use_traj_q,
     int traj_idx,
-    fp_t dynamic_xy_min,
-    fp_t dynamic_xy_max
+    fp_t dynamic_min,
+    fp_t dynamic_max
 ) {
 #pragma HLS INLINE
-#pragma HLS ALLOCATION function instances=dynamic_stage_compute limit=4
 #pragma HLS ARRAY_PARTITION variable=A_stage_row_counts complete dim=1
 #pragma HLS ARRAY_PARTITION variable=A_stage_row_cols complete dim=2
 #pragma HLS ARRAY_PARTITION variable=A_stage_row_vals complete dim=2
@@ -416,11 +381,24 @@ void ADMM_iteration(
 
         ADMM_IT_DYN_ROW_LOOP:
         for (int r = 0; r < STATE_SIZE; r++) {
-#pragma HLS PIPELINE II=1
-#pragma HLS UNROLL factor=4
-            fp_t Axi;
-            dynamic_stage_compute(r, xk, uk, xkp1, Axi, A_stage_row_counts, A_stage_row_cols, A_stage_row_vals, B_stage);
+#pragma HLS UNROLL factor=2
+            acc_t Axi_acc = (acc_t)xkp1[r];
+
+            ADMM_IT_DYN_A_LOOP:
+            for (int nz = 0; nz < A_STAGE_NNZ_MAX; nz++) {
+                if (nz < A_stage_row_counts[r]) {
+                    const int c = A_stage_row_cols[r][nz];
+                    Axi_acc -= (acc_t)A_stage_row_vals[r][nz] * (acc_t)xk[c];
+                }
+            }
+
+            ADMM_IT_DYN_B_LOOP:
+            for (int c = 0; c < INPUT_SIZE; c++) {
+                Axi_acc -= (acc_t)B_stage[r][c] * (acc_t)uk[c];
+            }
+
             const int i = row_base + r;
+            const fp_t Axi = (fp_t)Axi_acc;
             const fp_t yi = y[i] + Axi;
             y[i] = yi;
             b_tmp[i] = rho_mul(-yi, false);
@@ -454,10 +432,13 @@ void ADMM_iteration(
             const int i = row_base + axis;
             const fp_t Axi = x[xk_col + axis];
             fp_t zi = Axi + y[i];
-            if (zi < dynamic_xy_min) {
-                zi = dynamic_xy_min;
-            } else if (zi > dynamic_xy_max) {
-                zi = dynamic_xy_max;
+            const bool use_dynamic_bound = (axis == DYNAMIC_CONSTRAINT_AXIS);
+            const fp_t min_bound = use_dynamic_bound ? dynamic_min : (fp_t)XY_MIN;
+            const fp_t max_bound = use_dynamic_bound ? dynamic_max : (fp_t)XY_MAX;
+            if (zi < min_bound) {
+                zi = min_bound;
+            } else if (zi > max_bound) {
+                zi = max_bound;
             }
             const fp_t yi = y[i] + (Axi - zi);
             y[i] = yi;
@@ -503,21 +484,21 @@ static void ADMM_solver_core(
     const int traj_idx = 0;
 #endif
 
-    // Decode dynamic constraints: Value 1 (lower 16 bits): new XY_MIN, Value 2 (upper 16 bits): new XY_MAX.
+    // Decode dynamic constraints for DYNAMIC_CONSTRAINT_AXIS.
     // Constraints are encoded as int16_t (mm resolution). 0 means use defaults.
-    fp_t dynamic_xy_min = (fp_t)XY_MIN;
-    fp_t dynamic_xy_max = (fp_t)XY_MAX;
+    fp_t dynamic_min = (fp_t)XY_MIN;
+    fp_t dynamic_max = (fp_t)XY_MAX;
 
     if (current_in.constraints != 0) {
         int16_t min_16 = (int16_t)current_in.constraints.range(15, 0);
         int16_t max_16 = (int16_t)current_in.constraints.range(31, 16);
-        dynamic_xy_min = (fp_t)min_16 / (fp_t)1000.0f;
-        dynamic_xy_max = (fp_t)max_16 / (fp_t)1000.0f;
+        dynamic_min = (fp_t)min_16 / (fp_t)1000.0f;
+        dynamic_max = (fp_t)max_16 / (fp_t)1000.0f;
     }
 
 ADMM_MAIN_LOOP:
     for (int iter = 0; iter < ADMM_ITERATIONS; iter++) {
-        ADMM_iteration(x, b, y, current_state_vec, use_traj_q, traj_idx, dynamic_xy_min, dynamic_xy_max);
+        ADMM_iteration(x, b, y, current_state_vec, use_traj_q, traj_idx, dynamic_min, dynamic_max);
     }
 
 #if ADMM_ENABLE_TRAJECTORY

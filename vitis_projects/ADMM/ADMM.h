@@ -28,8 +28,8 @@ void ADMM_iteration(
     fp_t current_state[12],
     bool use_traj_q,
     int traj_idx,
-    fp_t dynamic_xy_min,
-    fp_t dynamic_xy_max
+    fp_t dynamic_min,
+    fp_t dynamic_max
 );
 
 void ADMM_solver(
