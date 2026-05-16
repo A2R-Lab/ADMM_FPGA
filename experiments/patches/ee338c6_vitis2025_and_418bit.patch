@@ -1,0 +1,133 @@
+diff --git a/vitis_projects/ADMM/ADMM.cpp b/vitis_projects/ADMM/ADMM.cpp
+--- a/vitis_projects/ADMM/ADMM.cpp
++++ b/vitis_projects/ADMM/ADMM.cpp
+@@ -483,8 +483,9 @@ static void ADMM_solver_core(
+     if (current_in.constraints != 0) {
+         int16_t min_16 = (int16_t)current_in.constraints.range(15, 0);
+         int16_t max_16 = (int16_t)current_in.constraints.range(31, 16);
+-        dynamic_xy_min = (fp_t)min_16 / 1000.0f;
+-        dynamic_xy_max = (fp_t)max_16 / 1000.0f;
++        const fp_t mm_to_m = (fp_t)0.001;
++        dynamic_xy_min = (fp_t)min_16 * mm_to_m;
++        dynamic_xy_max = (fp_t)max_16 * mm_to_m;
+     }
+
+ ADMM_MAIN_LOOP:
+diff --git a/vitis_projects/ADMM/ADMM.h b/vitis_projects/ADMM/ADMM.h
+--- a/vitis_projects/ADMM/ADMM.h
++++ b/vitis_projects/ADMM/ADMM.h
+@@ -28,7 +28,7 @@ void ADMM_iteration(
+ );
+
+ void ADMM_solver(
+-    ap_uint<386> current_in_bits,
++    ap_uint<418> current_in_bits,
+     ap_uint<128> &command_out_bits
+ );
+
+diff --git a/vitis_projects/ADMM/ADMM_closed_loop_tb.cpp b/vitis_projects/ADMM/ADMM_closed_loop_tb.cpp
+index 5ab4f46..563f612 100644
+--- a/vitis_projects/ADMM/ADMM_closed_loop_tb.cpp
++++ b/vitis_projects/ADMM/ADMM_closed_loop_tb.cpp
+@@ -12,13 +12,8 @@
+
+ namespace {
+
+-ap_uint<386> pack_current_state(const current_state_t &current) {
+-    ap_uint<386> bits = 0;
+-    for (int i = 0; i < 12; ++i) {
+-        bits.range(i * 32 + 31, i * 32) = fp_to_bits(current.state[i]);
+-    }
+-    bits.range(385, 384) = current.traj_cmd;
+-    return bits;
++ap_uint<418> pack_current_state(const current_state_t &current) {
++    return pack_current_state_bits(current);
+ }
+
+ command_out_t unpack_command_out(ap_uint<128> bits) {
+@@ -431,6 +426,7 @@ int main() {
+         for (int i = 0; i < kStateSize; ++i) {
+             current_state.state[i] = static_cast<fp_t>(state[i]);
+         }
++        current_state.constraints = 0;
+         current_state.traj_cmd = 0;
+         if (step == 0) {
+             current_state.traj_cmd[1] = 1;
+diff --git a/vitis_projects/ADMM/ADMM_test.cpp b/vitis_projects/ADMM/ADMM_test.cpp
+index 5711a78..7680297 100644
+--- a/vitis_projects/ADMM/ADMM_test.cpp
++++ b/vitis_projects/ADMM/ADMM_test.cpp
+@@ -8,13 +8,8 @@
+
+ const double REL_ERROR = .03;
+
+-static ap_uint<386> pack_current_state(const current_state_t &current) {
+-    ap_uint<386> bits = 0;
+-    for (int i = 0; i < 12; ++i) {
+-        bits.range(i * 32 + 31, i * 32) = fp_to_bits(current.state[i]);
+-    }
+-    bits.range(385, 384) = current.traj_cmd;
+-    return bits;
++static ap_uint<418> pack_current_state(const current_state_t &current) {
++    return pack_current_state_bits(current);
+ }
+
+ static command_out_t unpack_command_out(ap_uint<128> bits) {
+@@ -58,6 +53,7 @@ int main() {
+     current.state[0] = (fp_t)0.1;
+     current.state[1] = (fp_t)0.1;
+     current.state[2] = (fp_t)-0.1;
++    current.constraints = 0;
+     current.traj_cmd = 0;
+
+     printf("================= ADMM SOLVER %d iterations =================\n", ADMM_ITERATIONS);
+diff --git a/vitis_projects/ADMM/ADMM_uart_smoke_tb.cpp b/vitis_projects/ADMM/ADMM_uart_smoke_tb.cpp
+index 055272a..d20ab8d 100644
+--- a/vitis_projects/ADMM/ADMM_uart_smoke_tb.cpp
++++ b/vitis_projects/ADMM/ADMM_uart_smoke_tb.cpp
+@@ -3,13 +3,8 @@
+ #include "ADMM.h"
+ #include "data_types.h"
+
+-static ap_uint<386> pack_current_state(const current_state_t &current) {
+-    ap_uint<386> bits = 0;
+-    for (int i = 0; i < 12; ++i) {
+-        bits.range(i * 32 + 31, i * 32) = fp_to_bits(current.state[i]);
+-    }
+-    bits.range(385, 384) = current.traj_cmd;
+-    return bits;
++static ap_uint<418> pack_current_state(const current_state_t &current) {
++    return pack_current_state_bits(current);
+ }
+
+ static command_out_t unpack_command_out(ap_uint<128> bits) {
+@@ -37,6 +32,7 @@ int main() {
+     current.state[9] = (fp_t)0.0;
+     current.state[10] = (fp_t)0.0;
+     current.state[11] = (fp_t)0.0;
++    current.constraints = 0;
+     current.traj_cmd = 2;
+
+     ADMM_solver(pack_current_state(current), cmd_out_bits);
+diff --git a/vitis_projects/ADMM/data_types.h b/vitis_projects/ADMM/data_types.h
+index 491b3d6..fb75c25 100644
+--- a/vitis_projects/ADMM/data_types.h
++++ b/vitis_projects/ADMM/data_types.h
+@@ -53,6 +53,17 @@ static inline ap_uint<32> fp_to_bits(fp_t v) {
+ #endif
+ }
+
++static inline ap_uint<418> pack_current_state_bits(const current_state_t &current) {
++    ap_uint<418> bits = 0;
++    for (int i = 0; i < 12; ++i) {
++        bits.range(i * 32 + 31, i * 32) = fp_to_bits(current.state[i]);
++    }
++    // Solver input layout: state[383:0], constraints[415:384], traj_cmd[417:416].
++    bits.range(415, 384) = current.constraints;
++    bits.range(417, 416) = current.traj_cmd;
++    return bits;
++}
++
+ static inline int fp_bit_width() {
+ #if ADMM_USE_FLOAT
+     return 32;

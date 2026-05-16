@@ -53,6 +53,17 @@ static inline ap_uint<32> fp_to_bits(fp_t v) {
 #endif
 }
 
+static inline ap_uint<418> pack_current_state_bits(const current_state_t &current) {
+    ap_uint<418> bits = 0;
+    for (int i = 0; i < 12; ++i) {
+        bits.range(i * 32 + 31, i * 32) = fp_to_bits(current.state[i]);
+    }
+    // Solver input layout: state[383:0], constraints[415:384], traj_cmd[417:416].
+    bits.range(415, 384) = current.constraints;
+    bits.range(417, 416) = current.traj_cmd;
+    return bits;
+}
+
 static inline int fp_bit_width() {
 #if ADMM_USE_FLOAT
     return 32;

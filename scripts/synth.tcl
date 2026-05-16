@@ -11,6 +11,17 @@ set reports_dir "$build_dir/reports"
 file mkdir $build_dir
 file mkdir $reports_dir
 
+set vivado_max_threads 0
+if {[info exists ::env(VIVADO_MAX_THREADS)] && [string is integer -strict $::env(VIVADO_MAX_THREADS)] && $::env(VIVADO_MAX_THREADS) > 0} {
+    set vivado_max_threads $::env(VIVADO_MAX_THREADS)
+} elseif {[info exists ::env(SLURM_CPUS_PER_TASK)] && [string is integer -strict $::env(SLURM_CPUS_PER_TASK)] && $::env(SLURM_CPUS_PER_TASK) > 0} {
+    set vivado_max_threads $::env(SLURM_CPUS_PER_TASK)
+}
+if {$vivado_max_threads > 0} {
+    puts "Vivado max threads: $vivado_max_threads"
+    set_param general.maxThreads $vivado_max_threads
+}
+
 #------------------------------------------------------------------------------
 # Configuration (top_module, xdc_file, and synth checkpoint name via -tclargs)
 #------------------------------------------------------------------------------

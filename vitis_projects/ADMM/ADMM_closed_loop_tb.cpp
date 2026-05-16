@@ -12,13 +12,8 @@
 
 namespace {
 
-ap_uint<386> pack_current_state(const current_state_t &current) {
-    ap_uint<386> bits = 0;
-    for (int i = 0; i < 12; ++i) {
-        bits.range(i * 32 + 31, i * 32) = fp_to_bits(current.state[i]);
-    }
-    bits.range(385, 384) = current.traj_cmd;
-    return bits;
+ap_uint<418> pack_current_state(const current_state_t &current) {
+    return pack_current_state_bits(current);
 }
 
 command_out_t unpack_command_out(ap_uint<128> bits) {
@@ -431,6 +426,7 @@ int main() {
         for (int i = 0; i < kStateSize; ++i) {
             current_state.state[i] = static_cast<fp_t>(state[i]);
         }
+        current_state.constraints = 0;
         current_state.traj_cmd = 0;
         if (step == 0) {
             current_state.traj_cmd[1] = 1;

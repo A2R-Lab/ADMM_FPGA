@@ -8,13 +8,8 @@
 
 const double REL_ERROR = .03;
 
-static ap_uint<386> pack_current_state(const current_state_t &current) {
-    ap_uint<386> bits = 0;
-    for (int i = 0; i < 12; ++i) {
-        bits.range(i * 32 + 31, i * 32) = fp_to_bits(current.state[i]);
-    }
-    bits.range(385, 384) = current.traj_cmd;
-    return bits;
+static ap_uint<418> pack_current_state(const current_state_t &current) {
+    return pack_current_state_bits(current);
 }
 
 static command_out_t unpack_command_out(ap_uint<128> bits) {
@@ -58,6 +53,7 @@ int main() {
     current.state[0] = (fp_t)0.1;
     current.state[1] = (fp_t)0.1;
     current.state[2] = (fp_t)-0.1;
+    current.constraints = 0;
     current.traj_cmd = 0;
 
     printf("================= ADMM SOLVER %d iterations =================\n", ADMM_ITERATIONS);

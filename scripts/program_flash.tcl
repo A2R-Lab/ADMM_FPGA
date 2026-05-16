@@ -12,7 +12,11 @@ if {[llength $argv] >= 1} {
 } else {
     set top_module "top_spi"
 }
-set bitstream "$build_dir/${top_module}.bit"
+if {[llength $argv] >= 2} {
+    set bitstream [file normalize [lindex $argv 1]]
+} else {
+    set bitstream "$build_dir/${top_module}.bit"
+}
 set flash_mcs "$build_dir/${top_module}.mcs"
 
 # Check if bitstream exists

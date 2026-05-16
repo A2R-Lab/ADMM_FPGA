@@ -16,6 +16,8 @@ from parameters import (
     ADMM_USE_FLOAT,
     ADMM_ITERATIONS,
     ADMM_ENABLE_TRAJECTORY,
+    ADMM_SOLVER_ARCH,
+    ADMM_SOLVER_INPUT_WIDTH,
     MPC_LINEAR_DRAG_XY,
     MPC_LINEAR_DRAG_Z,
     STAR_INNER_RATIO,
@@ -439,6 +441,10 @@ def generate_verilog_params_header(constants_dict):
     lines.append(f"`define ADMM_N_CONSTR {constants_dict['N_CONSTR']}\n")
     lines.append(f"`define ADMM_START_INEQ {constants_dict['START_INEQ']}\n")
     lines.append(f"`define ADMM_DELAY_STEPS {constants_dict['DELAY_STEPS']}\n")
+    lines.append(f"`define ADMM_ENABLE_TRAJECTORY {constants_dict['ADMM_ENABLE_TRAJECTORY']}\n")
+    lines.append(f"`define ADMM_SOLVER_INPUT_WIDTH {constants_dict['ADMM_SOLVER_INPUT_WIDTH']}\n")
+    lines.append(f"`define ADMM_SOLVER_ARCH_STAGED_A {constants_dict['ADMM_SOLVER_ARCH_STAGED_A']}\n")
+    lines.append(f"`define ADMM_SOLVER_ARCH_FULL_SPARSE {constants_dict['ADMM_SOLVER_ARCH_FULL_SPARSE']}\n")
     lines.append("`endif // ADMM_AUTOGEN_PARAMS_VH\n")
     return "".join(lines)
 
@@ -451,6 +457,10 @@ def generate_runtime_config_header() -> str:
     lines.append(f"#define ADMM_USE_FLOAT {1 if ADMM_USE_FLOAT else 0}\n")
     lines.append(f"#define ADMM_ITERATIONS {int(ADMM_ITERATIONS)}\n")
     lines.append(f"#define ADMM_ENABLE_TRAJECTORY {1 if ADMM_ENABLE_TRAJECTORY else 0}\n")
+    lines.append(f"#define ADMM_SOLVER_ARCH_STAGED_A {1 if ADMM_SOLVER_ARCH == 'staged_a' else 0}\n")
+    lines.append(f"#define ADMM_SOLVER_ARCH_FULL_SPARSE {1 if ADMM_SOLVER_ARCH == 'full_sparse' else 0}\n")
+    lines.append(f"#define ADMM_SOLVER_ARCH_NAME \"{ADMM_SOLVER_ARCH}\"\n")
+    lines.append(f"#define ADMM_SOLVER_INPUT_WIDTH {int(ADMM_SOLVER_INPUT_WIDTH)}\n")
     lines.append("\n#endif // ADMM_RUNTIME_CONFIG_H\n")
     return "".join(lines)
 
@@ -589,6 +599,10 @@ constants["U_MAX"] = u_max[0]
 constants["XY_MIN"] = xy_min_eff
 constants["XY_MAX"] = xy_max_eff
 constants["U_HOVER"] = ug[0]
+constants["ADMM_ENABLE_TRAJECTORY"] = 1 if ADMM_ENABLE_TRAJECTORY else 0
+constants["ADMM_SOLVER_INPUT_WIDTH"] = ADMM_SOLVER_INPUT_WIDTH
+constants["ADMM_SOLVER_ARCH_STAGED_A"] = 1 if ADMM_SOLVER_ARCH == "staged_a" else 0
+constants["ADMM_SOLVER_ARCH_FULL_SPARSE"] = 1 if ADMM_SOLVER_ARCH == "full_sparse" else 0
 if ADMM_ENABLE_TRAJECTORY:
     constants["TRAJ_LENGTH"] = load_traj_length_from_header(TRAJ_DATA_HEADER_PATH, horizon=N)
     constants["TRAJ_TICK_DIV"] = TRAJ_TICK_DIV
@@ -598,22 +612,38 @@ else:
     constants["TRAJ_TICK_DIV"] = 1
     constants["TRAJ_WARMSTART_PAD"] = 0
 
-A_stage_row_counts, A_stage_row_cols, A_stage_row_vals, A_stage_nnz_max = build_sparse_rows(A_stage)
-A_stage_col_counts, A_stage_col_rows, A_stage_col_vals, A_stage_t_nnz_max = build_sparse_cols(A_stage)
-constants["A_STAGE_NNZ_MAX"] = A_stage_nnz_max
-constants["A_STAGE_T_NNZ_MAX"] = A_stage_t_nnz_max
-
 data = []
 data.append(generate_constants_header(constants))
 data.append(generate_matrix_header(L_banded, "L_banded"))
 data.append(generate_matrix_header(LT_banded, "LT_banded"))
-data.append(generate_vector_header(A_stage_row_counts, "A_stage_row_counts", type="int"))
-data.append(generate_matrix_header(A_stage_row_cols, "A_stage_row_cols", type="int"))
-data.append(generate_matrix_header(A_stage_row_vals, "A_stage_row_vals"))
-data.append(generate_vector_header(A_stage_col_counts, "A_stage_col_counts", type="int"))
-data.append(generate_matrix_header(A_stage_col_rows, "A_stage_col_rows", type="int"))
-data.append(generate_matrix_header(A_stage_col_vals, "A_stage_col_vals"))
-data.append(generate_matrix_header(B_stage, "B_stage"))
+
+if ADMM_SOLVER_ARCH == "staged_a":
+    A_stage_row_counts, A_stage_row_cols, A_stage_row_vals, A_stage_nnz_max = build_sparse_rows(A_stage)
+    A_stage_col_counts, A_stage_col_rows, A_stage_col_vals, A_stage_t_nnz_max = build_sparse_cols(A_stage)
+    constants["A_STAGE_NNZ_MAX"] = A_stage_nnz_max
+    constants["A_STAGE_T_NNZ_MAX"] = A_stage_t_nnz_max
+
+    data[0] = generate_constants_header(constants)
+    data.append(generate_vector_header(A_stage_row_counts, "A_stage_row_counts", type="int"))
+    data.append(generate_matrix_header(A_stage_row_cols, "A_stage_row_cols", type="int"))
+    data.append(generate_matrix_header(A_stage_row_vals, "A_stage_row_vals"))
+    data.append(generate_vector_header(A_stage_col_counts, "A_stage_col_counts", type="int"))
+    data.append(generate_matrix_header(A_stage_col_rows, "A_stage_col_rows", type="int"))
+    data.append(generate_matrix_header(A_stage_col_vals, "A_stage_col_vals"))
+    data.append(generate_matrix_header(B_stage, "B_stage"))
+elif ADMM_SOLVER_ARCH == "full_sparse":
+    A_sparse_data, A_sparse_indexes, A_n_bits_idx = convert_matrix_to_sparse_storage(A_full)
+    AT_sparse_data, AT_sparse_indexes, AT_n_bits_idx = convert_matrix_to_sparse_storage(A_full.T)
+    constants["A_SPARSE_INDEX_BITS"] = A_n_bits_idx
+    constants["AT_SPARSE_INDEX_BITS"] = AT_n_bits_idx
+
+    data[0] = generate_constants_header(constants)
+    data.append(generate_matrix_header(A_sparse_data, "A_sparse_data"))
+    data.append(generate_matrix_header(A_sparse_indexes, "A_sparse_indexes", type=f"ap_uint<{A_n_bits_idx}>"))
+    data.append(generate_matrix_header(AT_sparse_data, "AT_sparse_data"))
+    data.append(generate_matrix_header(AT_sparse_indexes, "AT_sparse_indexes", type=f"ap_uint<{AT_n_bits_idx}>"))
+else:
+    raise RuntimeError(f"Unsupported ADMM_SOLVER_ARCH: {ADMM_SOLVER_ARCH}")
 
 generate_full_header(data, filename=str(DATA_HEADER_PATH))
 RTL_PARAMS_HEADER_PATH.write_text(generate_verilog_params_header(constants))

@@ -5,6 +5,7 @@ Environment overrides are supported to simplify scripted sweeps:
 - ADMM_ITERATIONS
 - ADMM_USE_FLOAT
 - ADMM_ENABLE_TRAJECTORY
+- ADMM_SOLVER_ARCH
 - ADMM_MPC_LINEAR_DRAG_XY
 - ADMM_MPC_LINEAR_DRAG_Z
 - ADMM_RHO_EQ_PARAM
@@ -68,6 +69,15 @@ def _env_bool(name: str, default: bool) -> bool:
     raise ValueError(f"Invalid boolean for {name}: {raw}")
 
 
+def _env_choice(name: str, default: str, choices: set[str]) -> str:
+    raw = os.environ.get(name, default)
+    value = raw.strip().lower()
+    if value not in choices:
+        allowed = ", ".join(sorted(choices))
+        raise ValueError(f"Invalid value for {name}: {raw}. Expected one of: {allowed}")
+    return value
+
+
 def _env_float_list(name: str, default: list[float], expected_len: int) -> list[float]:
     raw = os.environ.get(name)
     if raw is None or raw.strip() == "":
@@ -104,6 +114,8 @@ R_DIAG = [R_SCALE * v for v in _BASE_R_DIAG]
 ADMM_USE_FLOAT = _env_bool("ADMM_USE_FLOAT", False)  # False: ap_fixed, True: float
 ADMM_ITERATIONS = _env_int("ADMM_ITERATIONS", 10)
 ADMM_ENABLE_TRAJECTORY = _env_bool("ADMM_ENABLE_TRAJECTORY", True)
+ADMM_SOLVER_ARCH = _env_choice("ADMM_SOLVER_ARCH", "staged_a", {"staged_a", "full_sparse"})
+ADMM_SOLVER_INPUT_WIDTH = 418
 
 # Linear drag terms used to bias the MPC linear model (header_generator.py).
 MPC_LINEAR_DRAG_XY = _env_float("ADMM_MPC_LINEAR_DRAG_XY", 0.12)

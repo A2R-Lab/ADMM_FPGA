@@ -10,6 +10,8 @@
 #   bit       - Generate bitstream only (assumes impl done)
 #   program   - Program FPGA via JTAG
 #   flash     - Write to SPI flash
+#   program-file - Program FPGA from explicit BITSTREAM_FILE
+#   flash-file   - Write explicit BITSTREAM_FILE to SPI flash
 #   sync      - Rsync build/ from remote (for build-on-server, program-local workflow)
 #   sim       - Run Vitis HLS C simulation (quick)
 #   sim-csim  - Run Vitis HLS C simulation
@@ -21,7 +23,7 @@
 # =============================================================================
 
 # Configuration
-SUPPORTED_MAKE_OVERRIDE_VARS := BOARD REMOTE SSH_PORT VIVADO VITIS_HLS PYTHON HLS_CLOSED_LOOP_ARGS
+SUPPORTED_MAKE_OVERRIDE_VARS := BOARD REMOTE SSH_PORT VIVADO VITIS_HLS PYTHON HLS_CLOSED_LOOP_ARGS BITSTREAM_FILE
 CMDLINE_OVERRIDE_VARS := $(sort $(foreach tok,$(MAKEOVERRIDES),$(if $(findstring =,$(tok)),$(word 1,$(subst =, ,$(tok))),)))
 UNKNOWN_CMDLINE_OVERRIDE_VARS := $(filter-out $(SUPPORTED_MAKE_OVERRIDE_VARS),$(CMDLINE_OVERRIDE_VARS))
 
@@ -48,6 +50,7 @@ RSYNC_SSH    := $(if $(SSH_PORT),-e "ssh -p $(SSH_PORT)",)
 VIVADO        := vivado
 VITIS_HLS     := v++
 PYTHON        := python3
+BITSTREAM_FILE ?=
 
 # Directories
 PROJ_ROOT     := $(shell pwd)
@@ -88,7 +91,7 @@ ROUTE_DCP     := $(BUILD_DIR)/post_route_$(BUILD_TAG).dcp
 # Main Targets
 # =============================================================================
 
-.PHONY: all traj headers hls vivado bit program flash sync sim sim-csim sim-cosim hls_closed_loop_sim clean clean-hls clean-all help
+.PHONY: all traj headers hls vivado bit program flash program-file flash-file sync sim sim-csim sim-cosim hls_closed_loop_sim clean clean-hls clean-all help
 
 all: $(BITSTREAM)
 	@echo "========================================="
@@ -111,6 +114,8 @@ help:
 	@echo "  bit       - Generate bitstream"
 	@echo "  program   - Program FPGA via JTAG"
 	@echo "  flash     - Write to SPI flash"
+	@echo "  program-file - Program FPGA from explicit BITSTREAM_FILE"
+	@echo "  flash-file   - Write explicit BITSTREAM_FILE to SPI flash"
 	@echo "  sim       - Vitis HLS C simulation (quick)"
 	@echo "  sim-csim  - Vitis HLS C simulation"
 	@echo "  sim-cosim - Vitis HLS C/RTL co-simulation (requires HLS build)"
@@ -129,6 +134,7 @@ help:
 	@echo "  make hls_closed_loop_sim"
 	@echo "  make hls_closed_loop_sim HLS_CLOSED_LOOP_ARGS='--sim-duration-s 8 --traj-start-step 60'"
 	@echo "  make program      # Program FPGA"
+	@echo "  make flash-file BITSTREAM_FILE=/path/to/top_spi.bit"
 	@echo "  make sync REMOTE=user@host:~/ADMM_FPGA [SSH_PORT=2222]  # Fetch build from server"
 
 # =============================================================================
@@ -269,6 +275,36 @@ flash:
 	$(VIVADO) -mode batch \
 		-source $(SCRIPTS_DIR)/program_flash.tcl \
 		-tclargs $(TOP_MODULE) \
+		-notrace
+
+program-file:
+	@if [ -z "$(BITSTREAM_FILE)" ]; then \
+		echo "Usage: make program-file BITSTREAM_FILE=/path/to/bitstream.bit"; exit 1; \
+	fi
+	@if [ ! -f "$(BITSTREAM_FILE)" ]; then \
+		echo "Error: $(BITSTREAM_FILE) not found."; exit 1; \
+	fi
+	@echo "========================================="
+	@echo "Programming FPGA from $(BITSTREAM_FILE)"
+	@echo "========================================="
+	$(VIVADO) -mode batch \
+		-source $(SCRIPTS_DIR)/program_file.tcl \
+		-tclargs "$(BITSTREAM_FILE)" \
+		-notrace
+
+flash-file:
+	@if [ -z "$(BITSTREAM_FILE)" ]; then \
+		echo "Usage: make flash-file BITSTREAM_FILE=/path/to/bitstream.bit"; exit 1; \
+	fi
+	@if [ ! -f "$(BITSTREAM_FILE)" ]; then \
+		echo "Error: $(BITSTREAM_FILE) not found."; exit 1; \
+	fi
+	@echo "========================================="
+	@echo "Writing $(BITSTREAM_FILE) to SPI Flash (BOARD=$(BOARD), TOP=$(TOP_MODULE))..."
+	@echo "========================================="
+	$(VIVADO) -mode batch \
+		-source $(SCRIPTS_DIR)/program_flash.tcl \
+		-tclargs $(TOP_MODULE) "$(BITSTREAM_FILE)" \
 		-notrace
 
 $(FLASH_BIN): $(BITSTREAM)

@@ -1,0 +1,39 @@
+# Normalized staged-A comparison manifest.
+#
+# These candidates intentionally normalize interface/testbench packing, one-axis
+# dynamic constraints, fixed-point-safe mm-to-m conversion, horizon, trajectory,
+# and generated data before selecting the surviving staged-A implementation.
+
+experiment:
+  name: normalized_staged_a
+  description: Normalize ee338c6 and f2fdd4e before staged-A selection.
+
+defaults:
+  horizon: 40
+  admm_iterations: default
+  trajectory: star_hold
+  enable_trajectory: true
+  run_closed_loop_csim: true
+  run_hls_synthesis: true
+  run_cosim: false
+  run_vivado: false
+  board: custom
+  sim_freq_hz: 500
+  traj_start_step: 0
+  csim_duration_s: 5
+  csim_timeout_s: 1800
+
+candidates:
+  - id: normalized_ee338c6
+    name: ee338c6 normalized staged-A
+    commit: ee338c643eec3b10c02e64e3ffc29437312c48d4
+    patch: experiments/patches/ee338c6_normalized_staged_a.patch
+    role: Staged-A memory optimization normalized to one-axis constraints and 418-bit interface.
+    architecture: staged_A
+
+  - id: normalized_f2fdd4e
+    name: f2fdd4e normalized staged-A
+    commit: f2fdd4e81fb770805409799127642cd99ff34783
+    patch: experiments/patches/f2fdd4e_normalized_staged_a.patch
+    role: Current staged-A baseline normalized to the same packing and mm conversion style.
+    architecture: staged_A

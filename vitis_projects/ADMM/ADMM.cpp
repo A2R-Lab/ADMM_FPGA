@@ -23,7 +23,28 @@ static_assert(TRAJ_TICK_DIV > 0, "TRAJ_TICK_DIV must be > 0");
 static_assert(DYNAMIC_CONSTRAINT_AXIS == 0 || DYNAMIC_CONSTRAINT_AXIS == 1,
               "DYNAMIC_CONSTRAINT_AXIS must be 0 (x) or 1 (y)");
 
+#ifndef ADMM_SOLVER_ARCH_STAGED_A
+#error "ADMM_SOLVER_ARCH_STAGED_A must be generated in admm_runtime_config.h"
+#endif
+
+#ifndef ADMM_SOLVER_ARCH_FULL_SPARSE
+#error "ADMM_SOLVER_ARCH_FULL_SPARSE must be generated in admm_runtime_config.h"
+#endif
+
+#ifndef ADMM_SOLVER_INPUT_WIDTH
+#error "ADMM_SOLVER_INPUT_WIDTH must be generated in admm_runtime_config.h"
+#endif
+
+static_assert(ADMM_SOLVER_ARCH_STAGED_A + ADMM_SOLVER_ARCH_FULL_SPARSE == 1,
+              "Exactly one ADMM solver architecture must be selected");
+static_assert(ADMM_SOLVER_INPUT_WIDTH == 418,
+              "The public ADMM_solver input width must remain 418 bits");
+
+#if ADMM_SOLVER_ARCH_FULL_SPARSE
+constexpr int ACC_GUARD_BITS = 12;
+#else
 constexpr int ACC_GUARD_BITS = 2;
+#endif
 
 #ifndef RHO_SHIFT_EQ
 #error "RHO_SHIFT_EQ must be generated in data.h by scripts/header_generator.py"
@@ -252,6 +273,7 @@ void AT_mul(
     fp_t ATx[N_VAR]
 ) {
 #pragma HLS INLINE
+#if ADMM_SOLVER_ARCH_STAGED_A
 #pragma HLS ARRAY_PARTITION variable=A_stage_col_counts complete dim=1
 #pragma HLS ARRAY_PARTITION variable=A_stage_col_rows complete dim=2
 #pragma HLS ARRAY_PARTITION variable=A_stage_col_vals complete dim=2
@@ -321,6 +343,18 @@ void AT_mul(
         ATx[xk_col + 0] += x[row_base + 0];
         ATx[xk_col + 1] += x[row_base + 1];
     }
+#else
+    AT_MUL_EXTERN_LOOP:
+    for (int i = 0; i < AT_SPARSE_DATA_ROWS; i++) {
+        acc_t sum_val = 0;
+        AT_MUL_DOT_PRODUCT_LOOP:
+        for (int j = 0; j < AT_SPARSE_DATA_COLS; j++) {
+            const int row_idx = (int)AT_sparse_indexes[i][j];
+            sum_val += (acc_t)AT_sparse_data[i][j] * (acc_t)x[row_idx];
+        }
+        ATx[i] = (fp_t)sum_val;
+    }
+#endif
 }
 
 void ADMM_iteration(
@@ -334,6 +368,7 @@ void ADMM_iteration(
     fp_t dynamic_max
 ) {
 #pragma HLS INLINE
+#if ADMM_SOLVER_ARCH_STAGED_A
 #pragma HLS ARRAY_PARTITION variable=A_stage_row_counts complete dim=1
 #pragma HLS ARRAY_PARTITION variable=A_stage_row_cols complete dim=2
 #pragma HLS ARRAY_PARTITION variable=A_stage_row_vals complete dim=2
@@ -446,6 +481,60 @@ void ADMM_iteration(
         }
     }
     AT_mul(b_tmp, b);
+#else
+    fp_t tmp[N_VAR];
+    fp_t b_tmp[N_CONSTR];
+
+    forward_substitution(b, use_traj_q, traj_idx, tmp);
+    backward_substitution(tmp, x);
+
+    ADMM_IT_ZY_UPDATE_LOOP:
+    for (int i = 0; i < N_CONSTR; i++) {
+        acc_t Axi_acc = 0;
+        ADMM_IT_A_ROW_LOOP:
+        for (int j = 0; j < A_SPARSE_DATA_COLS; j++) {
+            const int col_idx = (int)A_sparse_indexes[i][j];
+            Axi_acc += (acc_t)A_sparse_data[i][j] * (acc_t)x[col_idx];
+        }
+        const fp_t Axi = (fp_t)Axi_acc;
+
+        if (i < STATE_SIZE) {
+            const fp_t zi = current_state[i];
+            const fp_t yi = y[i] + (Axi - zi);
+            y[i] = yi;
+            b_tmp[i] = rho_mul(zi - yi, false);
+        } else if (i < START_INEQ) {
+            const fp_t yi = y[i] + Axi;
+            y[i] = yi;
+            b_tmp[i] = rho_mul(-yi, false);
+        } else {
+            fp_t zi = Axi + y[i];
+            if (i >= START_XY_INEQ) {
+                const int axis = (i - START_XY_INEQ) & 1;
+                const bool use_dynamic_bound = (axis == DYNAMIC_CONSTRAINT_AXIS);
+                const fp_t min_bound = use_dynamic_bound ? dynamic_min : (fp_t)XY_MIN;
+                const fp_t max_bound = use_dynamic_bound ? dynamic_max : (fp_t)XY_MAX;
+                if (zi < min_bound) {
+                    zi = min_bound;
+                } else if (zi > max_bound) {
+                    zi = max_bound;
+                }
+            } else {
+                if (zi < (fp_t)U_MIN) {
+                    zi = (fp_t)U_MIN;
+                } else if (zi > (fp_t)U_MAX) {
+                    zi = (fp_t)U_MAX;
+                }
+            }
+
+            const fp_t yi = y[i] + (Axi - zi);
+            y[i] = yi;
+            b_tmp[i] = rho_mul(zi - yi, true);
+        }
+    }
+
+    AT_mul(b_tmp, b);
+#endif
 }
 
 static void ADMM_solver_core(
@@ -492,8 +581,9 @@ static void ADMM_solver_core(
     if (current_in.constraints != 0) {
         int16_t min_16 = (int16_t)current_in.constraints.range(15, 0);
         int16_t max_16 = (int16_t)current_in.constraints.range(31, 16);
-        dynamic_min = (fp_t)min_16 / (fp_t)1000.0f;
-        dynamic_max = (fp_t)max_16 / (fp_t)1000.0f;
+        const fp_t mm_to_m = (fp_t)0.001;
+        dynamic_min = (fp_t)min_16 * mm_to_m;
+        dynamic_max = (fp_t)max_16 * mm_to_m;
     }
 
 ADMM_MAIN_LOOP:
