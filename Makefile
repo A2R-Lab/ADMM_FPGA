@@ -190,11 +190,11 @@ $(SYNTH_DCP): $(RTL_SOURCES) $(XDC_SOURCES) $(HLS_IP_MARKER)
 	@echo "========================================="
 	@mkdir -p $(BUILD_DIR)/logs $(BUILD_DIR)/reports
 	$(VIVADO) -mode batch \
-		-source $(SCRIPTS_DIR)/synth.tcl \
-		-tclargs $(TOP_MODULE) $(notdir $(XDC_SOURCES)) $(notdir $(SYNTH_DCP)) \
+		-notrace \
 		-log $(BUILD_DIR)/logs/synth.log \
 		-journal $(BUILD_DIR)/logs/synth.jou \
-		-notrace
+		-source $(SCRIPTS_DIR)/synth.tcl \
+		-tclargs $(TOP_MODULE) $(notdir $(XDC_SOURCES)) $(notdir $(SYNTH_DCP))
 
 # Implementation (Place & Route)
 $(ROUTE_DCP): $(SYNTH_DCP)
@@ -202,11 +202,11 @@ $(ROUTE_DCP): $(SYNTH_DCP)
 	@echo "Running Vivado Implementation..."
 	@echo "========================================="
 	$(VIVADO) -mode batch \
-		-source $(SCRIPTS_DIR)/impl.tcl \
-		-tclargs $(notdir $(SYNTH_DCP)) $(notdir $(ROUTE_DCP)) \
+		-notrace \
 		-log $(BUILD_DIR)/logs/impl.log \
 		-journal $(BUILD_DIR)/logs/impl.jou \
-		-notrace
+		-source $(SCRIPTS_DIR)/impl.tcl \
+		-tclargs $(notdir $(SYNTH_DCP)) $(notdir $(ROUTE_DCP))
 
 # =============================================================================
 # Bitstream Generation
@@ -219,11 +219,11 @@ $(BITSTREAM): $(ROUTE_DCP)
 	@echo "Generating Bitstream ($(TOP_MODULE))..."
 	@echo "========================================="
 	$(VIVADO) -mode batch \
-		-source $(SCRIPTS_DIR)/bitstream.tcl \
-		-tclargs $(TOP_MODULE) $(notdir $(ROUTE_DCP)) \
+		-notrace \
 		-log $(BUILD_DIR)/logs/bitstream.log \
 		-journal $(BUILD_DIR)/logs/bitstream.jou \
-		-notrace
+		-source $(SCRIPTS_DIR)/bitstream.tcl \
+		-tclargs $(TOP_MODULE) $(notdir $(ROUTE_DCP))
 
 # =============================================================================
 # Vitis HLS Simulation
@@ -261,9 +261,9 @@ program:
 	@echo "Programming FPGA (BOARD=$(BOARD), TOP=$(TOP_MODULE))..."
 	@echo "========================================="
 	$(VIVADO) -mode batch \
+		-notrace \
 		-source $(SCRIPTS_DIR)/program.tcl \
-		-tclargs $(TOP_MODULE) \
-		-notrace
+		-tclargs $(TOP_MODULE)
 
 flash:
 	@if [ ! -f $(BITSTREAM) ]; then \
@@ -273,9 +273,9 @@ flash:
 	@echo "Writing to SPI Flash (BOARD=$(BOARD), TOP=$(TOP_MODULE))..."
 	@echo "========================================="
 	$(VIVADO) -mode batch \
+		-notrace \
 		-source $(SCRIPTS_DIR)/program_flash.tcl \
-		-tclargs $(TOP_MODULE) \
-		-notrace
+		-tclargs $(TOP_MODULE)
 
 program-file:
 	@if [ -z "$(BITSTREAM_FILE)" ]; then \
@@ -288,9 +288,9 @@ program-file:
 	@echo "Programming FPGA from $(BITSTREAM_FILE)"
 	@echo "========================================="
 	$(VIVADO) -mode batch \
+		-notrace \
 		-source $(SCRIPTS_DIR)/program_file.tcl \
-		-tclargs "$(BITSTREAM_FILE)" \
-		-notrace
+		-tclargs "$(BITSTREAM_FILE)"
 
 flash-file:
 	@if [ -z "$(BITSTREAM_FILE)" ]; then \
@@ -303,9 +303,9 @@ flash-file:
 	@echo "Writing $(BITSTREAM_FILE) to SPI Flash (BOARD=$(BOARD), TOP=$(TOP_MODULE))..."
 	@echo "========================================="
 	$(VIVADO) -mode batch \
+		-notrace \
 		-source $(SCRIPTS_DIR)/program_flash.tcl \
-		-tclargs $(TOP_MODULE) "$(BITSTREAM_FILE)" \
-		-notrace
+		-tclargs $(TOP_MODULE) "$(BITSTREAM_FILE)"
 
 $(FLASH_BIN): $(BITSTREAM)
 	@echo "Flash binary already generated: $(FLASH_BIN)"
