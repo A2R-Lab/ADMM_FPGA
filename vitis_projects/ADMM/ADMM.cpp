@@ -19,9 +19,21 @@
 #define DYNAMIC_CONSTRAINT_AXIS 0
 #endif
 
+#ifndef DYNAMIC_CONSTRAINT_START_STAGE
+#define DYNAMIC_CONSTRAINT_START_STAGE (HORIZON_LENGTH/2)
+#endif
+
 static_assert(TRAJ_TICK_DIV > 0, "TRAJ_TICK_DIV must be > 0");
 static_assert(DYNAMIC_CONSTRAINT_AXIS == 0 || DYNAMIC_CONSTRAINT_AXIS == 1,
               "DYNAMIC_CONSTRAINT_AXIS must be 0 (x) or 1 (y)");
+static_assert(DYNAMIC_CONSTRAINT_START_STAGE >= 1 &&
+              DYNAMIC_CONSTRAINT_START_STAGE <= HORIZON_LENGTH,
+              "DYNAMIC_CONSTRAINT_START_STAGE must be within the prediction horizon");
+
+static inline bool use_dynamic_constraint_stage(int stage, int axis) {
+    return (axis == DYNAMIC_CONSTRAINT_AXIS) &&
+           (stage >= DYNAMIC_CONSTRAINT_START_STAGE);
+}
 
 #ifndef ADMM_SOLVER_ARCH_STAGED_A
 #error "ADMM_SOLVER_ARCH_STAGED_A must be generated in admm_runtime_config.h"
@@ -467,7 +479,7 @@ void ADMM_iteration(
             const int i = row_base + axis;
             const fp_t Axi = x[xk_col + axis];
             fp_t zi = Axi + y[i];
-            const bool use_dynamic_bound = (axis == DYNAMIC_CONSTRAINT_AXIS);
+            const bool use_dynamic_bound = use_dynamic_constraint_stage(k, axis);
             const fp_t min_bound = use_dynamic_bound ? dynamic_min : (fp_t)XY_MIN;
             const fp_t max_bound = use_dynamic_bound ? dynamic_max : (fp_t)XY_MAX;
             if (zi < min_bound) {
@@ -510,8 +522,10 @@ void ADMM_iteration(
         } else {
             fp_t zi = Axi + y[i];
             if (i >= START_XY_INEQ) {
-                const int axis = (i - START_XY_INEQ) & 1;
-                const bool use_dynamic_bound = (axis == DYNAMIC_CONSTRAINT_AXIS);
+                const int xy_idx = i - START_XY_INEQ;
+                const int axis = xy_idx & 1;
+                const int k = (xy_idx >> 1) + 1;
+                const bool use_dynamic_bound = use_dynamic_constraint_stage(k, axis);
                 const fp_t min_bound = use_dynamic_bound ? dynamic_min : (fp_t)XY_MIN;
                 const fp_t max_bound = use_dynamic_bound ? dynamic_max : (fp_t)XY_MAX;
                 if (zi < min_bound) {
