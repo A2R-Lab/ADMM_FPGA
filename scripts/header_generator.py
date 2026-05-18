@@ -105,6 +105,14 @@ def load_traj_length_from_header(header_path: Path, horizon: int) -> int:
         raise ValueError(f"Invalid TRAJ_LENGTH derived from {header_path}: {traj_length}")
     return traj_length
 
+
+def load_traj_loop_start_from_header(header_path: Path) -> int:
+    text = header_path.read_text()
+    m = re.search(r"#define\s+TRAJ_LOOP_START_IDX\s+(\d+)", text)
+    if m is None:
+        return 0
+    return int(m.group(1))
+
 # Control input constraints
 u_max = np.array([U_ABS_MAX - ug[0]] * 4)
 u_min = np.array([U_ABS_MIN - ug[0]] * 4)
@@ -607,10 +615,12 @@ if ADMM_ENABLE_TRAJECTORY:
     constants["TRAJ_LENGTH"] = load_traj_length_from_header(TRAJ_DATA_HEADER_PATH, horizon=N)
     constants["TRAJ_TICK_DIV"] = TRAJ_TICK_DIV
     constants["TRAJ_WARMSTART_PAD"] = TRAJ_WARMSTART_PAD
+    constants["TRAJ_LOOP_START_IDX"] = load_traj_loop_start_from_header(TRAJ_DATA_HEADER_PATH)
 else:
     constants["TRAJ_LENGTH"] = 0
     constants["TRAJ_TICK_DIV"] = 1
     constants["TRAJ_WARMSTART_PAD"] = 0
+    constants["TRAJ_LOOP_START_IDX"] = 0
 
 data = []
 data.append(generate_constants_header(constants))

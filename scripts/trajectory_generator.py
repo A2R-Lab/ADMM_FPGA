@@ -35,6 +35,7 @@ from parameters import (
     STAR_POINTS,
     TRAJ_DT,
     TRAJ_LENGTH,
+    TRAJ_ENTRY_ZERO_PAD,
     TRAJ_SHAPE,
     TRAJ_WARMSTART_PAD,
     Z0,
@@ -422,10 +423,12 @@ def generate_planar_shape_rollout_trajectory(
     elif shape == "fig8_hold":
         # Figure-8 position-only reference:
         # use geometric XY path but keep non-position states at hover reference.
-        x_raw = amp_x * np.sin(theta)
-        y_raw = amp_y * np.sin(theta) * np.cos(theta)
-        x = y_raw
-        y = x_raw
+        phase = np.arange(length, dtype=np.float64) / float(length)
+        theta_loop = 2.0 * np.pi * cycles * phase
+        x_raw = amp_x * np.sin(theta_loop)
+        y_raw = amp_y * np.sin(theta_loop) * np.cos(theta_loop)
+        x = x_raw
+        y = y_raw
         x_ref_seed = np.zeros((length, 12), dtype=np.float64)
         x_ref_seed[:, 0] = x
         x_ref_seed[:, 1] = y
@@ -556,7 +559,7 @@ def generate_planar_shape_rollout_trajectory(
 def _cycles_from_period_s(length: int, dt: float, period_s: float) -> float:
     if period_s <= 0:
         raise ValueError("FIG8_PERIOD_S must be > 0")
-    total_duration_s = (length - 1) * dt
+    total_duration_s = length * dt
     return total_duration_s / period_s
 
 
@@ -566,6 +569,7 @@ def build_traj_q_packed(
     q_diag: np.ndarray,
     r_diag: np.ndarray,
     horizon: int,
+    loop_start_idx: int,
 ) -> np.ndarray:
     del u_ref
     del r_diag
@@ -574,6 +578,8 @@ def build_traj_q_packed(
         raise ValueError("x_ref width and q_diag length mismatch")
     if horizon <= 0:
         raise ValueError("horizon must be > 0")
+    if loop_start_idx < 0 or loop_start_idx >= x_ref.shape[0]:
+        raise ValueError("loop_start_idx must point inside x_ref")
 
     q_state_ref = -(x_ref[:, :xyz_cols] * q_diag[None, :xyz_cols])
 
@@ -581,7 +587,8 @@ def build_traj_q_packed(
     core = np.zeros((x_ref.shape[0], cols), dtype=np.float64)
     core[:, :xyz_cols] = q_state_ref
 
-    # Warmstart-friendly timeline with fixed pad so cross-horizon comparisons are aligned.
+    # Periodic timeline. Optional padding is kept for scripted experiments, but the
+    # default is zero so hardware can loop the path without hovering between laps.
     pad = max(TRAJ_WARMSTART_PAD, 0)
     seq = np.vstack(
         [
@@ -592,15 +599,28 @@ def build_traj_q_packed(
     )
 
     # Extra horizon rows provide safe contiguous look-ahead for q_vec pointer reads.
+    # Repeat the loop section, not the one-shot entry prefix.
     traj_q_packed = np.zeros((seq.shape[0] + horizon, cols), dtype=np.float64)
     traj_q_packed[: seq.shape[0], :] = seq
+    loop_start = pad + loop_start_idx
+    loop_len = seq.shape[0] - loop_start
+    if loop_len <= 0:
+        raise ValueError("loop_start_idx leaves no loop samples")
+    traj_q_packed[seq.shape[0] :, :] = seq[loop_start + (np.arange(horizon) % loop_len), :]
     return traj_q_packed
 
 
-def build_traj_raw_packed(x_ref: np.ndarray, u_ref: np.ndarray, horizon: int) -> np.ndarray:
+def build_traj_raw_packed(
+    x_ref: np.ndarray,
+    u_ref: np.ndarray,
+    horizon: int,
+    loop_start_idx: int,
+) -> np.ndarray:
     del u_ref
     if horizon <= 0:
         raise ValueError("horizon must be > 0")
+    if loop_start_idx < 0 or loop_start_idx >= x_ref.shape[0]:
+        raise ValueError("loop_start_idx must point inside x_ref")
 
     xyz_cols = 3
     cols = xyz_cols
@@ -619,10 +639,15 @@ def build_traj_raw_packed(x_ref: np.ndarray, u_ref: np.ndarray, horizon: int) ->
 
     traj_raw_packed = np.zeros((seq.shape[0] + horizon, cols), dtype=np.float64)
     traj_raw_packed[: seq.shape[0], :] = seq
+    loop_start = pad + loop_start_idx
+    loop_len = seq.shape[0] - loop_start
+    if loop_len <= 0:
+        raise ValueError("loop_start_idx leaves no loop samples")
+    traj_raw_packed[seq.shape[0] :, :] = seq[loop_start + (np.arange(horizon) % loop_len), :]
     return traj_raw_packed
 
 
-def write_traj_q_header(path: Path, traj_q_packed: np.ndarray) -> None:
+def write_traj_q_header(path: Path, traj_q_packed: np.ndarray, loop_start_idx: int) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     rows, cols = traj_q_packed.shape
     with path.open("w") as f:
@@ -631,6 +656,7 @@ def write_traj_q_header(path: Path, traj_q_packed: np.ndarray) -> None:
         f.write('#include "data_types.h"\n\n')
         f.write(f"#define TRAJ_Q_PACKED_ROWS {rows}\n")
         f.write(f"#define TRAJ_Q_PACKED_COLS {cols}\n")
+        f.write(f"#define TRAJ_LOOP_START_IDX {loop_start_idx}\n")
         f.write("const fp_t traj_q_packed[TRAJ_Q_PACKED_ROWS][TRAJ_Q_PACKED_COLS] = {\n")
         for i in range(rows):
             vals = ", ".join(f"(fp_t){traj_q_packed[i, j]:.8f}" for j in range(cols))
@@ -639,7 +665,7 @@ def write_traj_q_header(path: Path, traj_q_packed: np.ndarray) -> None:
         f.write("#endif // TRAJ_DATA_H\n")
 
 
-def write_traj_raw_header(path: Path, traj_raw_packed: np.ndarray) -> None:
+def write_traj_raw_header(path: Path, traj_raw_packed: np.ndarray, loop_start_idx: int) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     rows, cols = traj_raw_packed.shape
     with path.open("w") as f:
@@ -648,6 +674,7 @@ def write_traj_raw_header(path: Path, traj_raw_packed: np.ndarray) -> None:
         f.write('#include "data_types.h"\n\n')
         f.write(f"#define TRAJ_RAW_PACKED_ROWS {rows}\n")
         f.write(f"#define TRAJ_RAW_PACKED_COLS {cols}\n")
+        f.write(f"#define TRAJ_LOOP_START_IDX {loop_start_idx}\n")
         f.write("const fp_t traj_raw_packed[TRAJ_RAW_PACKED_ROWS][TRAJ_RAW_PACKED_COLS] = {\n")
         for i in range(rows):
             vals = ", ".join(f"(fp_t){traj_raw_packed[i, j]:.8f}" for j in range(cols))
@@ -765,6 +792,13 @@ def main() -> int:
             hubstar_vertices=HUBSTAR_VERTICES,
         )
 
+    loop_start_idx = max(TRAJ_ENTRY_ZERO_PAD, 0)
+    if loop_start_idx > 0:
+        x_entry = np.zeros((loop_start_idx, x_ref.shape[1]), dtype=np.float64)
+        u_entry = np.zeros((loop_start_idx, u_ref.shape[1]), dtype=np.float64)
+        x_ref = np.vstack([x_entry, x_ref])
+        u_ref = np.vstack([u_entry, u_ref])
+
     u_hover = MASS * G / (4.0 * KT)
     u_cmd = u_ref + u_hover
     u_min = float(np.min(u_cmd))
@@ -783,10 +817,16 @@ def main() -> int:
         q_diag=np.asarray(Q_DIAG, dtype=np.float64),
         r_diag=np.asarray(R_DIAG, dtype=np.float64),
         horizon=HORIZON_LENGTH,
+        loop_start_idx=loop_start_idx,
     )
-    write_traj_q_header(TRAJ_DATA_HEADER_OUT, traj_q_packed)
-    traj_raw_packed = build_traj_raw_packed(x_ref=x_ref, u_ref=u_ref, horizon=HORIZON_LENGTH)
-    write_traj_raw_header(TRAJ_DATA_RAW_HEADER_OUT, traj_raw_packed)
+    write_traj_q_header(TRAJ_DATA_HEADER_OUT, traj_q_packed, loop_start_idx)
+    traj_raw_packed = build_traj_raw_packed(
+        x_ref=x_ref,
+        u_ref=u_ref,
+        horizon=HORIZON_LENGTH,
+        loop_start_idx=loop_start_idx,
+    )
+    write_traj_raw_header(TRAJ_DATA_RAW_HEADER_OUT, traj_raw_packed, loop_start_idx)
     write_header_x_ref(TRAJ_XREF_HEADER_OUT, x_ref)
     write_preview(TRAJ_PREVIEW_PNG_OUT, x_ref, u_ref, TRAJ_DT)
 
@@ -806,7 +846,11 @@ def main() -> int:
         f"chicane_mix={CHICANE_MIX:.3f} "
         f"hubstar_vertices={HUBSTAR_VERTICES}"
     )
-    print(f"dt={TRAJ_DT:.6f}s traj_length={TRAJ_LENGTH} fig8_period_s={FIG8_PERIOD_S:.6f}")
+    print(
+        f"dt={TRAJ_DT:.6f}s base_traj_length={TRAJ_LENGTH} "
+        f"packed_traj_length={x_ref.shape[0]} loop_start_idx={loop_start_idx} "
+        f"fig8_period_s={FIG8_PERIOD_S:.6f}"
+    )
     print(
         "u_range="
         f"[{u_min:.4f}, {u_max:.4f}] "

@@ -15,15 +15,20 @@
 #define TRAJ_TICK_DIV 1
 #endif
 
+#ifndef TRAJ_LOOP_START_IDX
+#define TRAJ_LOOP_START_IDX 0
+#endif
+
 #ifndef DYNAMIC_CONSTRAINT_AXIS
 #define DYNAMIC_CONSTRAINT_AXIS 0
 #endif
 
 #ifndef DYNAMIC_CONSTRAINT_START_STAGE
-#define DYNAMIC_CONSTRAINT_START_STAGE (HORIZON_LENGTH/2)
+#define DYNAMIC_CONSTRAINT_START_STAGE 10 // (HORIZON_LENGTH/2)
 #endif
 
 static_assert(TRAJ_TICK_DIV > 0, "TRAJ_TICK_DIV must be > 0");
+static_assert(TRAJ_LOOP_START_IDX >= 0, "TRAJ_LOOP_START_IDX must be >= 0");
 static_assert(DYNAMIC_CONSTRAINT_AXIS == 0 || DYNAMIC_CONSTRAINT_AXIS == 1,
               "DYNAMIC_CONSTRAINT_AXIS must be 0 (x) or 1 (y)");
 static_assert(DYNAMIC_CONSTRAINT_START_STAGE >= 1 &&
@@ -52,11 +57,7 @@ static_assert(ADMM_SOLVER_ARCH_STAGED_A + ADMM_SOLVER_ARCH_FULL_SPARSE == 1,
 static_assert(ADMM_SOLVER_INPUT_WIDTH == 418,
               "The public ADMM_solver input width must remain 418 bits");
 
-#if ADMM_SOLVER_ARCH_FULL_SPARSE
-constexpr int ACC_GUARD_BITS = 12;
-#else
-constexpr int ACC_GUARD_BITS = 2;
-#endif
+constexpr int ACC_GUARD_BITS = 8;
 
 #ifndef RHO_SHIFT_EQ
 #error "RHO_SHIFT_EQ must be generated in data.h by scripts/header_generator.py"
@@ -209,7 +210,7 @@ void forward_substitution(
         fp_t q_i = 0;
 
 #if ADMM_ENABLE_TRAJECTORY
-        if (use_traj_q && (traj_idx < TRAJ_LENGTH)) {
+        if (use_traj_q) {
             if (traj_stage < HORIZON_LENGTH) {
                 if (traj_local < 3) {
                     q_i = traj_q_packed[traj_idx + traj_stage][traj_local];
@@ -581,7 +582,7 @@ static void ADMM_solver_core(
         traj_started = true;
     }
 
-    const bool use_traj_q = traj_started && (traj_idx < TRAJ_LENGTH);
+    const bool use_traj_q = traj_started;
 #else
     const bool use_traj_q = false;
     const int traj_idx = 0;
@@ -606,11 +607,14 @@ ADMM_MAIN_LOOP:
     }
 
 #if ADMM_ENABLE_TRAJECTORY
-    if (traj_started && (traj_idx < TRAJ_LENGTH)) {
+    if (traj_started) {
         traj_tick_div_ctr++;
         if (traj_tick_div_ctr >= TRAJ_TICK_DIV) {
             traj_tick_div_ctr = 0;
             traj_idx++;
+            if (traj_idx >= TRAJ_LENGTH) {
+                traj_idx = TRAJ_LOOP_START_IDX;
+            }
         }
     }
 #endif
