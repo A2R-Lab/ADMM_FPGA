@@ -89,7 +89,7 @@ def _env_float_list(name: str, default: list[float], expected_len: int) -> list[
     return vals
 
 
-HORIZON_LENGTH = _env_int("ADMM_HORIZON_LENGTH", 40)
+HORIZON_LENGTH = _env_int("ADMM_HORIZON_LENGTH", 25)
 Q_DIAG = _env_float_list(
     "ADMM_Q_DIAG",
     [70.0,  # x
@@ -129,11 +129,11 @@ RHO_INEQ_PARAM = _env_int("ADMM_RHO_INEQ_PARAM", 32)
 RHO_PARAM = RHO_EQ_PARAM
 DELAY_STEPS = _env_int("ADMM_DELAY_STEPS", 0)
 TRAJ_DT = _env_float("ADMM_TRAJ_DT", 0.02)
-FIG8_PERIOD_S = _env_float_alias("ADMM_TRAJ_FIG8_PERIOD_S", "ADMM_FIG8_PERIOD_S", 2.5)
+FIG8_PERIOD_S = _env_float_alias("ADMM_TRAJ_FIG8_PERIOD_S", "ADMM_FIG8_PERIOD_S", 3.5)
 REPETITIONS = _env_int("ADMM_REPETITIONS", 1)
 TRAJ_WARMSTART_PAD = _env_int("ADMM_TRAJ_WARMSTART_PAD", 0)
 TRAJ_ENTRY_ZERO_PAD = _env_int("ADMM_TRAJ_ENTRY_ZERO_PAD", HORIZON_LENGTH + 1)
-TRAJ_TICK_DIV = 10
+TRAJ_TICK_DIV = 20
 
 # Endpoint is omitted so periodic onboard playback does not duplicate the origin.
 TRAJ_LENGTH = int(round(REPETITIONS * FIG8_PERIOD_S / TRAJ_DT))
