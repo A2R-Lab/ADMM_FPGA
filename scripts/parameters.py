@@ -89,11 +89,11 @@ def _env_float_list(name: str, default: list[float], expected_len: int) -> list[
     return vals
 
 
-HORIZON_LENGTH = _env_int("ADMM_HORIZON_LENGTH", 25)
+HORIZON_LENGTH = _env_int("ADMM_HORIZON_LENGTH", 27)
 Q_DIAG = _env_float_list(
     "ADMM_Q_DIAG",
-    [70.0,  # x
-     70.0,  # y
+    [50.0,  # x
+     50.0,  # y
      178.0, # z
      0.4,   # roll
      0.4,   # pitch
@@ -115,7 +115,7 @@ R_DIAG = [R_SCALE * v for v in _BASE_R_DIAG]
 ADMM_USE_FLOAT = _env_bool("ADMM_USE_FLOAT", False)  # False: ap_fixed, True: float
 ADMM_ITERATIONS = _env_int("ADMM_ITERATIONS", 9)
 ADMM_ENABLE_TRAJECTORY = _env_bool("ADMM_ENABLE_TRAJECTORY", True)
-ADMM_SOLVER_ARCH = _env_choice("ADMM_SOLVER_ARCH", "full_sparse", {"staged_a", "full_sparse"})
+ADMM_SOLVER_ARCH = _env_choice("ADMM_SOLVER_ARCH", "staged_a", {"staged_a", "full_sparse"})
 ADMM_SOLVER_INPUT_WIDTH = 418
 
 # Linear drag terms used to bias the MPC linear model (header_generator.py).
@@ -129,7 +129,7 @@ RHO_INEQ_PARAM = _env_int("ADMM_RHO_INEQ_PARAM", 32)
 RHO_PARAM = RHO_EQ_PARAM
 DELAY_STEPS = _env_int("ADMM_DELAY_STEPS", 0)
 TRAJ_DT = _env_float("ADMM_TRAJ_DT", 0.02)
-FIG8_PERIOD_S = _env_float_alias("ADMM_TRAJ_FIG8_PERIOD_S", "ADMM_FIG8_PERIOD_S", 3.5)
+FIG8_PERIOD_S = _env_float_alias("ADMM_TRAJ_FIG8_PERIOD_S", "ADMM_FIG8_PERIOD_S", 25.0)
 REPETITIONS = _env_int("ADMM_REPETITIONS", 1)
 TRAJ_WARMSTART_PAD = _env_int("ADMM_TRAJ_WARMSTART_PAD", 0)
 TRAJ_ENTRY_ZERO_PAD = _env_int("ADMM_TRAJ_ENTRY_ZERO_PAD", HORIZON_LENGTH + 1)
@@ -139,9 +139,9 @@ TRAJ_TICK_DIV = 20
 TRAJ_LENGTH = int(round(REPETITIONS * FIG8_PERIOD_S / TRAJ_DT))
 
 # Trajectory shape/geometry controls.
-TRAJ_SHAPE = os.environ.get("ADMM_TRAJ_SHAPE", "fig8_hold").strip().lower()
-AMP_X = _env_float("ADMM_TRAJ_AMP_X", .5) # lato lungo
-AMP_Y = _env_float("ADMM_TRAJ_AMP_Y", .7)
+TRAJ_SHAPE = os.environ.get("ADMM_TRAJ_SHAPE", "star_hold").strip().lower()
+AMP_X = _env_float("ADMM_TRAJ_AMP_X", 2.0) # lato lungo
+AMP_Y = _env_float("ADMM_TRAJ_AMP_Y", 2.0)
 Z0 = _env_float("ADMM_TRAJ_Z0", 0.0)
 SQUARE_SHARPNESS = _env_float("ADMM_TRAJ_SQUARE_SHARPNESS", 2.8)
 STAR_POINTS = _env_int("ADMM_TRAJ_STAR_POINTS", 12)
