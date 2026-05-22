@@ -78,6 +78,7 @@ HLS_CLOSED_LOOP_ARGS ?=
 
 # Generated files
 DATA_HEADER   := $(HLS_DIR)/data.h
+RUNTIME_CONFIG_HEADER := $(HLS_DIR)/admm_runtime_config.h
 TRAJ_REFS     := $(HLS_DIR)/trajectory_refs.csv
 TRAJ_HEADER   := $(HLS_DIR)/traj_data.h
 HLS_IP_MARKER := $(HLS_WORK_DIR)/.export_done
@@ -153,14 +154,15 @@ $(TRAJ_REFS) $(TRAJ_HEADER): $(TRAJ_SCRIPT) $(SCRIPTS_DIR)/crazyloihimodel.py $(
 # Header Generation
 # =============================================================================
 
-headers: $(DATA_HEADER)
+headers: $(DATA_HEADER) $(RUNTIME_CONFIG_HEADER)
 
-$(DATA_HEADER): $(HEADER_SCRIPT) $(SCRIPTS_DIR)/crazyloihimodel.py $(PARAMS_SCRIPT) $(TRAJ_HEADER)
+$(DATA_HEADER) $(RUNTIME_CONFIG_HEADER): $(HEADER_SCRIPT) $(SCRIPTS_DIR)/crazyloihimodel.py $(PARAMS_SCRIPT) $(TRAJ_HEADER)
 	@echo "========================================="
 	@echo "Generating headers..."
 	@echo "========================================="
 	cd $(SCRIPTS_DIR) && $(PYTHON) header_generator.py
 	@touch $(DATA_HEADER)
+	@touch $(RUNTIME_CONFIG_HEADER)
 
 # =============================================================================
 # HLS Build
