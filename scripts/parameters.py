@@ -92,9 +92,9 @@ def _env_float_list(name: str, default: list[float], expected_len: int) -> list[
 HORIZON_LENGTH = _env_int("ADMM_HORIZON_LENGTH", 27)
 Q_DIAG = _env_float_list(
     "ADMM_Q_DIAG",
-    [50.0,  # x
-     50.0,  # y
-     178.0, # z
+    [40.0,  # x
+     40.0,  # y
+     158.0, # z
      0.4,   # roll
      0.4,   # pitch
      40.0,  # yaw
