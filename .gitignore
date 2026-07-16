@@ -39,6 +39,7 @@ vitis_projects/_ide/
 *.backup.log
 *.backup.jou
 .Xil/
+nohup.out
 
 # Script output files
 scripts/admm_results.txt*

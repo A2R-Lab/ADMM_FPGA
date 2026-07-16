@@ -28,6 +28,7 @@ The development flow for this project is managed through the provided Makefiles:
 - `vitis_projects/ADMM/`: Vitis HLS project containing the ADMM solver implementation and testbench
 - `vivado_project/`: Vivado project with the top-level FPGA design, SPI/UART modules, constraints, and generated IP
 - `scripts/`: build, programming, simulation, and data/header generation scripts
+- `results/`: compact, versioned benchmark data, provenance, and final figures
 - `arduino_spi_test/`: simple Arduino sketch used for SPI communication tests
 - `Makefile`: top-level build flow for HLS, Vivado, bitstream generation, and programming
 
