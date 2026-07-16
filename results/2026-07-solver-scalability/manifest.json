@@ -1,0 +1,58 @@
+{
+  "admm_iterations": 10,
+  "architectures": [
+    "full_sparse",
+    "staged_a"
+  ],
+  "board": "custom",
+  "campaign": "2026-07-solver-scalability",
+  "configured_clock_mhz": 100.0,
+  "files": {
+    "data/low_horizon_comparison.csv": {
+      "bytes": 5813,
+      "sha256": "d5ae77caeb85fb40eaa4e2a4493a22cea9db717e8732425eb586b612ef6b13b0"
+    },
+    "data/staged_scalability.csv": {
+      "bytes": 6937,
+      "sha256": "5dbd4744ac48e3708c3031606acd4c7b777cd79ca3d09429a78343c83b762883"
+    },
+    "figures/solver_low_horizon_tradeoffs.png": {
+      "bytes": 272603,
+      "sha256": "50ee28b9593bf1aec81a5285792dba0b0841eb826e09d440d2c1b3bb26ea3c0f"
+    },
+    "figures/solver_scalability_latency.png": {
+      "bytes": 113727,
+      "sha256": "3637a927fd641c5a98de65c8d1d448b688bce41aadcd3f439cb880a8293376d7"
+    },
+    "figures/solver_scalability_table.png": {
+      "bytes": 113211,
+      "sha256": "a5335fe8b0710eabfe08dfaa445be3743c765e5159b5456097b721de95ef84e5"
+    }
+  },
+  "high_horizon_provenance_note": "Existing high-horizon rows were produced from a recorded dirty worktree based on b82e18d; see README.",
+  "low_horizons": [
+    10,
+    20,
+    30,
+    40,
+    50,
+    60,
+    70,
+    80,
+    90
+  ],
+  "low_run_dirs": [
+    "/home/agrillo/fpga/exp/2026-07-solver-scalability",
+    "/home/agrillo/fpga/exp/2026-07-solver-scalability-staged-a"
+  ],
+  "manual_scalability_source": "/home/agrillo/fpga/exp/2026-07-solver-scalability/scalability_manual.csv",
+  "part": "xc7a100tcsg324-1",
+  "published_utc": "2026-07-16T11:49:58.051441+00:00",
+  "publisher_git_head": "a26f4f1043dbb2d34f992bd895168e0ba5554e4d",
+  "publisher_git_status": "",
+  "source_git_heads": [
+    "a834011a71c66a82cf59a8c8e1230a803f19ec73",
+    "b82e18de9cad81d9eb1ed0e8f80b483730111982"
+  ],
+  "trajectory_enabled": false
+}
