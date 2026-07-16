@@ -13,4 +13,4 @@ Every campaign committed here must contain:
 
 | Campaign | Status | Purpose |
 |---|---|---|
-| `2026-07-solver-scalability` | Planned | Solver architecture Pareto comparison and large-problem scaling |
+| [`2026-07-solver-scalability`](2026-07-solver-scalability/README.md) | Complete | Solver architecture Pareto comparison and large-problem scaling |

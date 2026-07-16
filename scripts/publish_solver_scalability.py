@@ -75,7 +75,9 @@ def read_csv(path: Path) -> list[dict[str, str]]:
 def write_csv(path: Path, rows: list[dict[str, str]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="") as fobj:
-        writer = csv.DictWriter(fobj, fieldnames=CANONICAL_FIELDS)
+        writer = csv.DictWriter(
+            fobj, fieldnames=CANONICAL_FIELDS, lineterminator="\n"
+        )
         writer.writeheader()
         writer.writerows(rows)
 
