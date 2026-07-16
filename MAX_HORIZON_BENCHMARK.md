@@ -180,6 +180,7 @@ record. Publish only compact, plot-ready data and final figures:
 ```bash
 python scripts/publish_solver_scalability.py \
   --run-dir ../exp/2026-07-solver-scalability \
+  --run-dir ../exp/2026-07-solver-scalability-staged-a \
   --manual-scalability ../exp/2026-07-solver-scalability/scalability_manual.csv \
   --output results/2026-07-solver-scalability
 ```

@@ -145,23 +145,25 @@ def canonical_from_raw(row: dict[str, str], run_dir: Path) -> dict[str, str]:
     }
 
 
-def collect_low_rows(run_dir: Path) -> list[dict[str, str]]:
-    raw_rows: list[dict[str, str]] = []
-    for path in sorted((run_dir / "rows").glob("*.csv")):
-        raw_rows.extend(read_csv(path))
+def collect_low_rows(run_dirs: list[Path]) -> list[dict[str, str]]:
+    raw_rows: list[tuple[dict[str, str], Path]] = []
+    for run_dir in run_dirs:
+        for path in sorted((run_dir / "rows").glob("*.csv")):
+            raw_rows.extend((row, run_dir) for row in read_csv(path))
     selected: list[dict[str, str]] = []
     for arch in ARCHES:
         for horizon in LOW_HORIZONS:
             matches = [
-                row
-                for row in raw_rows
+                (row, run_dir)
+                for row, run_dir in raw_rows
                 if row.get("arch") == arch
                 and int(float(row.get("horizon", "0") or 0)) == horizon
                 and row.get("seed") == "0"
             ]
             if len(matches) != 1:
                 raise SystemExit(f"Expected one seed-0 row for {arch} H={horizon}, found {len(matches)}")
-            selected.append(canonical_from_raw(matches[0], run_dir))
+            row, source_run_dir = matches[0]
+            selected.append(canonical_from_raw(row, source_run_dir))
     return sorted(selected, key=lambda row: (int(row["horizon"]), row["arch"]))
 
 
@@ -328,7 +330,12 @@ def render_figures(output: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--run-dir", type=Path, help="Raw low-horizon comparison run directory")
+    parser.add_argument(
+        "--run-dir",
+        action="append",
+        type=Path,
+        help="Raw low-horizon run directory; repeat when architectures were run separately",
+    )
     parser.add_argument("--manual-scalability", type=Path, help="Manually curated canonical staged scalability CSV")
     parser.add_argument("--output", required=True, type=Path, help="Tracked campaign result directory")
     parser.add_argument("--regenerate-only", action="store_true", help="Regenerate figures from tracked canonical CSVs")
@@ -342,9 +349,9 @@ def main() -> int:
     if args.run_dir is None or args.manual_scalability is None:
         parser.error("--run-dir and --manual-scalability are required unless --regenerate-only is used")
 
-    run_dir = args.run_dir.resolve()
+    run_dirs = [path.resolve() for path in args.run_dir]
     manual_path = args.manual_scalability.resolve()
-    low_rows = collect_low_rows(run_dir)
+    low_rows = collect_low_rows(run_dirs)
     scale_rows = load_manual_scalability(manual_path)
     low_csv = output / "data" / "low_horizon_comparison.csv"
     scale_csv = output / "data" / "staged_scalability.csv"
@@ -363,7 +370,7 @@ def main() -> int:
         "trajectory_enabled": False,
         "low_horizons": LOW_HORIZONS,
         "architectures": ARCHES,
-        "low_run_dir": str(run_dir),
+        "low_run_dirs": [str(path) for path in run_dirs],
         "manual_scalability_source": str(manual_path),
         "publisher_git_head": git_output(repo, "rev-parse", "HEAD"),
         "publisher_git_status": git_output(repo, "status", "--short"),
