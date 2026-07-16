@@ -229,7 +229,7 @@ def plot_low_tradeoffs(rows: list[dict[str, str]], output: Path) -> None:
             for row, x, y in zip(points, xs, ys):
                 clean = row["timing_clean"] == "1"
                 ax.scatter(x, y, s=42, facecolor=colors[arch] if clean else "white", edgecolor=colors[arch], zorder=3)
-                if key == "latency_ms":
+                if key == "latency_ms" and arch == "full_sparse":
                     ax.annotate(f"H={row['horizon']}", (x, y), xytext=(0, 7), textcoords="offset points", ha="center", fontsize=7)
         ax.set_ylabel(ylabel)
         ax.grid(True, alpha=0.25)
@@ -373,7 +373,7 @@ def main() -> int:
         "low_run_dirs": [str(path) for path in run_dirs],
         "manual_scalability_source": str(manual_path),
         "publisher_git_head": git_output(repo, "rev-parse", "HEAD"),
-        "publisher_git_status": git_output(repo, "status", "--short"),
+        "publisher_git_status": git_output(repo, "status", "--short", "--untracked-files=no"),
         "source_git_heads": sorted({row["source_git_head"] for row in low_rows + scale_rows}),
         "high_horizon_provenance_note": "Existing high-horizon rows were produced from a recorded dirty worktree based on b82e18d; see README.",
         "files": {},
