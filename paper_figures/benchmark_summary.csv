@@ -1,0 +1,985 @@
+campaign,source_summary,slug,arch,horizon,admm_iters,status,failed_stage,bitstream_exists,timing_clean,route_wns_ns,hls_latency_cycles,solve_us_cfg_clk,solve_us_per_iter_cfg_clk,hls_latency_cycles_per_iter,route_power_total_w,energy_per_solve_cfg_uj,energy_per_iter_cfg_uj,route_bram_tile_used,route_bram_tile_util_pct,route_dsps_used,route_dsps_util_pct,route_slice_luts_used,route_slice_luts_util_pct,route_slice_registers_used,route_slice_registers_util_pct,route_lut_as_mem_used,route_lut_as_mem_util_pct,tinympc_min_us,tinympc_avg_us,tinympc_max_us,tinympc_misses,tinympc_total,tinympc_solved,tinympc_max_iter,tinympc_noncvx,tinympc_other,gen_n_var,gen_n_constr,gen_kkt_nnz,gen_chol_l_nnz,seed,vivado_impl_variant,vivado_place_seed,vivado_route_seed,git_head,git_status_short,point_dir
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1150_k10_s0,staged_a,1150,10,pass,,1,0,-0.175,3821917,38219.17,3821.917,382191.7,1.071,40932.731069999994,4093.27311,130,96.3,80,33.33,39374,62.1,27676,21.83,9543,50.23,,,,,,,,,,18412,20712,464744,307922,0,baseline,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1150_k10_s0
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1150_k10_s1,staged_a,1150,10,pass,,1,0,-0.175,3821917,38219.17,3821.917,382191.7,1.071,40932.731069999994,4093.27311,130,96.3,80,33.33,39374,62.1,27676,21.83,9543,50.23,,,,,,,,,,18412,20712,464744,307922,1,route_aggressive,1,1,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1150_k10_s1
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1150_k10_s2,staged_a,1150,10,pass,,1,0,-0.298,3821917,38219.17,3821.917,382191.7,1.07,40894.5119,4089.45119,130,96.3,80,33.33,39374,62.1,27676,21.83,9543,50.23,,,,,,,,,,18412,20712,464744,307922,2,route_more_global,2,2,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1150_k10_s2
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1150_k10_s3,staged_a,1150,10,pass,,1,0,-0.548,3821917,38219.17,3821.917,382191.7,1.075,41085.607749999996,4108.56077,130,96.3,80,33.33,39374,62.1,27676,21.83,9543,50.23,,,,,,,,,,18412,20712,464744,307922,3,route_no_timing_relax,3,3,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1150_k10_s3
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1150_k10_s4,staged_a,1150,10,pass,,1,0,-0.497,3821917,38219.17,3821.917,382191.7,1.062,40588.75854,4058.87585,130,96.3,80,33.33,39374,62.1,27676,21.83,9543,50.23,,,,,,,,,,18412,20712,464744,307922,4,route_higher_delay_cost,4,4,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1150_k10_s4
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1150_k10_s5,staged_a,1150,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,18412,20712,464744,307922,5,place_aggressive,5,5,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1150_k10_s5
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1150_k10_s6,staged_a,1150,10,pass,,1,0,-0.291,3821917,38219.17,3821.917,382191.7,1.07,40894.5119,4089.45119,130,96.3,80,33.33,39370,62.1,27679,21.83,9543,50.23,,,,,,,,,,18412,20712,464744,307922,6,phys_hold_tns,6,6,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1150_k10_s6
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1150_k10_s7,staged_a,1150,10,pass,,1,1,0.181,3821917,38219.17,3821.917,382191.7,1.098,41964.64866,4196.46487,130,96.3,80,33.33,39569,62.41,27628,21.79,9544,50.23,,,,,,,,,,18412,20712,464744,307922,7,opt_remap,7,7,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1150_k10_s7
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1200_k10_s0,staged_a,1200,10,pass,,1,0,-0.77,3987917,39879.17,3987.917,398791.7,1.139,45422.37463,4542.23746,130,96.3,80,33.33,40311,63.58,27703,21.85,10213,53.75,,,,,,,,,,19212,21612,484944,321313,0,baseline,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1200_k10_s0
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1200_k10_s1,staged_a,1200,10,pass,,1,0,-0.77,3987917,39879.17,3987.917,398791.7,1.139,45422.37463,4542.23746,130,96.3,80,33.33,40311,63.58,27703,21.85,10213,53.75,,,,,,,,,,19212,21612,484944,321313,1,route_aggressive,1,1,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1200_k10_s1
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1200_k10_s2,staged_a,1200,10,pass,,1,0,-1.266,3987917,39879.17,3987.917,398791.7,1.129,45023.58293,4502.35829,130,96.3,80,33.33,40310,63.58,27703,21.85,10213,53.75,,,,,,,,,,19212,21612,484944,321313,2,route_more_global,2,2,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1200_k10_s2
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1200_k10_s3,staged_a,1200,10,pass,,1,0,-0.89,3987917,39879.17,3987.917,398791.7,1.134,45222.97877999999,4522.29788,130,96.3,80,33.33,40310,63.58,27703,21.85,10213,53.75,,,,,,,,,,19212,21612,484944,321313,3,route_no_timing_relax,3,3,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1200_k10_s3
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1200_k10_s4,staged_a,1200,10,pass,,1,0,-0.924,3987917,39879.17,3987.917,398791.7,1.117,44545.032889999995,4454.50329,130,96.3,80,33.33,40310,63.58,27703,21.85,10213,53.75,,,,,,,,,,19212,21612,484944,321313,4,route_higher_delay_cost,4,4,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1200_k10_s4
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1200_k10_s5,staged_a,1200,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,19212,21612,484944,321313,5,place_aggressive,5,5,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1200_k10_s5
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1200_k10_s6,staged_a,1200,10,pass,,1,0,-0.803,3987917,39879.17,3987.917,398791.7,1.132,45143.22044,4514.32204,130,96.3,80,33.33,40328,63.61,27703,21.85,10213,53.75,,,,,,,,,,19212,21612,484944,321313,6,phys_hold_tns,6,6,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1200_k10_s6
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1200_k10_s7,staged_a,1200,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,19212,21612,484944,321313,7,opt_remap,7,7,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1200_k10_s7
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1250_k10_s0,staged_a,1250,10,pass,,1,0,-0.059,4153917,41539.17,4153.917,415391.7,1.18,49016.22059999999,4901.62206,130,96.3,80,33.33,40764,64.3,28037,22.11,10554,55.55,,,,,,,,,,20012,22512,505144,334705,0,baseline,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1250_k10_s0
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1250_k10_s1,staged_a,1250,10,pass,,1,0,-0.059,4153917,41539.17,4153.917,415391.7,1.18,49016.22059999999,4901.62206,130,96.3,80,33.33,40764,64.3,28037,22.11,10554,55.55,,,,,,,,,,20012,22512,505144,334705,1,route_aggressive,1,1,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1250_k10_s1
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1250_k10_s2,staged_a,1250,10,pass,,1,0,-0.031,4153917,41539.17,4153.917,415391.7,1.177,48891.60309,4889.16031,130,96.3,80,33.33,40763,64.29,28037,22.11,10554,55.55,,,,,,,,,,20012,22512,505144,334705,2,route_more_global,2,2,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1250_k10_s2
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1250_k10_s3,staged_a,1250,10,pass,,1,0,-0.158,4153917,41539.17,4153.917,415391.7,1.189,49390.07313,4939.00731,130,96.3,80,33.33,40763,64.29,28037,22.11,10554,55.55,,,,,,,,,,20012,22512,505144,334705,3,route_no_timing_relax,3,3,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1250_k10_s3
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1250_k10_s4,staged_a,1250,10,pass,,1,0,-0.005,4153917,41539.17,4153.917,415391.7,1.169,48559.28973,4855.92897,130,96.3,80,33.33,40763,64.29,28037,22.11,10554,55.55,,,,,,,,,,20012,22512,505144,334705,4,route_higher_delay_cost,4,4,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1250_k10_s4
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1250_k10_s5,staged_a,1250,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,20012,22512,505144,334705,5,place_aggressive,5,5,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1250_k10_s5
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1250_k10_s6,staged_a,1250,10,pass,,1,1,0.002,4153917,41539.17,4153.917,415391.7,1.182,49099.29893999999,4909.92989,130,96.3,80,33.33,40752,64.28,28028,22.1,10554,55.55,,,,,,,,,,20012,22512,505144,334705,6,phys_hold_tns,6,6,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1250_k10_s6
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1300_k10_s0,staged_a,1300,10,pass,,1,1,0.043,4319917,43199.17,4319.917,431991.7,1.142,49333.452139999994,4933.34521,130,96.3,80,33.33,41517,65.48,28004,22.09,10890,57.32,,,,,,,,,,20812,23412,525344,348097,0,baseline,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1300_k10_s0
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1350_k10_s0,staged_a,1350,10,pass,,1,1,0.023,4485917,44859.17,4485.917,448591.7,1.146,51408.608819999994,5140.86088,130,96.3,80,33.33,41643,65.68,27997,22.08,11226,59.08,,,,,,,,,,21612,24312,545544,361488,0,baseline,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1350_k10_s0
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1400_k10_s0,staged_a,1400,10,pass,,1,0,-0.494,4651917,46519.17,4651.917,465191.7,1.14,53031.85379999999,5303.18538,130,96.3,80,33.33,41780,65.9,27954,22.05,11559,60.84,,,,,,,,,,22412,25212,565744,374880,0,baseline,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1400_k10_s0
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1400_k10_s1,staged_a,1400,10,pass,,1,0,-0.494,4651917,46519.17,4651.917,465191.7,1.14,53031.85379999999,5303.18538,130,96.3,80,33.33,41780,65.9,27954,22.05,11559,60.84,,,,,,,,,,22412,25212,565744,374880,1,route_aggressive,1,1,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1400_k10_s1
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1400_k10_s2,staged_a,1400,10,pass,,1,0,-0.516,4651917,46519.17,4651.917,465191.7,1.14,53031.85379999999,5303.18538,130,96.3,80,33.33,41780,65.9,27954,22.05,11559,60.84,,,,,,,,,,22412,25212,565744,374880,2,route_more_global,2,2,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1400_k10_s2
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1400_k10_s3,staged_a,1400,10,pass,,1,0,-0.381,4651917,46519.17,4651.917,465191.7,1.146,53310.968819999995,5331.09688,130,96.3,80,33.33,41780,65.9,27954,22.05,11559,60.84,,,,,,,,,,22412,25212,565744,374880,3,route_no_timing_relax,3,3,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1400_k10_s3
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1400_k10_s4,staged_a,1400,10,pass,,1,0,-0.422,4651917,46519.17,4651.917,465191.7,1.134,52752.73877999999,5275.27388,130,96.3,80,33.33,41780,65.9,27954,22.05,11559,60.84,,,,,,,,,,22412,25212,565744,374880,4,route_higher_delay_cost,4,4,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1400_k10_s4
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1400_k10_s5,staged_a,1400,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,22412,25212,565744,374880,5,place_aggressive,5,5,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1400_k10_s5
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1400_k10_s6,staged_a,1400,10,pass,,1,0,-0.172,4651917,46519.17,4651.917,465191.7,1.14,53031.85379999999,5303.18538,130,96.3,80,33.33,41773,65.89,27948,22.04,11559,60.84,,,,,,,,,,22412,25212,565744,374880,6,phys_hold_tns,6,6,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1400_k10_s6
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1400_k10_s7,staged_a,1400,10,pass,,1,0,-0.764,4651917,46519.17,4651.917,465191.7,1.152,53590.08383999999,5359.00838,130,96.3,80,33.33,41913,66.11,27973,22.06,11560,60.84,,,,,,,,,,22412,25212,565744,374880,7,opt_remap,7,7,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1400_k10_s7
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1400_k10_s8,staged_a,1400,10,pass,,1,0,-0.25,4651917,46519.17,4651.917,465191.7,1.136,52845.77711999999,5284.57771,130,96.3,80,33.33,41781,65.9,27954,22.05,11559,60.84,,,,,,,,,,22412,25212,565744,374880,8,route_ultrathreads,8,8,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1400_k10_s8
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1400_k10_s9,staged_a,1400,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,22412,25212,565744,374880,9,place_reduce_congestion,9,9,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1400_k10_s9
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1450_k10_s0,staged_a,1450,10,pass,,1,0,-0.487,4817917,48179.17,4817.917,481791.7,1.152,55502.40383999999,5550.24038,130,96.3,80,33.33,42407,66.89,27966,22.06,11897,62.62,,,,,,,,,,23212,26112,585944,388272,0,baseline,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1450_k10_s0
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1450_k10_s1,staged_a,1450,10,pass,,1,0,-0.487,4817917,48179.17,4817.917,481791.7,1.152,55502.40383999999,5550.24038,130,96.3,80,33.33,42407,66.89,27966,22.06,11897,62.62,,,,,,,,,,23212,26112,585944,388272,1,route_aggressive,1,1,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1450_k10_s1
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1450_k10_s2,staged_a,1450,10,pass,,1,0,-0.47,4817917,48179.17,4817.917,481791.7,1.154,55598.76217999999,5559.87622,130,96.3,80,33.33,42407,66.89,27966,22.06,11897,62.62,,,,,,,,,,23212,26112,585944,388272,2,route_more_global,2,2,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1450_k10_s2
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1450_k10_s3,staged_a,1450,10,pass,,1,0,-0.372,4817917,48179.17,4817.917,481791.7,1.157,55743.29969,5574.32997,130,96.3,80,33.33,42407,66.89,27966,22.06,11897,62.62,,,,,,,,,,23212,26112,585944,388272,3,route_no_timing_relax,3,3,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1450_k10_s3
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1450_k10_s4,staged_a,1450,10,pass,,1,0,-0.617,4817917,48179.17,4817.917,481791.7,1.138,54827.89545999999,5482.78955,130,96.3,80,33.33,42407,66.89,27966,22.06,11897,62.62,,,,,,,,,,23212,26112,585944,388272,4,route_higher_delay_cost,4,4,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1450_k10_s4
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1450_k10_s5,staged_a,1450,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,23212,26112,585944,388272,5,place_aggressive,5,5,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1450_k10_s5
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1450_k10_s6,staged_a,1450,10,pass,,1,0,-0.529,4817917,48179.17,4817.917,481791.7,1.152,55502.40383999999,5550.24038,130,96.3,80,33.33,42394,66.87,27967,22.06,11897,62.62,,,,,,,,,,23212,26112,585944,388272,6,phys_hold_tns,6,6,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1450_k10_s6
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1450_k10_s7,staged_a,1450,10,pass,,1,0,-1.422,4817917,48179.17,4817.917,481791.7,1.137,54779.71629,5477.97163,130,96.3,80,33.33,42583,67.17,27991,22.07,11896,62.61,,,,,,,,,,23212,26112,585944,388272,7,opt_remap,7,7,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1450_k10_s7
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1450_k10_s8,staged_a,1450,10,pass,,1,0,-0.675,4817917,48179.17,4817.917,481791.7,1.148,55309.687159999994,5530.96872,130,96.3,80,33.33,42407,66.89,27966,22.06,11897,62.62,,,,,,,,,,23212,26112,585944,388272,8,route_ultrathreads,8,8,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1450_k10_s8
+2026-07-above-1100-variants-rerun,../exp/2026-07-above-1100-variants-rerun/summary.csv,stageda_h1450_k10_s9,staged_a,1450,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,23212,26112,585944,388272,9,place_reduce_congestion,9,9,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun/stageda_h1450_k10_s9
+2026-07-common-h40-radar,../exp/2026-07-common-h40-radar/summary.csv,fullsparse_h40_k10_s0,full_sparse,40,10,pass,,1,1,0.308,148467,1484.67,148.467,14846.7,0.333,494.39511000000005,49.439511,78.5,58.15,77,32.08,9280,14.64,12051,9.5,199,1.05,,,,,,,,,,652,732,16304,10664,0,baseline,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-common-h40-radar/fullsparse_h40_k10_s0
+2026-07-common-h40-radar,../exp/2026-07-common-h40-radar/summary.csv,stageda_h40_k10_s0,staged_a,40,10,pass,,1,1,0.309,136507,1365.07,136.507,13650.7,0.683,932.34281,93.234281,36,26.67,80,33.33,22127,34.9,26540,20.93,417,2.19,,,,,,,,,,652,732,16304,10664,0,baseline,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-common-h40-radar/stageda_h40_k10_s0
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h100_k10_s0,full_sparse,100,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1612,1812,40544,26698,0,baseline,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h100_k10_s0
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h100_k10_s1,full_sparse,100,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1612,1812,40544,26698,1,route_aggressive,1,1,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h100_k10_s1
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h100_k10_s2,full_sparse,100,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1612,1812,40544,26698,2,route_more_global,2,2,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h100_k10_s2
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h100_k10_s3,full_sparse,100,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1612,1812,40544,26698,3,route_no_timing_relax,3,3,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h100_k10_s3
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h100_k10_s4,full_sparse,100,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1612,1812,40544,26698,4,route_higher_delay_cost,4,4,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h100_k10_s4
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h100_k10_s5,full_sparse,100,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1612,1812,40544,26698,5,place_aggressive,5,5,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h100_k10_s5
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h100_k10_s6,full_sparse,100,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1612,1812,40544,26698,6,phys_hold_tns,6,6,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h100_k10_s6
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h100_k10_s7,full_sparse,100,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1612,1812,40544,26698,7,opt_remap,7,7,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h100_k10_s7
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h100_k10_s8,full_sparse,100,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1612,1812,40544,26698,8,route_ultrathreads,8,8,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h100_k10_s8
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h100_k10_s9,full_sparse,100,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1612,1812,40544,26698,9,place_reduce_congestion,9,9,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h100_k10_s9
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h110_k10_s0,full_sparse,110,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1772,1992,44584,29375,0,baseline,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h110_k10_s0
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h110_k10_s1,full_sparse,110,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1772,1992,44584,29375,1,route_aggressive,1,1,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h110_k10_s1
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h110_k10_s2,full_sparse,110,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1772,1992,44584,29375,2,route_more_global,2,2,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h110_k10_s2
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h110_k10_s3,full_sparse,110,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1772,1992,44584,29375,3,route_no_timing_relax,3,3,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h110_k10_s3
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h110_k10_s4,full_sparse,110,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1772,1992,44584,29375,4,route_higher_delay_cost,4,4,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h110_k10_s4
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h110_k10_s5,full_sparse,110,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1772,1992,44584,29375,5,place_aggressive,5,5,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h110_k10_s5
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h110_k10_s6,full_sparse,110,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1772,1992,44584,29375,6,phys_hold_tns,6,6,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h110_k10_s6
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h110_k10_s7,full_sparse,110,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1772,1992,44584,29375,7,opt_remap,7,7,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h110_k10_s7
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h110_k10_s8,full_sparse,110,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1772,1992,44584,29375,8,route_ultrathreads,8,8,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h110_k10_s8
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h110_k10_s9,full_sparse,110,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1772,1992,44584,29375,9,place_reduce_congestion,9,9,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h110_k10_s9
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h120_k10_s0,full_sparse,120,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1932,2172,48624,32053,0,baseline,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h120_k10_s0
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h120_k10_s1,full_sparse,120,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1932,2172,48624,32053,1,route_aggressive,1,1,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h120_k10_s1
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h120_k10_s2,full_sparse,120,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1932,2172,48624,32053,2,route_more_global,2,2,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h120_k10_s2
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h120_k10_s3,full_sparse,120,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1932,2172,48624,32053,3,route_no_timing_relax,3,3,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h120_k10_s3
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h120_k10_s4,full_sparse,120,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1932,2172,48624,32053,4,route_higher_delay_cost,4,4,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h120_k10_s4
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h120_k10_s5,full_sparse,120,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1932,2172,48624,32053,5,place_aggressive,5,5,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h120_k10_s5
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h120_k10_s6,full_sparse,120,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1932,2172,48624,32053,6,phys_hold_tns,6,6,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h120_k10_s6
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h120_k10_s7,full_sparse,120,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1932,2172,48624,32053,7,opt_remap,7,7,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h120_k10_s7
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h120_k10_s8,full_sparse,120,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1932,2172,48624,32053,8,route_ultrathreads,8,8,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h120_k10_s8
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h120_k10_s9,full_sparse,120,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,1932,2172,48624,32053,9,place_reduce_congestion,9,9,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h120_k10_s9
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h130_k10_s0,full_sparse,130,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2092,2352,52664,34732,0,baseline,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h130_k10_s0
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h130_k10_s1,full_sparse,130,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2092,2352,52664,34732,1,route_aggressive,1,1,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h130_k10_s1
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h130_k10_s2,full_sparse,130,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2092,2352,52664,34732,2,route_more_global,2,2,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h130_k10_s2
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h130_k10_s3,full_sparse,130,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2092,2352,52664,34732,3,route_no_timing_relax,3,3,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h130_k10_s3
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h130_k10_s4,full_sparse,130,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2092,2352,52664,34732,4,route_higher_delay_cost,4,4,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h130_k10_s4
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h130_k10_s5,full_sparse,130,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2092,2352,52664,34732,5,place_aggressive,5,5,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h130_k10_s5
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h130_k10_s6,full_sparse,130,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2092,2352,52664,34732,6,phys_hold_tns,6,6,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h130_k10_s6
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h130_k10_s7,full_sparse,130,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2092,2352,52664,34732,7,opt_remap,7,7,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h130_k10_s7
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h130_k10_s8,full_sparse,130,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2092,2352,52664,34732,8,route_ultrathreads,8,8,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h130_k10_s8
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h140_k10_s0,full_sparse,140,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2252,2532,56704,37411,0,baseline,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h140_k10_s0
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h140_k10_s1,full_sparse,140,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2252,2532,56704,37411,1,route_aggressive,1,1,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h140_k10_s1
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h140_k10_s2,full_sparse,140,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2252,2532,56704,37411,2,route_more_global,2,2,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h140_k10_s2
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h140_k10_s3,full_sparse,140,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2252,2532,56704,37411,3,route_no_timing_relax,3,3,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h140_k10_s3
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h140_k10_s4,full_sparse,140,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2252,2532,56704,37411,4,route_higher_delay_cost,4,4,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h140_k10_s4
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h140_k10_s5,full_sparse,140,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2252,2532,56704,37411,5,place_aggressive,5,5,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h140_k10_s5
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h140_k10_s6,full_sparse,140,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2252,2532,56704,37411,6,phys_hold_tns,6,6,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h140_k10_s6
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h150_k10_s0,full_sparse,150,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2412,2712,60744,40088,0,baseline,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h150_k10_s0
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h150_k10_s1,full_sparse,150,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2412,2712,60744,40088,1,route_aggressive,1,1,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h150_k10_s1
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h150_k10_s2,full_sparse,150,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2412,2712,60744,40088,2,route_more_global,2,2,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h150_k10_s2
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h150_k10_s3,full_sparse,150,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2412,2712,60744,40088,3,route_no_timing_relax,3,3,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h150_k10_s3
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h150_k10_s4,full_sparse,150,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2412,2712,60744,40088,4,route_higher_delay_cost,4,4,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h150_k10_s4
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h150_k10_s5,full_sparse,150,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2412,2712,60744,40088,5,place_aggressive,5,5,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h150_k10_s5
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h150_k10_s6,full_sparse,150,10,fail,make_bit_rc_2,0,0,,,,,,,,,,,,,,,,,,,,,,,,,,,,2412,2712,60744,40088,6,phys_hold_tns,6,6,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h150_k10_s6
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h80_k10_s0,full_sparse,80,10,pass,,1,1,0.046,293267,2932.67,293.267,29326.7,0.63,1847.5821,184.75821,70,51.85,77,32.08,38251,60.33,13770,10.86,15482,81.48,,,,,,,,,,1292,1452,32464,21351,0,baseline,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h80_k10_s0
+2026-07-full-sparse-max-variants-rerun,../exp/2026-07-full-sparse-max-variants-rerun/summary.csv,fullsparse_h90_k10_s0,full_sparse,90,10,pass,,1,1,0.152,329467,3294.67,329.467,32946.7,0.732,2411.69844,241.169844,70,51.85,77,32.08,41601,65.62,13849,10.92,17406,91.61,,,,,,,,,,1452,1632,36504,24022,0,baseline,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-full-sparse-max-variants-rerun/fullsparse_h90_k10_s0
+2026-07-max-horizon-direct,../exp/2026-07-max-horizon-direct/summary.csv,stageda_h320_k10,staged_a,320,10,pass,,1,1,0.031,1066237,10662.37,1066.237,106623.7,0.806,8593.87022,859.387022,129,95.56,80,33.33,27633,43.59,26853,21.18,3132,16.48,,,,,,,,,,5132,5772,129424,85620,,,,,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+?? MAX_HORIZON_BENCHMARK.md
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-direct/stageda_h320_k10
+2026-07-max-horizon-direct,../exp/2026-07-max-horizon-direct/summary.csv,stageda_h640_k10,staged_a,640,10,pass,,1,0,-0.066,2128667,21286.67,2128.667,212866.7,0.95,20222.336499999998,2022.23365,133.5,98.89,80,33.33,32620,51.45,27621,21.78,5834,30.71,,,,,,,,,,10252,11532,258704,171327,,,,,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+?? MAX_HORIZON_BENCHMARK.md
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-direct/stageda_h640_k10
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h1000_k10_s0,staged_a,1000,10,pass,,1,1,0.172,3323867,33238.67,3323.867,332386.7,1.131,37592.93577,3759.29358,122.5,90.74,80,33.33,36738,57.95,27302,21.53,8517,44.83,,,,,,,,,,16012,18012,404144,267747,0,,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h1000_k10_s0
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h1050_k10_s0,staged_a,1050,10,pass,,1,1,0.054,3489917,34899.17,3489.917,348991.7,1.102,38458.88534,3845.88853,130,96.3,80,33.33,38372,60.52,27691,21.84,8869,46.68,,,,,,,,,,16812,18912,424344,281139,0,,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h1050_k10_s0
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h1100_k10_s0,staged_a,1100,10,pass,,1,1,0.061,3655917,36559.17,3655.917,365591.7,1.085,39666.69945,3966.66995,130,96.3,80,33.33,39213,61.85,27678,21.83,9206,48.45,,,,,,,,,,17612,19812,444544,294531,0,,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h1100_k10_s0
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h1150_k10_s0,staged_a,1150,10,pass,,1,0,-0.175,3821917,38219.17,3821.917,382191.7,1.071,40932.731069999994,4093.27311,130,96.3,80,33.33,39374,62.1,27676,21.83,9543,50.23,,,,,,,,,,18412,20712,464744,307922,0,,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h1150_k10_s0
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h1150_k10_s1,staged_a,1150,10,pass,,1,0,-0.175,3821917,38219.17,3821.917,382191.7,1.071,40932.731069999994,4093.27311,130,96.3,80,33.33,39374,62.1,27676,21.83,9543,50.23,,,,,,,,,,18412,20712,464744,307922,1,,1,1,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h1150_k10_s1
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h1150_k10_s2,staged_a,1150,10,pass,,1,0,-0.175,3821917,38219.17,3821.917,382191.7,1.071,40932.731069999994,4093.27311,130,96.3,80,33.33,39374,62.1,27676,21.83,9543,50.23,,,,,,,,,,18412,20712,464744,307922,2,,2,2,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h1150_k10_s2
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h1150_k10_s3,staged_a,1150,10,pass,,1,0,-0.175,3821917,38219.17,3821.917,382191.7,1.071,40932.731069999994,4093.27311,130,96.3,80,33.33,39374,62.1,27676,21.83,9543,50.23,,,,,,,,,,18412,20712,464744,307922,3,,3,3,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h1150_k10_s3
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h1150_k10_s4,staged_a,1150,10,pass,,1,0,-0.175,3821917,38219.17,3821.917,382191.7,1.071,40932.731069999994,4093.27311,130,96.3,80,33.33,39374,62.1,27676,21.83,9543,50.23,,,,,,,,,,18412,20712,464744,307922,4,,4,4,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h1150_k10_s4
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h1150_k10_s5,staged_a,1150,10,pass,,1,0,-0.175,3821917,38219.17,3821.917,382191.7,1.071,40932.731069999994,4093.27311,130,96.3,80,33.33,39374,62.1,27676,21.83,9543,50.23,,,,,,,,,,18412,20712,464744,307922,5,,5,5,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h1150_k10_s5
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h1150_k10_s6,staged_a,1150,10,pass,,1,0,-0.175,3821917,38219.17,3821.917,382191.7,1.071,40932.731069999994,4093.27311,130,96.3,80,33.33,39374,62.1,27676,21.83,9543,50.23,,,,,,,,,,18412,20712,464744,307922,6,,6,6,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h1150_k10_s6
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h1150_k10_s7,staged_a,1150,10,pass,,1,0,-0.175,3821917,38219.17,3821.917,382191.7,1.071,40932.731069999994,4093.27311,130,96.3,80,33.33,39374,62.1,27676,21.83,9543,50.23,,,,,,,,,,18412,20712,464744,307922,7,,7,7,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h1150_k10_s7
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h640_k10_s0,staged_a,640,10,pass,,1,0,-0.066,2128667,21286.67,2128.667,212866.7,0.95,20222.336499999998,2022.23365,133.5,98.89,80,33.33,32620,51.45,27621,21.78,5834,30.71,,,,,,,,,,10252,11532,258704,171327,0,,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h640_k10_s0
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h704_k10_s0,staged_a,704,10,pass,,1,1,0.314,2341147,23411.47,2341.147,234114.7,0.885,20719.150950000003,2071.9151,133.5,98.89,80,33.33,33474,52.8,27678,21.83,6174,32.49,,,,,,,,,,11276,12684,284560,188468,0,,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h704_k10_s0
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h768_k10_s0,staged_a,768,10,pass,,1,1,0.067,2553627,25536.27,2553.627,255362.7,0.881,22497.45387,2249.74539,133.5,98.89,80,33.33,34104,53.79,27281,21.51,6843,36.02,,,,,,,,,,12300,13836,310416,205609,0,,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h768_k10_s0
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h832_k10_s0,staged_a,832,10,pass,,1,0,-0.093,2766107,27661.07,2766.107,276610.7,0.91,25171.5737,2517.15737,133.5,98.89,80,33.33,34602,54.58,27297,21.53,7178,37.78,,,,,,,,,,13324,14988,336272,222751,0,,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h832_k10_s0
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h832_k10_s1,staged_a,832,10,pass,,1,0,-0.093,2766107,27661.07,2766.107,276610.7,0.91,25171.5737,2517.15737,133.5,98.89,80,33.33,34602,54.58,27297,21.53,7178,37.78,,,,,,,,,,13324,14988,336272,222751,1,,1,1,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h832_k10_s1
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h832_k10_s2,staged_a,832,10,pass,,1,0,-0.093,2766107,27661.07,2766.107,276610.7,0.91,25171.5737,2517.15737,133.5,98.89,80,33.33,34602,54.58,27297,21.53,7178,37.78,,,,,,,,,,13324,14988,336272,222751,2,,2,2,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h832_k10_s2
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h832_k10_s3,staged_a,832,10,pass,,1,0,-0.093,2766107,27661.07,2766.107,276610.7,0.91,25171.5737,2517.15737,133.5,98.89,80,33.33,34602,54.58,27297,21.53,7178,37.78,,,,,,,,,,13324,14988,336272,222751,3,,3,3,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h832_k10_s3
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h832_k10_s4,staged_a,832,10,pass,,1,0,-0.093,2766107,27661.07,2766.107,276610.7,0.91,25171.5737,2517.15737,133.5,98.89,80,33.33,34602,54.58,27297,21.53,7178,37.78,,,,,,,,,,13324,14988,336272,222751,4,,4,4,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h832_k10_s4
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h832_k10_s5,staged_a,832,10,pass,,1,0,-0.093,2766107,27661.07,2766.107,276610.7,0.91,25171.5737,2517.15737,133.5,98.89,80,33.33,34602,54.58,27297,21.53,7178,37.78,,,,,,,,,,13324,14988,336272,222751,5,,5,5,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h832_k10_s5
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h832_k10_s6,staged_a,832,10,pass,,1,0,-0.093,2766107,27661.07,2766.107,276610.7,0.91,25171.5737,2517.15737,133.5,98.89,80,33.33,34602,54.58,27297,21.53,7178,37.78,,,,,,,,,,13324,14988,336272,222751,6,,6,6,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h832_k10_s6
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h832_k10_s7,staged_a,832,10,pass,,1,0,-0.093,2766107,27661.07,2766.107,276610.7,0.91,25171.5737,2517.15737,133.5,98.89,80,33.33,34602,54.58,27297,21.53,7178,37.78,,,,,,,,,,13324,14988,336272,222751,7,,7,7,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h832_k10_s7
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h900_k10_s0,staged_a,900,10,pass,,1,1,0.059,2991867,29918.67,2991.867,299186.7,0.914,27345.66438,2734.56644,133.5,98.89,80,33.33,35765,56.41,27295,21.53,7849,41.31,,,,,,,,,,14412,16212,363744,240964,0,,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h900_k10_s0
+2026-07-max-horizon-parallel,../exp/2026-07-max-horizon-parallel/summary.csv,stageda_h950_k10_s0,staged_a,950,10,pass,,1,1,0.174,3157867,31578.67,3157.867,315786.7,1.108,34989.16636,3498.91664,122.5,90.74,80,33.33,36513,57.59,27265,21.5,8180,43.05,,,,,,,,,,15212,17112,383944,254355,0,,0,0,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py",/home/agrillo/fpga/exp/2026-07-max-horizon-parallel/stageda_h950_k10_s0
+2026-07-solver-scalability,../exp/2026-07-solver-scalability/summary.csv,fullsparse_h10_k10_s0,full_sparse,10,10,pass,,1,1,0.099,39867,398.67,39.867,3986.7,0.267,106.44489000000002,10.644489,30.5,22.59,77,32.08,8101,12.78,11600,9.15,219,1.15,,,,,,,,,,172,192,4184,2645,0,baseline,0,0,a834011a71c66a82cf59a8c8e1230a803f19ec73,,/home/agrillo/fpga/exp/2026-07-solver-scalability/fullsparse_h10_k10_s0
+2026-07-solver-scalability,../exp/2026-07-solver-scalability/summary.csv,fullsparse_h20_k10_s0,full_sparse,20,10,pass,,1,1,0.133,76067,760.67,76.067,7606.7,0.309,235.04702999999998,23.504703,42,31.11,77,32.08,8904,14.04,11648,9.19,214,1.13,,,,,,,,,,332,372,8224,5320,0,baseline,0,0,a834011a71c66a82cf59a8c8e1230a803f19ec73,,/home/agrillo/fpga/exp/2026-07-solver-scalability/fullsparse_h20_k10_s0
+2026-07-solver-scalability,../exp/2026-07-solver-scalability/summary.csv,fullsparse_h30_k10_s0,full_sparse,30,10,pass,,1,1,0.243,112267,1122.67,112.267,11226.7,0.287,322.20628999999997,32.220629,52,38.52,77,32.08,8591,13.55,11915,9.4,198,1.04,,,,,,,,,,492,552,12264,7992,0,baseline,0,0,a834011a71c66a82cf59a8c8e1230a803f19ec73,,/home/agrillo/fpga/exp/2026-07-solver-scalability/fullsparse_h30_k10_s0
+2026-07-solver-scalability,../exp/2026-07-solver-scalability/summary.csv,fullsparse_h40_k10_s0,full_sparse,40,10,pass,,1,1,0.308,148467,1484.67,148.467,14846.7,0.333,494.39511000000005,49.439511,78.5,58.15,77,32.08,9280,14.64,12051,9.5,199,1.05,,,,,,,,,,652,732,16304,10664,0,baseline,0,0,a834011a71c66a82cf59a8c8e1230a803f19ec73,,/home/agrillo/fpga/exp/2026-07-solver-scalability/fullsparse_h40_k10_s0
+2026-07-solver-scalability,../exp/2026-07-solver-scalability/summary.csv,fullsparse_h50_k10_s0,full_sparse,50,10,pass,,1,1,0.182,184667,1846.67,184.667,18466.7,0.335,618.63445,61.863445,81,60.0,77,32.08,9114,14.38,11936,9.41,199,1.05,,,,,,,,,,812,912,20344,13334,0,baseline,0,0,a834011a71c66a82cf59a8c8e1230a803f19ec73,,/home/agrillo/fpga/exp/2026-07-solver-scalability/fullsparse_h50_k10_s0
+2026-07-solver-scalability,../exp/2026-07-solver-scalability/summary.csv,fullsparse_h60_k10_s0,full_sparse,60,10,pass,,1,1,0.379,220867,2208.67,220.867,22086.7,0.383,845.92061,84.592061,95.5,70.74,77,32.08,9796,15.45,11765,9.28,215,1.13,,,,,,,,,,972,1092,24384,16002,0,baseline,0,0,a834011a71c66a82cf59a8c8e1230a803f19ec73,,/home/agrillo/fpga/exp/2026-07-solver-scalability/fullsparse_h60_k10_s0
+2026-07-solver-scalability,../exp/2026-07-solver-scalability/summary.csv,fullsparse_h70_k10_s0,full_sparse,70,10,pass,,1,1,0.275,257067,2570.67,257.067,25706.7,0.363,933.15321,93.315321,96,71.11,77,32.08,12145,19.16,12330,9.72,214,1.13,,,,,,,,,,1132,1272,28424,18676,0,baseline,0,0,a834011a71c66a82cf59a8c8e1230a803f19ec73,,/home/agrillo/fpga/exp/2026-07-solver-scalability/fullsparse_h70_k10_s0
+2026-07-solver-scalability,../exp/2026-07-solver-scalability/summary.csv,fullsparse_h80_k10_s0,full_sparse,80,10,pass,,1,1,0.046,293267,2932.67,293.267,29326.7,0.63,1847.5821,184.75821,70,51.85,77,32.08,38251,60.33,13770,10.86,15482,81.48,,,,,,,,,,1292,1452,32464,21351,0,baseline,0,0,a834011a71c66a82cf59a8c8e1230a803f19ec73,,/home/agrillo/fpga/exp/2026-07-solver-scalability/fullsparse_h80_k10_s0
+2026-07-solver-scalability,../exp/2026-07-solver-scalability/summary.csv,fullsparse_h90_k10_s0,full_sparse,90,10,pass,,1,1,0.152,329467,3294.67,329.467,32946.7,0.732,2411.69844,241.169844,70,51.85,77,32.08,41601,65.62,13849,10.92,17406,91.61,,,,,,,,,,1452,1632,36504,24022,0,baseline,0,0,a834011a71c66a82cf59a8c8e1230a803f19ec73,,/home/agrillo/fpga/exp/2026-07-solver-scalability/fullsparse_h90_k10_s0
+2026-07-solver-scalability-staged-a,../exp/2026-07-solver-scalability-staged-a/summary.csv,stageda_h10_k10_s0,staged_a,10,10,pass,,1,1,0.231,36677,366.77,36.677,3667.7,0.668,245.00236,24.500236,20.5,15.19,80,33.33,20947,33.04,26214,20.67,704,3.71,,,,,,,,,,172,192,4184,2645,0,baseline,0,0,a834011a71c66a82cf59a8c8e1230a803f19ec73,,/home/agrillo/fpga/exp/2026-07-solver-scalability-staged-a/stageda_h10_k10_s0
+2026-07-solver-scalability-staged-a,../exp/2026-07-solver-scalability-staged-a/summary.csv,stageda_h1200_k10_s0,staged_a,1200,10,pass,,1,0,-0.667,3987917,39879.17,3987.917,398791.7,1.118,44584.91206,4458.49121,130,96.3,80,33.33,40341,63.63,27674,21.82,10213,53.75,,,,,,,,,,19212,21612,484944,321313,0,baseline,0,0,fe47d0ca1c0af01b3c602abca5ee7f98b17e31c0,"M vitis_projects/ADMM/ADMM.cpp
+?? scripts/aggregate_july_benchmarks.py",/home/agrillo/fpga/exp/2026-07-solver-scalability-staged-a/stageda_h1200_k10_s0
+2026-07-solver-scalability-staged-a,../exp/2026-07-solver-scalability-staged-a/summary.csv,stageda_h1200_k10_s1,staged_a,1200,10,pass,,1,0,-0.667,3987917,39879.17,3987.917,398791.7,1.118,44584.91206,4458.49121,130,96.3,80,33.33,40341,63.63,27674,21.82,10213,53.75,,,,,,,,,,19212,21612,484944,321313,1,route_aggressive,1,1,fe47d0ca1c0af01b3c602abca5ee7f98b17e31c0,"M vitis_projects/ADMM/ADMM.cpp
+?? scripts/aggregate_july_benchmarks.py",/home/agrillo/fpga/exp/2026-07-solver-scalability-staged-a/stageda_h1200_k10_s1
+2026-07-solver-scalability-staged-a,../exp/2026-07-solver-scalability-staged-a/summary.csv,stageda_h1200_k10_s2,staged_a,1200,10,pass,,1,0,-0.835,3987917,39879.17,3987.917,398791.7,1.118,44584.91206,4458.49121,130,96.3,80,33.33,40341,63.63,27674,21.82,10213,53.75,,,,,,,,,,19212,21612,484944,321313,2,route_more_global,2,2,fe47d0ca1c0af01b3c602abca5ee7f98b17e31c0,"M vitis_projects/ADMM/ADMM.cpp
+?? scripts/aggregate_july_benchmarks.py",/home/agrillo/fpga/exp/2026-07-solver-scalability-staged-a/stageda_h1200_k10_s2
+2026-07-solver-scalability-staged-a,../exp/2026-07-solver-scalability-staged-a/summary.csv,stageda_h1200_k10_s3,staged_a,1200,10,pass,,1,0,-0.904,3987917,39879.17,3987.917,398791.7,1.124,44824.18708,4482.41871,130,96.3,80,33.33,40341,63.63,27674,21.82,10213,53.75,,,,,,,,,,19212,21612,484944,321313,3,route_no_timing_relax,3,3,fe47d0ca1c0af01b3c602abca5ee7f98b17e31c0,"M vitis_projects/ADMM/ADMM.cpp
+?? scripts/aggregate_july_benchmarks.py",/home/agrillo/fpga/exp/2026-07-solver-scalability-staged-a/stageda_h1200_k10_s3
+2026-07-solver-scalability-staged-a,../exp/2026-07-solver-scalability-staged-a/summary.csv,stageda_h20_k10_s0,staged_a,20,10,pass,,1,1,0.068,69877,698.77,69.877,6987.7,0.671,468.87467000000004,46.887467,26.5,19.63,80,33.33,21894,34.53,26173,20.64,414,2.18,,,,,,,,,,332,372,8224,5320,0,baseline,0,0,a834011a71c66a82cf59a8c8e1230a803f19ec73,,/home/agrillo/fpga/exp/2026-07-solver-scalability-staged-a/stageda_h20_k10_s0
+2026-07-solver-scalability-staged-a,../exp/2026-07-solver-scalability-staged-a/summary.csv,stageda_h30_k10_s0,staged_a,30,10,pass,,1,1,0.05,102977,1029.77,102.977,10297.7,0.69,710.5413,71.05413,27.5,20.37,80,33.33,21473,33.87,26491,20.89,408,2.15,,,,,,,,,,492,552,12264,7992,0,baseline,0,0,a834011a71c66a82cf59a8c8e1230a803f19ec73,,/home/agrillo/fpga/exp/2026-07-solver-scalability-staged-a/stageda_h30_k10_s0
+2026-07-solver-scalability-staged-a,../exp/2026-07-solver-scalability-staged-a/summary.csv,stageda_h400_k10_s0,staged_a,400,10,pass,,1,1,0.234,1331837,13318.37,1331.837,133183.7,0.774,10308.418380000001,1030.84184,129,95.56,80,33.33,28416,44.82,27176,21.43,3805,20.03,,,,,,,,,,6412,7212,161744,107047,0,baseline,0,0,fe47d0ca1c0af01b3c602abca5ee7f98b17e31c0,"M vitis_projects/ADMM/ADMM.cpp
+?? scripts/aggregate_july_benchmarks.py",/home/agrillo/fpga/exp/2026-07-solver-scalability-staged-a/stageda_h400_k10_s0
+2026-07-solver-scalability-staged-a,../exp/2026-07-solver-scalability-staged-a/summary.csv,stageda_h40_k10_s0,staged_a,40,10,pass,,1,1,0.309,136507,1365.07,136.507,13650.7,0.683,932.34281,93.234281,36,26.67,80,33.33,22127,34.9,26540,20.93,417,2.19,,,,,,,,,,652,732,16304,10664,0,baseline,0,0,a834011a71c66a82cf59a8c8e1230a803f19ec73,,/home/agrillo/fpga/exp/2026-07-solver-scalability-staged-a/stageda_h40_k10_s0
+2026-07-solver-scalability-staged-a,../exp/2026-07-solver-scalability-staged-a/summary.csv,stageda_h500_k10_s0,staged_a,500,10,pass,,1,1,0.037,1663837,16638.37,1663.837,166383.7,0.826,13743.293619999999,1374.32936,130.5,96.67,80,33.33,29664,46.79,27302,21.53,4475,23.55,,,,,,,,,,8012,9012,202144,133831,0,baseline,0,0,fe47d0ca1c0af01b3c602abca5ee7f98b17e31c0,"M vitis_projects/ADMM/ADMM.cpp
+?? scripts/aggregate_july_benchmarks.py",/home/agrillo/fpga/exp/2026-07-solver-scalability-staged-a/stageda_h500_k10_s0
+2026-07-solver-scalability-staged-a,../exp/2026-07-solver-scalability-staged-a/summary.csv,stageda_h50_k10_s0,staged_a,50,10,pass,,1,1,0.268,169707,1697.07,169.707,16970.7,0.689,1169.2812299999998,116.928123,36,26.67,80,33.33,21998,34.7,26166,20.64,417,2.19,,,,,,,,,,812,912,20344,13334,0,baseline,0,0,a834011a71c66a82cf59a8c8e1230a803f19ec73,,/home/agrillo/fpga/exp/2026-07-solver-scalability-staged-a/stageda_h50_k10_s0
+2026-07-solver-scalability-staged-a,../exp/2026-07-solver-scalability-staged-a/summary.csv,stageda_h600_k10_s0,staged_a,600,10,pass,,1,1,0.093,1995867,19958.67,1995.867,199586.7,0.914,18242.22438,1824.22244,133.5,98.89,80,33.33,32779,51.7,27630,21.79,5497,28.93,,,,,,,,,,9612,10812,242544,160613,0,baseline,0,0,fe47d0ca1c0af01b3c602abca5ee7f98b17e31c0,"M vitis_projects/ADMM/ADMM.cpp
+?? scripts/aggregate_july_benchmarks.py",/home/agrillo/fpga/exp/2026-07-solver-scalability-staged-a/stageda_h600_k10_s0
+2026-07-solver-scalability-staged-a,../exp/2026-07-solver-scalability-staged-a/summary.csv,stageda_h60_k10_s0,staged_a,60,10,pass,,1,1,0.044,202907,2029.07,202.907,20290.7,0.699,1418.3199299999999,141.831993,39,28.89,80,33.33,21590,34.05,26089,20.57,419,2.21,,,,,,,,,,972,1092,24384,16002,0,baseline,0,0,a834011a71c66a82cf59a8c8e1230a803f19ec73,,/home/agrillo/fpga/exp/2026-07-solver-scalability-staged-a/stageda_h60_k10_s0
+2026-07-solver-scalability-staged-a,../exp/2026-07-solver-scalability-staged-a/summary.csv,stageda_h70_k10_s0,staged_a,70,10,pass,,1,1,0.14,236157,2361.57,236.157,23615.7,0.73,1723.9461000000001,172.39461,83.5,61.85,80,33.33,19966,31.49,25383,20.02,422,2.22,,,,,,,,,,1132,1272,28424,18676,0,baseline,0,0,a834011a71c66a82cf59a8c8e1230a803f19ec73,,/home/agrillo/fpga/exp/2026-07-solver-scalability-staged-a/stageda_h70_k10_s0
+2026-07-solver-scalability-staged-a,../exp/2026-07-solver-scalability-staged-a/summary.csv,stageda_h800_k10_s0,staged_a,800,10,pass,,1,1,0.15,2659867,26598.67,2659.867,265986.7,0.909,24178.191029999998,2417.8191,133.5,98.89,80,33.33,34311,54.12,27714,21.86,6845,36.03,,,,,,,,,,12812,14412,323344,214180,0,baseline,0,0,fe47d0ca1c0af01b3c602abca5ee7f98b17e31c0,"M vitis_projects/ADMM/ADMM.cpp
+?? scripts/aggregate_july_benchmarks.py",/home/agrillo/fpga/exp/2026-07-solver-scalability-staged-a/stageda_h800_k10_s0
+2026-07-solver-scalability-staged-a,../exp/2026-07-solver-scalability-staged-a/summary.csv,stageda_h80_k10_s0,staged_a,80,10,pass,,1,1,0.282,269357,2693.57,269.357,26935.7,0.724,1950.14468,195.014468,83.5,61.85,80,33.33,19962,31.49,25410,20.04,424,2.23,,,,,,,,,,1292,1452,32464,21351,0,baseline,0,0,a834011a71c66a82cf59a8c8e1230a803f19ec73,,/home/agrillo/fpga/exp/2026-07-solver-scalability-staged-a/stageda_h80_k10_s0
+2026-07-solver-scalability-staged-a,../exp/2026-07-solver-scalability-staged-a/summary.csv,stageda_h90_k10_s0,staged_a,90,10,pass,,1,1,0.169,302557,3025.57,302.557,30255.7,0.707,2139.07799,213.907799,83.5,61.85,80,33.33,19979,31.51,25752,20.31,423,2.23,,,,,,,,,,1452,1632,36504,24022,0,baseline,0,0,a834011a71c66a82cf59a8c8e1230a803f19ec73,,/home/agrillo/fpga/exp/2026-07-solver-scalability-staged-a/stageda_h90_k10_s0
+tinympc,../tinympcBenchmark.csv,tinympc_e_h10_k1,tinympc_e,10,1,benchmark,,,1,,,482,482,,,,,,,,,,,,,,,354,482,639,0,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h10_k2,tinympc_e,10,2,benchmark,,,1,,,983,491.5,,,,,,,,,,,,,,,863,983,1236,0,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h10_k5,tinympc_e,10,5,benchmark,,,1,,,2476,495.2,,,,,,,,,,,,,,,2310,2476,2717,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h10_k10,tinympc_e,10,10,benchmark,,,1,,,4977,497.7,,,,,,,,,,,,,,,4763,4977,5233,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h10_k15,tinympc_e,10,15,benchmark,,,1,,,7463,497.533333,,,,,,,,,,,,,,,7249,7463,7666,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h10_k20,tinympc_e,10,20,benchmark,,,1,,,9960,498,,,,,,,,,,,,,,,9752,9960,10238,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h10_k25,tinympc_e,10,25,benchmark,,,1,,,12449,497.96,,,,,,,,,,,,,,,12086,12449,12805,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h10_k30,tinympc_e,10,30,benchmark,,,1,,,14894,496.466667,,,,,,,,,,,,,,,14573,14894,15307,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h20_k1,tinympc_e,20,1,benchmark,,,1,,,1031,1031,,,,,,,,,,,,,,,933,1031,1185,0,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h20_k2,tinympc_e,20,2,benchmark,,,1,,,2080,1040,,,,,,,,,,,,,,,1953,2080,2304,73,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h20_k5,tinympc_e,20,5,benchmark,,,1,,,5177,1035.4,,,,,,,,,,,,,,,4966,5177,5357,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h20_k10,tinympc_e,20,10,benchmark,,,1,,,10339,1033.9,,,,,,,,,,,,,,,10083,10339,10643,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h20_k15,tinympc_e,20,15,benchmark,,,1,,,15522,1034.8,,,,,,,,,,,,,,,14954,15522,15886,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h20_k20,tinympc_e,20,20,benchmark,,,1,,,20595,1029.75,,,,,,,,,,,,,,,20153,20595,20962,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h20_k25,tinympc_e,20,25,benchmark,,,1,,,25701,1028.04,,,,,,,,,,,,,,,25195,25701,26215,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h20_k30,tinympc_e,20,30,benchmark,,,1,,,30715,1023.83333,,,,,,,,,,,,,,,30324,30715,31196,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h30_k1,tinympc_e,30,1,benchmark,,,1,,,1592,1592,,,,,,,,,,,,,,,1434,1592,1729,0,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h30_k2,tinympc_e,30,2,benchmark,,,1,,,3149,1574.5,,,,,,,,,,,,,,,3024,3149,3345,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h30_k5,tinympc_e,30,5,benchmark,,,1,,,7883,1576.6,,,,,,,,,,,,,,,7708,7883,8123,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h30_k10,tinympc_e,30,10,benchmark,,,1,,,15692,1569.2,,,,,,,,,,,,,,,15379,15692,16054,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h30_k15,tinympc_e,30,15,benchmark,,,1,,,23500,1566.66667,,,,,,,,,,,,,,,23121,23500,24120,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h30_k20,tinympc_e,30,20,benchmark,,,1,,,31244,1562.2,,,,,,,,,,,,,,,30796,31244,31827,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h30_k25,tinympc_e,30,25,benchmark,,,1,,,38852,1554.08,,,,,,,,,,,,,,,38371,38852,39596,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h30_k30,tinympc_e,30,30,benchmark,,,1,,,46594,1553.13333,,,,,,,,,,,,,,,45853,46594,47088,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h40_k1,tinympc_e,40,1,benchmark,,,1,,,2144,2144,,,,,,,,,,,,,,,1988,2144,2355,78,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h40_k2,tinympc_e,40,2,benchmark,,,1,,,4241,2120.5,,,,,,,,,,,,,,,4065,4241,4536,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h40_k5,tinympc_e,40,5,benchmark,,,1,,,10548,2109.6,,,,,,,,,,,,,,,10307,10548,10982,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h40_k10,tinympc_e,40,10,benchmark,,,1,,,20899,2089.9,,,,,,,,,,,,,,,20515,20899,21327,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h40_k15,tinympc_e,40,15,benchmark,,,1,,,31333,2088.86667,,,,,,,,,,,,,,,30896,31333,31781,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h40_k20,tinympc_e,40,20,benchmark,,,1,,,41652,2082.6,,,,,,,,,,,,,,,40994,41652,42243,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h40_k25,tinympc_e,40,25,benchmark,,,1,,,52054,2082.16,,,,,,,,,,,,,,,51315,52054,53034,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h40_k30,tinympc_e,40,30,benchmark,,,1,,,62552,2085.06667,,,,,,,,,,,,,,,61809,62552,63395,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h50_k1,tinympc_e,50,1,benchmark,,,1,,,2675,2675,,,,,,,,,,,,,,,2487,2675,2864,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h50_k2,tinympc_e,50,2,benchmark,,,1,,,5332,2666,,,,,,,,,,,,,,,5147,5332,5633,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h50_k5,tinympc_e,50,5,benchmark,,,1,,,13199,2639.8,,,,,,,,,,,,,,,12839,13199,13456,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h50_k10,tinympc_e,50,10,benchmark,,,1,,,26200,2620,,,,,,,,,,,,,,,25850,26200,26741,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h50_k15,tinympc_e,50,15,benchmark,,,1,,,39227,2615.13333,,,,,,,,,,,,,,,38626,39227,39688,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h50_k20,tinympc_e,50,20,benchmark,,,1,,,52340,2617,,,,,,,,,,,,,,,51701,52340,52975,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h50_k25,tinympc_e,50,25,benchmark,,,1,,,65364,2614.56,,,,,,,,,,,,,,,64850,65364,65960,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h50_k30,tinympc_e,50,30,benchmark,,,1,,,78316,2610.53333,,,,,,,,,,,,,,,77081,78316,79338,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h60_k1,tinympc_e,60,1,benchmark,,,1,,,3191,3191,,,,,,,,,,,,,,,3041,3191,3400,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h60_k2,tinympc_e,60,2,benchmark,,,1,,,6373,3186.5,,,,,,,,,,,,,,,6136,6373,6664,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h60_k5,tinympc_e,60,5,benchmark,,,1,,,15791,3158.2,,,,,,,,,,,,,,,15532,15791,16032,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h60_k10,tinympc_e,60,10,benchmark,,,1,,,31525,3152.5,,,,,,,,,,,,,,,30804,31525,32042,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h60_k15,tinympc_e,60,15,benchmark,,,1,,,47194,3146.26667,,,,,,,,,,,,,,,46757,47194,47821,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h60_k20,tinympc_e,60,20,benchmark,,,1,,,62791,3139.55,,,,,,,,,,,,,,,62194,62791,63379,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h60_k25,tinympc_e,60,25,benchmark,,,1,,,78495,3139.8,,,,,,,,,,,,,,,77509,78495,79668,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h60_k30,tinympc_e,60,30,benchmark,,,1,,,94103,3136.76667,,,,,,,,,,,,,,,93285,94103,94842,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h70_k1,tinympc_e,70,1,benchmark,,,1,,,3715,3715,,,,,,,,,,,,,,,3531,3715,3890,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h70_k2,tinympc_e,70,2,benchmark,,,1,,,7392,3696,,,,,,,,,,,,,,,7127,7392,7564,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h70_k5,tinympc_e,70,5,benchmark,,,1,,,18381,3676.2,,,,,,,,,,,,,,,17998,18381,18742,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h70_k10,tinympc_e,70,10,benchmark,,,1,,,36727,3672.7,,,,,,,,,,,,,,,36111,36727,37380,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h70_k15,tinympc_e,70,15,benchmark,,,1,,,55057,3670.46667,,,,,,,,,,,,,,,54338,55057,55863,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h70_k20,tinympc_e,70,20,benchmark,,,1,,,73434,3671.7,,,,,,,,,,,,,,,72867,73434,74304,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h70_k25,tinympc_e,70,25,benchmark,,,1,,,91680,3667.2,,,,,,,,,,,,,,,90777,91680,92707,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h70_k30,tinympc_e,70,30,benchmark,,,1,,,109968,3665.6,,,,,,,,,,,,,,,109058,109968,111111,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h80_k1,tinympc_e,80,1,benchmark,,,1,,,4202,4202,,,,,,,,,,,,,,,4034,4202,4497,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h80_k2,tinympc_e,80,2,benchmark,,,1,,,8421,4210.5,,,,,,,,,,,,,,,8251,8421,8663,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h80_k5,tinympc_e,80,5,benchmark,,,1,,,21034,4206.8,,,,,,,,,,,,,,,20650,21034,21455,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h80_k10,tinympc_e,80,10,benchmark,,,1,,,42012,4201.2,,,,,,,,,,,,,,,41522,42012,42656,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h80_k15,tinympc_e,80,15,benchmark,,,1,,,63078,4205.2,,,,,,,,,,,,,,,62524,63078,63672,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h80_k20,tinympc_e,80,20,benchmark,,,1,,,84067,4203.35,,,,,,,,,,,,,,,83218,84067,84704,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h80_k25,tinympc_e,80,25,benchmark,,,1,,,104891,4195.64,,,,,,,,,,,,,,,103722,104891,106027,80,80,0,80,0,0,,,,,,,,,,,
+tinympc,../tinympcBenchmark.csv,tinympc_e_h80_k30,tinympc_e,80,30,benchmark,,,1,,,125976,4199.2,,,,,,,,,,,,,,,124897,125976,127140,80,80,0,80,0,0,,,,,,,,,,,
