@@ -403,6 +403,8 @@ def plot_edp_bars(
 
     fig, ax = plt.subplots(figsize=(9.2, 4.8))
     fig.patch.set_facecolor("white")
+    non_axis_fontsize = 10
+    improvement_label_fontsize = 11
 
     bar_width = 0.24
     offsets = {
@@ -449,21 +451,27 @@ def plot_edp_bars(
     ax.set_ylabel(f"EDP at k={compare_iters} [uJ*us] (log scale)", fontsize=15)
 
     arrow_specs = [
-        ("staged_a", COLORS["staged_a"], -0.035, 0.30),
-        ("full_sparse", COLORS["full_sparse"], 0.015, 0.48),
+        ("staged_a", COLORS["staged_a"], 8.5),
+        ("full_sparse", COLORS["full_sparse"], -8.5),
     ]
     for idx, _horizon in enumerate(horizons):
         tiny_edp = edp_by_arch["tinympc_e"][idx]
-        for arch, arrow_color, x_nudge, label_fraction in arrow_specs:
+        lala = 0.95
+        arrow_top = tiny_edp * lala
+        shared_arrow_bottom = max(
+            edp_by_arch[arch][idx] * 1.08
+            for arch, _arrow_color, _label_offset_points in arrow_specs
+        )
+        shared_label_y = shared_arrow_bottom * (arrow_top / shared_arrow_bottom) ** 0.50
+        for arch, arrow_color, label_offset_points in arrow_specs:
             target_edp = edp_by_arch[arch][idx]
-            target_x = idx + offsets[arch] + x_nudge
+            target_x = idx + offsets[arch]
             tiny_x = idx + offsets["tinympc_e"] + bar_width / 2.0
             improvement = tiny_edp / target_edp
-            label_y = target_edp * (tiny_edp / target_edp) ** label_fraction
-            lala = 0.95
+            arrow_bottom = target_edp * 1.08
             ax.plot(
                 [tiny_x, target_x],
-                [tiny_edp * lala, tiny_edp * lala],
+                [arrow_top, arrow_top],
                 color=arrow_color,
                 linewidth=1.25,
                 linestyle="--",
@@ -471,8 +479,8 @@ def plot_edp_bars(
             )
             ax.annotate(
                 "",
-                xy=(target_x, target_edp * 1.08),
-                xytext=(target_x, tiny_edp * lala),
+                xy=(target_x, arrow_bottom),
+                xytext=(target_x, arrow_top),
                 arrowprops={
                     "arrowstyle": "-|>",
                     "color": arrow_color,
@@ -482,15 +490,23 @@ def plot_edp_bars(
                 },
                 zorder=5,
             )
-            ax.text(
-                target_x + 0.025,
-                label_y,
+            ax.annotate(
                 f"{improvement:.0f}x",
+                xy=(target_x, shared_label_y),
+                xytext=(0, label_offset_points),
+                textcoords="offset points",
                 color=arrow_color,
-                fontsize=8.3,
+                fontsize=improvement_label_fontsize,
                 fontweight="semibold",
-                ha="left",
+                ha="center",
                 va="center",
+                bbox={
+                    "boxstyle": "round,pad=0.14",
+                    "fc": "white",
+                    "ec": arrow_color,
+                    "alpha": 0.86,
+                    "linewidth": 0.55,
+                },
                 zorder=6,
             )
 
@@ -499,7 +515,7 @@ def plot_edp_bars(
         frameon=True,
         fancybox=False,
         edgecolor="#D0D0D0",
-        fontsize=10,
+        fontsize=non_axis_fontsize+2.5,
     )
     legend.get_frame().set_linewidth(0.8)
     legend.get_frame().set_facecolor("white")
@@ -581,6 +597,7 @@ def plot_solver_radar(
     ax = fig.add_subplot(111, polar=True)
     ax.set_theta_offset(np.pi / 2)
     ax.set_theta_direction(-1)
+    radar_label_fontsize = 12.5
 
     for arch_idx, arch in enumerate(RADAR_ARCHES):
         values = [norm_by_metric[metric][arch] for metric in metrics]
@@ -625,7 +642,7 @@ def plot_solver_radar(
                 label_radius,
                 format_radar_value(metric, raw_by_arch[arch][metric], max_horizons[arch]),
                 color=COLORS[arch],
-                fontsize=7.2,
+                fontsize=radar_label_fontsize-2.0,
                 fontweight="semibold",
                 ha="center",
                 va="center",
@@ -649,7 +666,7 @@ def plot_solver_radar(
             angle,
             label_distances[metric],
             metric,
-            fontsize=12.5,
+            fontsize=radar_label_fontsize,
             ha="center",
             va="center",
             color="#333333",
