@@ -14,6 +14,9 @@ import csv
 import math
 import os
 from pathlib import Path
+from typing import Any
+
+import numpy as np
 
 
 LABELS = {
@@ -48,6 +51,22 @@ RADAR_METRIC_UNITS = {
     "Scalability": "max H cost",
 }
 
+DATA_DIR = Path("data")
+OUTPUT_DIR = Path("output")
+
+BENCHMARK_SUMMARY_CSV = DATA_DIR / "benchmark_summary.csv"
+
+FIGURE8_REFERENCE_CSV = DATA_DIR / "figure8_ref_trajectory.csv"
+FIGURE8_FPGA_CSV = DATA_DIR / "figure8_fpga_trajectory.csv"
+FIGURE8_TINYMPC_CSV = DATA_DIR / "figure8_tinympc_trajectory.csv"
+
+FIGURE8_X_LIMITS = (-0.65, 0.65)
+FIGURE8_Y_LIMITS = (-0.65, 0.65)
+FIGURE8_FPGA_ROW_RANGE = (500, 1300)
+FIGURE8_TINYMPC_ROW_RANGE = (350, 1070)
+FIGURE8_FPGA_ALIGNMENT = (0.757180, -0.383558, 0.598284, -0.289005)
+FIGURE8_TINYMPC_ALIGNMENT = (0.971674, -0.439716, 0.580961, -0.313049)
+
 
 def f(row: dict[str, str], key: str, default: float = math.nan) -> float:
     raw = row.get(key, "")
@@ -62,6 +81,76 @@ def f(row: dict[str, str], key: str, default: float = math.nan) -> float:
 def load_rows(path: Path) -> list[dict[str, str]]:
     with path.open(newline="") as fobj:
         return list(csv.DictReader(fobj))
+
+
+def load_figure8_hw_log(path: Path) -> dict[str, Any]:
+    rows = load_rows(path)
+    if not rows:
+        return {"name": path.stem, "path": path, "n": 0, "t": np.array([], dtype=np.float64), "data": {}}
+
+    t_ms = np.array([f(row, "time_ms") for row in rows], dtype=np.float64)
+    data = {
+        "x": np.array([f(row, "state_x") for row in rows], dtype=np.float64),
+        "y": np.array([f(row, "state_y") for row in rows], dtype=np.float64),
+        "z": np.array([f(row, "state_z") for row in rows], dtype=np.float64),
+    }
+    return {
+        "name": path.stem,
+        "path": path,
+        "n": len(rows),
+        "t": (t_ms - t_ms[0]) / 1000.0,
+        "data": data,
+    }
+
+
+def load_figure8_reference(path: Path) -> dict[str, Any]:
+    rows = load_rows(path)
+    if not rows:
+        return {"name": path.stem, "path": path, "n": 0, "t": np.array([], dtype=np.float64), "data": {}}
+
+    data = {
+        "x": np.array([f(row, "x0") for row in rows], dtype=np.float64),
+        "y": np.array([f(row, "x1") for row in rows], dtype=np.float64),
+        "z": np.array([f(row, "x2") for row in rows], dtype=np.float64),
+    }
+    return {
+        "name": path.stem,
+        "path": path,
+        "n": len(rows),
+        "t": np.array([f(row, "t") for row in rows], dtype=np.float64),
+        "data": data,
+    }
+
+
+def apply_figure8_alignment(ds: dict[str, Any], alignment: tuple[float, float, float, float]) -> dict[str, Any]:
+    lag_s, dx, dy, dz = alignment
+    data = {key: np.array(value, copy=True) for key, value in ds["data"].items()}
+    for key, offset in (("x", dx), ("y", dy), ("z", dz)):
+        if key in data:
+            data[key] = data[key] + offset
+    return {
+        "name": ds["name"],
+        "path": ds["path"],
+        "n": ds["n"],
+        "t": ds["t"] + lag_s,
+        "data": data,
+    }
+
+
+def slice_figure8_dataset(ds: dict[str, Any], row_range: tuple[int | None, int | None]) -> dict[str, Any]:
+    if ds["n"] < 1:
+        return ds
+    row_start, row_end = row_range
+    sliced_t = ds["t"][row_start:row_end]
+    if sliced_t.size == 0:
+        return ds
+    return {
+        "name": ds["name"],
+        "path": ds["path"],
+        "n": int(sliced_t.size),
+        "t": sliced_t - sliced_t[0],
+        "data": {key: value[row_start:row_end] for key, value in ds["data"].items()},
+    }
 
 
 def best_rows(rows: list[dict[str, str]], compare_iters: int) -> list[dict[str, str]]:
@@ -404,7 +493,7 @@ def plot_edp_bars(
     fig, ax = plt.subplots(figsize=(9.2, 4.8))
     fig.patch.set_facecolor("white")
     non_axis_fontsize = 10
-    improvement_label_fontsize = 11
+    improvement_label_fontsize = 13
 
     bar_width = 0.24
     offsets = {
@@ -451,8 +540,8 @@ def plot_edp_bars(
     ax.set_ylabel(f"EDP at k={compare_iters} [uJ*us] (log scale)", fontsize=15)
 
     arrow_specs = [
-        ("staged_a", COLORS["staged_a"], 8.5),
-        ("full_sparse", COLORS["full_sparse"], -8.5),
+        ("staged_a", COLORS["staged_a"], 9.5),
+        ("full_sparse", COLORS["full_sparse"], -9.5),
     ]
     for idx, _horizon in enumerate(horizons):
         tiny_edp = edp_by_arch["tinympc_e"][idx]
@@ -499,7 +588,7 @@ def plot_edp_bars(
                 fontsize=improvement_label_fontsize,
                 fontweight="semibold",
                 ha="center",
-                va="center",
+                va="center_baseline",
                 bbox={
                     "boxstyle": "round,pad=0.14",
                     "fc": "white",
@@ -696,9 +785,99 @@ def plot_solver_radar(
     plt.close(fig)
 
 
+def plot_figure8_trajectory(
+    reference_csv: Path,
+    fpga_csv: Path,
+    tinympc_csv: Path,
+    svg_output: Path,
+    png_output: Path,
+    pdf_output: Path,
+) -> None:
+    os.environ.setdefault("MPLCONFIGDIR", "/tmp/latency_benchmark_matplotlib")
+    import matplotlib.pyplot as plt
+
+    plt.rcParams.update({
+        "font.family": "serif",
+        "font.serif": ["Times New Roman", "Times", "DejaVu Serif"],
+        "mathtext.fontset": "stix",
+        "svg.fonttype": "none",
+        "pdf.fonttype": 42,
+    })
+
+    reference = load_figure8_reference(reference_csv)
+    fpga = slice_figure8_dataset(
+        apply_figure8_alignment(load_figure8_hw_log(fpga_csv), FIGURE8_FPGA_ALIGNMENT),
+        FIGURE8_FPGA_ROW_RANGE,
+    )
+    tinympc = slice_figure8_dataset(
+        apply_figure8_alignment(load_figure8_hw_log(tinympc_csv), FIGURE8_TINYMPC_ALIGNMENT),
+        FIGURE8_TINYMPC_ROW_RANGE,
+    )
+
+    fig, ax = plt.subplots(figsize=(5.9, 5.25))
+    fig.patch.set_facecolor("white")
+
+    ax.plot(
+        reference["data"]["x"],
+        reference["data"]["y"],
+        color="#424141",
+        linewidth=2.0,
+        linestyle="--",
+        label="Reference",
+        zorder=2,
+    )
+    ax.plot(
+        fpga["data"]["x"],
+        fpga["data"]["y"],
+        color=COLORS["staged_a"],
+        linewidth=2.2,
+        label="FPGA",
+        zorder=3,
+    )
+    ax.plot(
+        tinympc["data"]["x"],
+        tinympc["data"]["y"],
+        color=COLORS["tinympc_e"],
+        linewidth=2.2,
+        label="TinyMPC",
+        zorder=3,
+    )
+
+    ax.set_xlim(*FIGURE8_X_LIMITS)
+    ax.set_ylim(*FIGURE8_Y_LIMITS)
+    ax.set_aspect("equal", adjustable="box")
+    ax.set_xlabel("x [m]", fontsize=15)
+    ax.set_ylabel("y [m]", fontsize=15)
+    ax.grid(True, color="#D9D9D9", linewidth=0.9)
+    ax.set_axisbelow(True)
+    ax.tick_params(axis="both", labelsize=13, colors="#333333")
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_color("#333333")
+    ax.spines["bottom"].set_color("#333333")
+    ax.spines["bottom"].set_linewidth(1.1)
+
+    ax.legend(
+        loc="lower center",
+        bbox_to_anchor=(0.5, -0.22),
+        ncol=3,
+        frameon=False,
+        fontsize=12,
+    )
+
+    fig.subplots_adjust(left=0.14, right=0.98, top=0.98, bottom=0.23)
+
+    for output in (svg_output, png_output, pdf_output):
+        output.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(svg_output, format="svg", bbox_inches="tight")
+    fig.savefig(png_output, format="png", dpi=240, bbox_inches="tight")
+    fig.savefig(pdf_output, format="pdf", bbox_inches="tight")
+    plt.close(fig)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=Path("benchmark_summary.csv"))
+    parser.add_argument("--input", type=Path, default=BENCHMARK_SUMMARY_CSV)
     parser.add_argument("--compare-iters", type=int, default=10)
     parser.add_argument(
         "--tinympc-power-w",
@@ -706,16 +885,22 @@ def main() -> int:
         default=DEFAULT_TINYMPC_POWER_W,
         help="TinyMPC active power estimate used for bubble area (default: 87 mA at 3.3 V)",
     )
-    parser.add_argument("--svg-output", type=Path, default=Path("benchmark_latency_energy.svg"))
-    parser.add_argument("--png-output", type=Path, default=Path("benchmark_latency_energy.png"))
-    parser.add_argument("--pdf-output", type=Path, default=Path("benchmark_latency_energy.pdf"))
-    parser.add_argument("--edp-svg-output", type=Path, default=Path("benchmark_edp_bars.svg"))
-    parser.add_argument("--edp-png-output", type=Path, default=Path("benchmark_edp_bars.png"))
-    parser.add_argument("--edp-pdf-output", type=Path, default=Path("benchmark_edp_bars.pdf"))
+    parser.add_argument("--svg-output", type=Path, default=OUTPUT_DIR / "benchmark_latency_energy.svg")
+    parser.add_argument("--png-output", type=Path, default=OUTPUT_DIR / "benchmark_latency_energy.png")
+    parser.add_argument("--pdf-output", type=Path, default=OUTPUT_DIR / "benchmark_latency_energy.pdf")
+    parser.add_argument("--edp-svg-output", type=Path, default=OUTPUT_DIR / "benchmark_edp_bars.svg")
+    parser.add_argument("--edp-png-output", type=Path, default=OUTPUT_DIR / "benchmark_edp_bars.png")
+    parser.add_argument("--edp-pdf-output", type=Path, default=OUTPUT_DIR / "benchmark_edp_bars.pdf")
     parser.add_argument("--radar-horizon", type=int, default=40)
-    parser.add_argument("--radar-svg-output", type=Path, default=Path("benchmark_solver_radar.svg"))
-    parser.add_argument("--radar-png-output", type=Path, default=Path("benchmark_solver_radar.png"))
-    parser.add_argument("--radar-pdf-output", type=Path, default=Path("benchmark_solver_radar.pdf"))
+    parser.add_argument("--radar-svg-output", type=Path, default=OUTPUT_DIR / "benchmark_solver_radar.svg")
+    parser.add_argument("--radar-png-output", type=Path, default=OUTPUT_DIR / "benchmark_solver_radar.png")
+    parser.add_argument("--radar-pdf-output", type=Path, default=OUTPUT_DIR / "benchmark_solver_radar.pdf")
+    parser.add_argument("--trajectory-reference", type=Path, default=FIGURE8_REFERENCE_CSV)
+    parser.add_argument("--trajectory-fpga", type=Path, default=FIGURE8_FPGA_CSV)
+    parser.add_argument("--trajectory-tinympc", type=Path, default=FIGURE8_TINYMPC_CSV)
+    parser.add_argument("--trajectory-svg-output", type=Path, default=OUTPUT_DIR / "figure8_trajectory_overlay.svg")
+    parser.add_argument("--trajectory-png-output", type=Path, default=OUTPUT_DIR / "figure8_trajectory_overlay.png")
+    parser.add_argument("--trajectory-pdf-output", type=Path, default=OUTPUT_DIR / "figure8_trajectory_overlay.pdf")
     args = parser.parse_args()
 
     if not math.isfinite(args.tinympc_power_w) or args.tinympc_power_w <= 0:
@@ -747,10 +932,19 @@ def main() -> int:
         args.radar_horizon,
         args.tinympc_power_w,
     )
+    plot_figure8_trajectory(
+        args.trajectory_reference,
+        args.trajectory_fpga,
+        args.trajectory_tinympc,
+        args.trajectory_svg_output,
+        args.trajectory_png_output,
+        args.trajectory_pdf_output,
+    )
     print(
         f"Wrote {args.svg_output}, {args.png_output}, {args.pdf_output}, "
         f"{args.edp_svg_output}, {args.edp_png_output}, {args.edp_pdf_output}, "
-        f"{args.radar_svg_output}, {args.radar_png_output}, and {args.radar_pdf_output}"
+        f"{args.radar_svg_output}, {args.radar_png_output}, {args.radar_pdf_output}, "
+        f"{args.trajectory_svg_output}, {args.trajectory_png_output}, and {args.trajectory_pdf_output}"
     )
     return 0
 

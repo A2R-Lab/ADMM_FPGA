@@ -55,4 +55,5 @@ vivado_project/vivado_project.srcs/sources_1/new/admm_autogen_params.vh
 paper_figures/*.pdf
 paper_figures/*.png
 paper_figures/*.svg
+paper_figures/output/
 paper_figures/__pycache__/
