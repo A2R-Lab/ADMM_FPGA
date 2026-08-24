@@ -567,6 +567,10 @@ def main() -> int:
     iter_counts = parse_int_list(args.iters)
     if args.samples <= 0:
         raise ValueError("--samples must be > 0")
+    if not args.output_dir.is_absolute():
+        args.output_dir = (REPO_ROOT / args.output_dir).resolve()
+    else:
+        args.output_dir = args.output_dir.resolve()
 
     all_rows: list[dict[str, Any]] = []
     args.output_dir.mkdir(parents=True, exist_ok=True)
