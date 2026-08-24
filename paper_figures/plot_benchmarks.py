@@ -67,6 +67,16 @@ FIGURE8_TINYMPC_ROW_RANGE = (350, 1070)
 FIGURE8_FPGA_ALIGNMENT = (0.757180, -0.383558, 0.598284, -0.289005)
 FIGURE8_TINYMPC_ALIGNMENT = (0.971674, -0.439716, 0.580961, -0.313049)
 
+FEASIBILITY_HORIZONS = (5, 10, 20, 30, 40, 50, 70, 90, 100, 150, 200, 250, 275)
+FEASIBILITY_SOLVERS = (
+    ("tinympc_e", "TinyMPC (MCU)"),
+    ("full_sparse", r"\texttt{Full\_sparse} FPGA"),
+    ("staged_a", r"\texttt{Staged} FPGA"),
+)
+FEASIBILITY_MANUAL_ITERATIONS = {
+    ("tinympc_e", 5): 4,
+}
+
 
 def f(row: dict[str, str], key: str, default: float = math.nan) -> float:
     raw = row.get(key, "")
@@ -81,6 +91,133 @@ def f(row: dict[str, str], key: str, default: float = math.nan) -> float:
 def load_rows(path: Path) -> list[dict[str, str]]:
     with path.open(newline="") as fobj:
         return list(csv.DictReader(fobj))
+
+
+def parse_horizon_list(raw: str) -> tuple[int, ...]:
+    horizons = []
+    for token in raw.split(","):
+        token = token.strip()
+        if not token:
+            continue
+        horizon = int(token)
+        if horizon <= 0:
+            raise ValueError("feasibility horizons must be positive")
+        horizons.append(horizon)
+    if not horizons:
+        raise ValueError("at least one feasibility horizon is required")
+    return tuple(horizons)
+
+
+def row_has_valid_feasibility_timing(row: dict[str, str]) -> bool:
+    if row.get("timing_clean") != "1":
+        return False
+    per_iter_us = f(row, "solve_us_per_iter_cfg_clk")
+    if not math.isfinite(per_iter_us) or per_iter_us <= 0:
+        return False
+
+    arch = row.get("arch")
+    if arch in {"staged_a", "full_sparse"}:
+        return row.get("status") == "pass"
+    if arch == "tinympc_e":
+        return row.get("status") == "benchmark"
+    return False
+
+
+def feasible_iteration_table(
+    rows: list[dict[str, str]],
+    horizons: tuple[int, ...],
+    control_period_us: float,
+    fpga_spi_overhead_us: float,
+) -> dict[str, dict[int, int | None]]:
+    table: dict[str, dict[int, int | None]] = {
+        arch: {horizon: None for horizon in horizons}
+        for arch, _label in FEASIBILITY_SOLVERS
+    }
+    rows_by_key: dict[tuple[str, int], list[dict[str, str]]] = {}
+
+    for row in rows:
+        if not row_has_valid_feasibility_timing(row):
+            continue
+        arch = row.get("arch", "")
+        horizon = int(f(row, "horizon", -1))
+        if horizon in horizons:
+            rows_by_key.setdefault((arch, horizon), []).append(row)
+
+    for arch, _label in FEASIBILITY_SOLVERS:
+        budget_us = control_period_us
+        if arch in {"staged_a", "full_sparse"}:
+            budget_us -= fpga_spi_overhead_us
+        if budget_us <= 0:
+            continue
+
+        for horizon in horizons:
+            manual_value = FEASIBILITY_MANUAL_ITERATIONS.get((arch, horizon))
+            if manual_value is not None:
+                table[arch][horizon] = manual_value
+                continue
+            candidates = rows_by_key.get((arch, horizon), [])
+            if not candidates:
+                continue
+            best_per_iter_us = min(f(row, "solve_us_per_iter_cfg_clk") for row in candidates)
+            max_iters = math.floor(budget_us / best_per_iter_us)
+            if max_iters >= 1:
+                table[arch][horizon] = max_iters
+
+    return table
+
+
+def format_feasibility_cell(value: int | None, best_value: int | None) -> str:
+    if value is None:
+        return "--"
+    if best_value is not None and value == best_value:
+        return rf"\textbf{{{value}}}"
+    return str(value)
+
+
+def write_feasibility_table(
+    rows: list[dict[str, str]],
+    output: Path,
+    horizons: tuple[int, ...],
+    control_period_us: float,
+    fpga_spi_overhead_us: float,
+) -> None:
+    table = feasible_iteration_table(rows, horizons, control_period_us, fpga_spi_overhead_us)
+    best_by_horizon: dict[int, int | None] = {}
+    for horizon in horizons:
+        values = [
+            by_horizon[horizon]
+            for by_horizon in table.values()
+            if by_horizon[horizon] is not None
+        ]
+        best_by_horizon[horizon] = max(values) if values else None
+
+    col_spec = "l" + ("c" * len(horizons))
+    cmidrule_end = len(horizons) + 1
+    control_rate_khz = 1000.0 / control_period_us
+    lines = [
+        rf"\begin{{tabular}}{{{col_spec}}}",
+        r"\toprule",
+        rf"& \multicolumn{{{len(horizons)}}}{{c}}{{Prediction Horizon $H$}} \\",
+        rf"\cmidrule(lr){{2-{cmidrule_end}}}",
+        "Solver & " + " & ".join(str(horizon) for horizon in horizons) + r" \\",
+        r"\midrule",
+    ]
+
+    for arch, label in FEASIBILITY_SOLVERS:
+        cells = [
+            format_feasibility_cell(table[arch][horizon], best_by_horizon[horizon])
+            for horizon in horizons
+        ]
+        lines.append(label + " & " + " & ".join(cells) + r" \\")
+
+    lines.extend([
+        r"\bottomrule",
+        r"\end{tabular}",
+        "",
+    ])
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text("\n".join(lines))
 
 
 def load_figure8_hw_log(path: Path) -> dict[str, Any]:
@@ -901,10 +1038,28 @@ def main() -> int:
     parser.add_argument("--trajectory-svg-output", type=Path, default=OUTPUT_DIR / "figure8_trajectory_overlay.svg")
     parser.add_argument("--trajectory-png-output", type=Path, default=OUTPUT_DIR / "figure8_trajectory_overlay.png")
     parser.add_argument("--trajectory-pdf-output", type=Path, default=OUTPUT_DIR / "figure8_trajectory_overlay.pdf")
+    parser.add_argument("--feasibility-table-output", type=Path, default=OUTPUT_DIR / "feasibility_table.tex")
+    parser.add_argument(
+        "--feasibility-horizons",
+        default=",".join(str(horizon) for horizon in FEASIBILITY_HORIZONS),
+        help="Comma-separated prediction horizons for the generated feasibility table.",
+    )
+    parser.add_argument("--control-period-us", type=float, default=1000.0)
+    parser.add_argument("--fpga-spi-overhead-us", type=float, default=100.0)
     args = parser.parse_args()
 
     if not math.isfinite(args.tinympc_power_w) or args.tinympc_power_w <= 0:
         parser.error("--tinympc-power-w must be a positive finite value")
+    if not math.isfinite(args.control_period_us) or args.control_period_us <= 0:
+        parser.error("--control-period-us must be a positive finite value")
+    if not math.isfinite(args.fpga_spi_overhead_us) or args.fpga_spi_overhead_us < 0:
+        parser.error("--fpga-spi-overhead-us must be a nonnegative finite value")
+    if args.fpga_spi_overhead_us >= args.control_period_us:
+        parser.error("--fpga-spi-overhead-us must be smaller than --control-period-us")
+    try:
+        feasibility_horizons = parse_horizon_list(args.feasibility_horizons)
+    except ValueError as exc:
+        parser.error(str(exc))
 
     rows = load_rows(args.input)
     selected = best_rows(rows, args.compare_iters)
@@ -940,11 +1095,19 @@ def main() -> int:
         args.trajectory_png_output,
         args.trajectory_pdf_output,
     )
+    write_feasibility_table(
+        rows,
+        args.feasibility_table_output,
+        feasibility_horizons,
+        args.control_period_us,
+        args.fpga_spi_overhead_us,
+    )
     print(
         f"Wrote {args.svg_output}, {args.png_output}, {args.pdf_output}, "
         f"{args.edp_svg_output}, {args.edp_png_output}, {args.edp_pdf_output}, "
         f"{args.radar_svg_output}, {args.radar_png_output}, {args.radar_pdf_output}, "
-        f"{args.trajectory_svg_output}, {args.trajectory_png_output}, and {args.trajectory_pdf_output}"
+        f"{args.trajectory_svg_output}, {args.trajectory_png_output}, "
+        f"{args.trajectory_pdf_output}, and {args.feasibility_table_output}"
     )
     return 0
 
