@@ -29,12 +29,22 @@ void ADMM_iteration(
     bool use_traj_q,
     int traj_idx,
     fp_t dynamic_min,
-    fp_t dynamic_max
+    fp_t dynamic_max,
+    const fp_t q_vec[N_VAR] = nullptr,
+    bool use_q_vec = false
 );
 
 void ADMM_solver(
     ap_uint<418> current_in_bits,
     ap_uint<128> &command_out_bits
+);
+
+void ADMM_benchmark_solve(
+    const fp_t current_state[12],
+    const fp_t q_vec[N_VAR],
+    fp_t dynamic_min,
+    fp_t dynamic_max,
+    fp_t out_x[N_VAR]
 );
 
 fp_t admm_test_rho_mul(fp_t v);

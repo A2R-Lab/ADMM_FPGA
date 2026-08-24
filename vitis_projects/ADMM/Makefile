@@ -18,6 +18,7 @@ help:
 	@echo "  csim    - Run C simulation"
 	@echo "  csim-rho - Run rho/accumulator C simulation testbench"
 	@echo "  csim-uart-smoke - Run one-shot ADMM_solver smoke testbench"
+	@echo "  csim-precision - Run batch precision benchmark C simulation"
 	@echo "  csim-closed-loop - Run fixed-point closed-loop C simulation"
 	@echo "  csim-closed-loop-strict - Run fixed-point closed-loop C simulation and fail on early stop"
 	@echo "  build-uart-smoke - Run HLS synthesis for one-shot ADMM_solver smoke testbench"
@@ -40,6 +41,9 @@ csim-rho:
 
 csim-uart-smoke:
 	vitis-run --mode hls --csim --config ./hls_uart_smoke_config.cfg --work_dir ADMM_uart_smoke
+
+csim-precision:
+	vitis-run --mode hls --csim --config ./hls_precision_config.cfg --work_dir ADMM_precision
 
 csim-closed-loop:
 	ADMM_SIM_FREQ=100 ADMM_SIM_DURATION_S=2 ADMM_TRAJ_START_STEP=50 ADMM_CSIM_TRAJ_PATH=trajectory_csim.csv vitis-run --mode hls --csim --config ./hls_eval_config.cfg --work_dir ADMM_closed_loop

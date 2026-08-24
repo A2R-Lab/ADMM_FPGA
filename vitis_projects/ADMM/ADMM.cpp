@@ -191,10 +191,12 @@ static inline ap_uint<128> pack_command_out(const command_out_t &command_out) {
     return command_out_bits;
 }
 
-void forward_substitution(
+static void forward_substitution_impl(
     const fp_t b[L_BANDED_ROWS],
     bool use_traj_q,
     int traj_idx,
+    const fp_t q_vec[N_VAR],
+    bool use_q_vec,
     fp_t x[L_BANDED_ROWS]
 ) {
 #pragma HLS INLINE
@@ -209,19 +211,23 @@ void forward_substitution(
         acc_t sum_val = 0;
         fp_t q_i = 0;
 
+        if (use_q_vec) {
+            q_i = q_vec[i];
+        } else {
 #if ADMM_ENABLE_TRAJECTORY
-        if (use_traj_q) {
-            if (traj_stage < HORIZON_LENGTH) {
-                if (traj_local < 3) {
-                    q_i = traj_q_packed[traj_idx + traj_stage][traj_local];
-                }
-            } else {
-                if (traj_local < 3) {
-                    q_i = traj_q_packed[traj_idx + HORIZON_LENGTH][traj_local];
+            if (use_traj_q) {
+                if (traj_stage < HORIZON_LENGTH) {
+                    if (traj_local < 3) {
+                        q_i = traj_q_packed[traj_idx + traj_stage][traj_local];
+                    }
+                } else {
+                    if (traj_local < 3) {
+                        q_i = traj_q_packed[traj_idx + HORIZON_LENGTH][traj_local];
+                    }
                 }
             }
-        }
 #endif
+        }
 
         FORW_SUBST_DOT_PRODUCT_LOOP:
         for (int j = 0; j < L_BANDED_COLS - 1; j++) {
@@ -246,6 +252,16 @@ void forward_substitution(
             }
         }
     }
+}
+
+void forward_substitution(
+    const fp_t b[L_BANDED_ROWS],
+    bool use_traj_q,
+    int traj_idx,
+    fp_t x[L_BANDED_ROWS]
+) {
+#pragma HLS INLINE
+    forward_substitution_impl(b, use_traj_q, traj_idx, nullptr, false, x);
 }
 
 void backward_substitution(
@@ -378,7 +394,9 @@ void ADMM_iteration(
     bool use_traj_q,
     int traj_idx,
     fp_t dynamic_min,
-    fp_t dynamic_max
+    fp_t dynamic_max,
+    const fp_t q_vec[N_VAR],
+    bool use_q_vec
 ) {
 #pragma HLS INLINE
 #if ADMM_SOLVER_ARCH_STAGED_A
@@ -389,7 +407,7 @@ void ADMM_iteration(
     fp_t tmp[N_VAR];
     fp_t b_tmp[N_CONSTR];
 
-    forward_substitution(b, use_traj_q, traj_idx, tmp);
+    forward_substitution_impl(b, use_traj_q, traj_idx, q_vec, use_q_vec, tmp);
     backward_substitution(tmp, x);
 
     // `y` stores the scaled dual variable u = lambda / rho.
@@ -498,7 +516,7 @@ void ADMM_iteration(
     fp_t tmp[N_VAR];
     fp_t b_tmp[N_CONSTR];
 
-    forward_substitution(b, use_traj_q, traj_idx, tmp);
+    forward_substitution_impl(b, use_traj_q, traj_idx, q_vec, use_q_vec, tmp);
     backward_substitution(tmp, x);
 
     ADMM_IT_ZY_UPDATE_LOOP:
@@ -550,6 +568,33 @@ void ADMM_iteration(
 
     AT_mul(b_tmp, b);
 #endif
+}
+
+void ADMM_benchmark_solve(
+    const fp_t current_state[12],
+    const fp_t q_vec[N_VAR],
+    fp_t dynamic_min,
+    fp_t dynamic_max,
+    fp_t out_x[N_VAR]
+) {
+    fp_t x[N_VAR] = {0};
+    fp_t b[N_VAR] = {0};
+    fp_t y[N_CONSTR] = {0};
+    fp_t current_state_vec[12];
+
+    for (int i = 0; i < 12; i++) {
+        current_state_vec[i] = current_state[i];
+    }
+
+    ADMM_BENCH_MAIN_LOOP:
+    for (int iter = 0; iter < ADMM_ITERATIONS; iter++) {
+        ADMM_iteration(x, b, y, current_state_vec, false, 0, dynamic_min, dynamic_max, q_vec, true);
+    }
+
+    ADMM_BENCH_COPY_OUT:
+    for (int i = 0; i < N_VAR; i++) {
+        out_x[i] = x[i];
+    }
 }
 
 static void ADMM_solver_core(
