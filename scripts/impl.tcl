@@ -19,6 +19,45 @@ if {$vivado_max_threads > 0} {
     set_param general.maxThreads $vivado_max_threads
 }
 
+set opt_directive "Explore"
+if {[info exists ::env(VIVADO_OPT_DIRECTIVE)] && $::env(VIVADO_OPT_DIRECTIVE) ne ""} {
+    set opt_directive $::env(VIVADO_OPT_DIRECTIVE)
+}
+set place_directive "Explore"
+if {[info exists ::env(VIVADO_PLACE_DIRECTIVE)] && $::env(VIVADO_PLACE_DIRECTIVE) ne ""} {
+    set place_directive $::env(VIVADO_PLACE_DIRECTIVE)
+}
+set place_subdirective ""
+if {[info exists ::env(VIVADO_PLACE_SUBDIRECTIVE)] && $::env(VIVADO_PLACE_SUBDIRECTIVE) ne ""} {
+    set place_subdirective $::env(VIVADO_PLACE_SUBDIRECTIVE)
+}
+set phys_directive "AggressiveExplore"
+if {[info exists ::env(VIVADO_PHYS_OPT_DIRECTIVE)] && $::env(VIVADO_PHYS_OPT_DIRECTIVE) ne ""} {
+    set phys_directive $::env(VIVADO_PHYS_OPT_DIRECTIVE)
+}
+set route_directive "Explore"
+if {[info exists ::env(VIVADO_ROUTE_DIRECTIVE)] && $::env(VIVADO_ROUTE_DIRECTIVE) ne ""} {
+    set route_directive $::env(VIVADO_ROUTE_DIRECTIVE)
+}
+set route_tns_cleanup 0
+if {[info exists ::env(VIVADO_ROUTE_TNS_CLEANUP)] && $::env(VIVADO_ROUTE_TNS_CLEANUP) eq "1"} {
+    set route_tns_cleanup 1
+}
+set route_ultrathreads 0
+if {[info exists ::env(VIVADO_ROUTE_ULTRATHREADS)] && $::env(VIVADO_ROUTE_ULTRATHREADS) eq "1"} {
+    set route_ultrathreads 1
+}
+
+puts "Vivado opt directive: $opt_directive"
+puts "Vivado place directive: $place_directive"
+if {$place_subdirective ne ""} {
+    puts "Vivado place subdirective: $place_subdirective"
+}
+puts "Vivado phys_opt directive: $phys_directive"
+puts "Vivado route directive: $route_directive"
+puts "Vivado route tns_cleanup: $route_tns_cleanup"
+puts "Vivado route ultrathreads: $route_ultrathreads"
+
 if {[llength $argv] >= 1} {
     set synth_dcp [lindex $argv 0]
 } else {
@@ -40,13 +79,17 @@ open_checkpoint "$build_dir/$synth_dcp"
 # Optimization
 #------------------------------------------------------------------------------
 puts "Running Optimization..."
-opt_design -directive Explore
+opt_design -directive $opt_directive
 
 #------------------------------------------------------------------------------
 # Placement
 #------------------------------------------------------------------------------
 puts "Running Placement..."
-place_design -directive Explore
+if {$place_subdirective ne ""} {
+    place_design -directive $place_directive -subdirective $place_subdirective
+} else {
+    place_design -directive $place_directive
+}
 
 report_utilization -file "$reports_dir/post_place_utilization.rpt"
 report_timing_summary -file "$reports_dir/post_place_timing.rpt"
@@ -57,13 +100,20 @@ write_checkpoint -force "$build_dir/post_place.dcp"
 # Physical Optimization
 #------------------------------------------------------------------------------
 puts "Running Physical Optimization..."
-phys_opt_design -directive AggressiveExplore
+phys_opt_design -directive $phys_directive
 
 #------------------------------------------------------------------------------
 # Routing
 #------------------------------------------------------------------------------
 puts "Running Routing..."
-route_design -directive Explore
+set route_args [list -directive $route_directive]
+if {$route_tns_cleanup} {
+    lappend route_args -tns_cleanup
+}
+if {$route_ultrathreads} {
+    lappend route_args -ultrathreads
+}
+route_design {*}$route_args
 
 #------------------------------------------------------------------------------
 # Reports

@@ -1,0 +1,87 @@
+series,arch,horizon,admm_iters,seed,vivado_impl_variant,status,failed_stage,bitstream_exists,timing_clean,route_wns_ns,optimization_variables,constraints,hls_latency_cycles,clock_mhz,latency_ms,solve_rate_hz,power_w,energy_mj_per_solve,bram_used,bram_util_pct,lut_used,lut_util_pct,ff_used,ff_util_pct,dsp_used,dsp_util_pct,lutram_used,lutram_util_pct,compute_lut_ff_util_pct,table_milestone,source_slug,source_run_dir,source_git_head,source_git_status
+staged_scalability,staged_a,40,10,0,baseline,pass,,1,1,0.309,652,732,136507,100,1.36507,732.563165,0.683,0.93234281,36,26.67,22127,34.9,26540,20.93,80,33.33,417,2.19,55.83,1,stageda_h40_k10_s0,/home/agrillo/fpga/exp/2026-07-common-h40-radar,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py"
+staged_scalability,staged_a,320,10,,,pass,,1,1,0.031,5132,5772,1066237,100,10.66237,93.7877789,0.806,8.59387022,129,95.56,27633,43.59,26853,21.18,80,33.33,3132,16.48,64.77,1,stageda_h320_k10,/home/agrillo/fpga/exp/2026-07-max-horizon-direct,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+?? MAX_HORIZON_BENCHMARK.md
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_point.py"
+staged_scalability,staged_a,704,10,0,,pass,,1,1,0.314,11276,12684,2341147,100,23.41147,42.7141055,0.885,20.719151,133.5,98.89,33474,52.8,27678,21.83,80,33.33,6174,32.49,74.63,1,stageda_h704_k10_s0,/home/agrillo/fpga/exp/2026-07-max-horizon-parallel,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py"
+staged_scalability,staged_a,768,10,0,,pass,,1,1,0.067,12300,13836,2553627,100,25.53627,39.159987,0.881,22.4974539,133.5,98.89,34104,53.79,27281,21.51,80,33.33,6843,36.02,75.3,0,stageda_h768_k10_s0,/home/agrillo/fpga/exp/2026-07-max-horizon-parallel,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py"
+staged_scalability,staged_a,900,10,0,,pass,,1,1,0.059,14412,16212,2991867,100,29.91867,33.4239456,0.914,27.3456644,133.5,98.89,35765,56.41,27295,21.53,80,33.33,7849,41.31,77.94,1,stageda_h900_k10_s0,/home/agrillo/fpga/exp/2026-07-max-horizon-parallel,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py"
+staged_scalability,staged_a,950,10,0,,pass,,1,1,0.174,15212,17112,3157867,100,31.57867,31.6669448,1.108,34.9891664,122.5,90.74,36513,57.59,27265,21.5,80,33.33,8180,43.05,79.09,0,stageda_h950_k10_s0,/home/agrillo/fpga/exp/2026-07-max-horizon-parallel,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py"
+staged_scalability,staged_a,1000,10,0,,pass,,1,1,0.172,16012,18012,3323867,100,33.23867,30.0854396,1.131,37.5929358,122.5,90.74,36738,57.95,27302,21.53,80,33.33,8517,44.83,79.48,0,stageda_h1000_k10_s0,/home/agrillo/fpga/exp/2026-07-max-horizon-parallel,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py"
+staged_scalability,staged_a,1050,10,0,,pass,,1,1,0.054,16812,18912,3489917,100,34.89917,28.6539766,1.102,38.4588853,130,96.3,38372,60.52,27691,21.84,80,33.33,8869,46.68,82.36,0,stageda_h1050_k10_s0,/home/agrillo/fpga/exp/2026-07-max-horizon-parallel,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py"
+staged_scalability,staged_a,1100,10,0,,pass,,1,1,0.061,17612,19812,3655917,100,36.55917,27.3529186,1.085,39.6666995,130,96.3,39213,61.85,27678,21.83,80,33.33,9206,48.45,83.68,1,stageda_h1100_k10_s0,/home/agrillo/fpga/exp/2026-07-max-horizon-parallel,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py"
+staged_scalability,staged_a,1150,10,7,opt_remap,pass,,1,1,0.181,18412,20712,3821917,100,38.21917,26.1648801,1.098,41.9646487,130,96.3,39569,62.41,27628,21.79,80,33.33,9544,50.23,84.2,0,stageda_h1150_k10_s7,/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py"
+staged_scalability,staged_a,1250,10,6,phys_hold_tns,pass,,1,1,0.002,20012,22512,4153917,100,41.53917,24.0736635,1.182,49.0992989,130,96.3,40752,64.28,28028,22.1,80,33.33,10554,55.55,86.38,1,stageda_h1250_k10_s6,/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py"
+staged_scalability,staged_a,1300,10,0,baseline,pass,,1,1,0.043,20812,23412,4319917,100,43.19917,23.1485929,1.142,49.3334521,130,96.3,41517,65.48,28004,22.09,80,33.33,10890,57.32,87.57,0,stageda_h1300_k10_s0,/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py"
+staged_scalability,staged_a,1350,10,0,baseline,pass,,1,1,0.023,21612,24312,4485917,100,44.85917,22.2919862,1.146,51.4086088,130,96.3,41643,65.68,27997,22.08,80,33.33,11226,59.08,87.76,1,stageda_h1350_k10_s0,/home/agrillo/fpga/exp/2026-07-above-1100-variants-rerun,b82e18de9cad81d9eb1ed0e8f80b483730111982,"M scripts/header_generator.py
+ M scripts/impl.tcl
+?? MAX_HORIZON_BENCHMARK.md
+?? nohup.out
+?? scripts/aggregate_max_horizon_results.py
+?? scripts/run_max_horizon_parallel.py
+?? scripts/run_max_horizon_point.py"

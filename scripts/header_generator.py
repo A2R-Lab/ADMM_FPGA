@@ -1,6 +1,8 @@
 from pathlib import Path
 import re
 import os
+import json
+import time
 import numpy as np
 from crazyloihimodel import CrazyLoihiModel
 from parameters import (
@@ -45,6 +47,7 @@ TEST_DATA_HEADER_PATH = REPO_ROOT / "vitis_projects" / "ADMM" / "test_data.h"
 RTL_PARAMS_HEADER_PATH = REPO_ROOT / "vivado_project" / "vivado_project.srcs" / "sources_1" / "new" / "admm_autogen_params.vh"
 RUNTIME_CONFIG_HEADER_PATH = REPO_ROOT / "vitis_projects" / "ADMM" / "admm_runtime_config.h"
 ABQR_OVERRIDE_PATH = os.environ.get("ADMM_ABQR_OVERRIDE_PATH", "").strip()
+GENERATOR_DIAGNOSTICS_PATH = os.environ.get("ADMM_GENERATOR_DIAGNOSTICS_PATH", "").strip()
 
 # Initialize goal state
 xg = np.zeros(13)
@@ -169,6 +172,15 @@ def add_block(mat, row_start, col_start, block):
     mat[row_start:row_start + rows, col_start:col_start + cols] += block
 
 
+def add_sparse_block(mat, row_start, col_start, block):
+    rows, cols = block.shape
+    for r in range(rows):
+        for c in range(cols):
+            val = block[r, c]
+            if val != 0:
+                mat[row_start + r, col_start + c] += val
+
+
 def idx_x_interleaved(k, n, m):
     return k * (n + m)
 
@@ -224,6 +236,52 @@ def build_kkt_direct(Anp, Bnp, Pmat, horizon, rho_eq_val, rho_ineq_val):
     return KKT
 
 
+def build_kkt_sparse(Anp, Bnp, Pmat, horizon, rho_eq_val, rho_ineq_val):
+    from scipy import sparse
+
+    n = Anp.shape[0]
+    m = Bnp.shape[1]
+    KKT = Pmat.tolil()
+
+    aTa = Anp.T @ Anp
+    aTb = Anp.T @ Bnp
+    bTa = Bnp.T @ Anp
+    bTb = Bnp.T @ Bnp
+    eye_n = np.eye(n)
+
+    x0 = idx_x_interleaved(0, n, m)
+    add_sparse_block(KKT, x0, x0, rho_eq_val * eye_n)
+
+    for k in range(horizon):
+        xk = idx_x_interleaved(k, n, m)
+        uk = idx_u_interleaved(k, n, m)
+        xkp1 = idx_x_interleaved(k + 1, n, m)
+
+        add_sparse_block(KKT, xk, xk, rho_eq_val * aTa)
+        add_sparse_block(KKT, xk, uk, rho_eq_val * aTb)
+        add_sparse_block(KKT, xk, xkp1, -rho_eq_val * Anp.T)
+
+        add_sparse_block(KKT, uk, xk, rho_eq_val * bTa)
+        add_sparse_block(KKT, uk, uk, rho_eq_val * bTb)
+        add_sparse_block(KKT, uk, xkp1, -rho_eq_val * Bnp.T)
+
+        add_sparse_block(KKT, xkp1, xk, -rho_eq_val * Anp)
+        add_sparse_block(KKT, xkp1, uk, -rho_eq_val * Bnp)
+        add_sparse_block(KKT, xkp1, xkp1, rho_eq_val * eye_n)
+
+    for k in range(horizon):
+        uk = idx_u_interleaved(k, n, m)
+        for i in range(m):
+            KKT[uk + i, uk + i] += rho_ineq_val
+
+    for k in range(1, horizon + 1):
+        xk = idx_x_interleaved(k, n, m)
+        KKT[xk + 0, xk + 0] += rho_ineq_val
+        KKT[xk + 1, xk + 1] += rho_ineq_val
+
+    return KKT.tocsc()
+
+
 def build_full_constraint_matrix(Anp, Bnp, horizon, n, m, n_ineq, num_var):
     A_eq, _ = build_Aeq_interleaved(Anp, Bnp, horizon)
     A_ineq = np.zeros((n_ineq, num_var))
@@ -246,6 +304,49 @@ def build_full_constraint_matrix(Anp, Bnp, horizon, n, m, n_ineq, num_var):
         raise RuntimeError(f"Internal inequality row mismatch: row={row}, n_ineq={n_ineq}")
 
     return A_eq, A_ineq, np.vstack([A_eq, A_ineq])
+
+
+def build_full_constraint_matrix_sparse(Anp, Bnp, horizon, n, m, n_ineq, num_var):
+    from scipy import sparse
+
+    num_eq_rows = (horizon + 1) * n
+    num_constraints = num_eq_rows + n_ineq
+    A_full = sparse.lil_matrix((num_constraints, num_var), dtype=np.float64)
+
+    for i in range(n):
+        A_full[i, idx_x_interleaved(0, n, m) + i] = 1.0
+
+    for k in range(horizon):
+        row_start = (k + 1) * n
+        xk_col = idx_x_interleaved(k, n, m)
+        xkp1_col = idx_x_interleaved(k + 1, n, m)
+        uk_col = idx_u_interleaved(k, n, m)
+
+        add_sparse_block(A_full, row_start, xkp1_col, np.eye(n))
+        add_sparse_block(A_full, row_start, xk_col, -Anp)
+        add_sparse_block(A_full, row_start, uk_col, -Bnp)
+
+    row = num_eq_rows
+    for k in range(horizon):
+        u_start = idx_u_interleaved(k, n, m)
+        for i in range(m):
+            A_full[row + i, u_start + i] = 1.0
+        row += m
+
+    for k in range(1, horizon + 1):
+        xk_start = idx_x_interleaved(k, n, m)
+        A_full[row, xk_start + 0] = 1.0
+        row += 1
+        A_full[row, xk_start + 1] = 1.0
+        row += 1
+
+    if row != num_constraints:
+        raise RuntimeError(f"Internal sparse inequality row mismatch: row={row}, n_constr={num_constraints}")
+
+    A_full = A_full.tocsc()
+    A_eq = A_full[:num_eq_rows, :]
+    A_ineq = A_full[num_eq_rows:, :]
+    return A_eq, A_ineq, A_full
 
 
 # def compute_lqr_terminal_cost(
@@ -290,18 +391,14 @@ for k in range(N):
     blocks.append(R)     # R_k
 blocks.append(Q)  # Final terminal Q_N from discrete LQR
 
-# total size
-total = sum(block.shape[0] for block in blocks)
+try:
+    from scipy import sparse
+except ImportError as exc:
+    raise RuntimeError(
+        "scipy is required for sparse header generation. Activate ~/venv or install scipy."
+    ) from exc
 
-# initialize final matrix
-P = np.zeros((total, total))
-
-# fill block diagonal piece by piece
-start = 0
-for block in blocks:
-    size = block.shape[0]
-    P[start:start+size, start:start+size] = block
-    start += size
+P_sparse = sparse.block_diag(blocks, format="csc", dtype=np.float64)
 
 num_eq_rows = n * (N + 1)
 num_input_ineq = m * N
@@ -338,10 +435,29 @@ u = np.hstack([b_eq, u_u])
 num_constraints = num_eq_rows + n_ineq
 rho_vect = rho_ineq * np.ones(num_constraints)
 rho_vect[np.where(l == u)[0]] = rho_eq
-KKT = build_kkt_direct(A, B, P, N, rho_eq, rho_ineq)
-A_eq, A_ineq, A_full = build_full_constraint_matrix(A, B, N, n, m, n_ineq, num_var)
 
-L = np.linalg.cholesky(KKT)
+generation_start = time.time()
+KKT = build_kkt_sparse(A, B, P_sparse, N, rho_eq, rho_ineq)
+A_eq, A_ineq, A_full = build_full_constraint_matrix_sparse(A, B, N, n, m, n_ineq, num_var)
+
+try:
+    from sksparse.cholmod import cholesky
+except ImportError as exc:
+    raise RuntimeError(
+        "CHOLMOD sparse Cholesky requires scikit-sparse in the active Python environment. "
+        "Run `source ~/venv/bin/activate` and install scikit-sparse/SuiteSparse before "
+        "large-horizon benchmark generation."
+    ) from exc
+
+factor_result = cholesky(KKT, lower=True, order="natural")
+if isinstance(factor_result, tuple):
+    L, chol_permutation = factor_result
+else:
+    L = factor_result.L()
+    chol_permutation = np.arange(KKT.shape[0], dtype=np.int32)
+L = L.tocsc()
+if not np.array_equal(np.asarray(chol_permutation), np.arange(KKT.shape[0])):
+    raise RuntimeError("CHOLMOD returned a non-identity permutation despite order='natural'")
 
 def print_matrix(mat, name):
     print(f"{name}:")
@@ -383,6 +499,28 @@ def convert_matrix_to_sparse_storage(M):
     n_bits_idx = int(np.ceil(np.log2(np.max(M_indexes) + 1)))
     return M_data, M_indexes, n_bits_idx
 
+
+def convert_sparse_matrix_to_sparse_storage(M):
+    M = M.tocsr()
+    rows, cols = M.shape
+    counts = np.diff(M.indptr)
+    k = int(counts.max()) if rows else 0
+    M_data = np.zeros((rows, k))
+    M_indexes = np.zeros((rows, k), dtype=np.uint)
+
+    for i in range(rows):
+        start = M.indptr[i]
+        end = M.indptr[i + 1]
+        row_cols = M.indices[start:end]
+        row_vals = M.data[start:end]
+        for j, (col_idx, val) in enumerate(zip(row_cols, row_vals)):
+            M_data[i, j] = val
+            M_indexes[i, j] = col_idx
+
+    max_idx = int(M_indexes.max()) if M_indexes.size else max(cols - 1, 0)
+    n_bits_idx = max(1, int(np.ceil(np.log2(max_idx + 1))))
+    return M_data, M_indexes, n_bits_idx
+
 def convert_chol_to_banded_storage(L):
     n = L.shape[0]
     max_bandwidth = get_max_bandwidth(L)
@@ -405,6 +543,41 @@ def convert_chol_to_banded_storage(L):
     
     return L_row
 
+
+def get_sparse_lower_bandwidth(L):
+    L = L.tocsr()
+    max_bandwidth = 0
+    for i in range(L.shape[0]):
+        start = L.indptr[i]
+        end = L.indptr[i + 1]
+        cols = L.indices[start:end]
+        cols = cols[cols <= i]
+        if cols.size == 0:
+            continue
+        bandwidth = i - int(cols.min()) + 1
+        max_bandwidth = max(max_bandwidth, bandwidth)
+    return max_bandwidth
+
+
+def convert_sparse_chol_to_banded_storage(L, max_bandwidth):
+    L = L.tocsr()
+    n = L.shape[0]
+    L_row = np.zeros((n, max_bandwidth))
+
+    for i in range(n):
+        start_col = max(0, i - max_bandwidth + 1)
+        values = dict(zip(L.indices[L.indptr[i]:L.indptr[i + 1]], L.data[L.indptr[i]:L.indptr[i + 1]]))
+        row_values = [values.get(j, 0.0) for j in range(start_col, i + 1)]
+        while len(row_values) < max_bandwidth:
+            row_values.insert(0, 0.0)
+        diag = values.get(i)
+        if diag is None or diag == 0:
+            raise RuntimeError(f"Missing or zero Cholesky diagonal at row {i}")
+        row_values[-1] = 1.0 / diag
+        L_row[i, :] = row_values
+
+    return L_row
+
 def convert_chol_transposed_to_banded_storage(L):
     n = L.shape[0]
     max_bandwidth = get_max_bandwidth(L)
@@ -425,6 +598,26 @@ def convert_chol_transposed_to_banded_storage(L):
 
         L_row[i, :] = row_values
     
+    return L_row
+
+
+def convert_sparse_chol_transposed_to_banded_storage(L, max_bandwidth):
+    U = L.T.tocsr()
+    n = U.shape[0]
+    L_row = np.zeros((n, max_bandwidth))
+
+    for i in range(n):
+        end_col = min(n, i + max_bandwidth)
+        values = dict(zip(U.indices[U.indptr[i]:U.indptr[i + 1]], U.data[U.indptr[i]:U.indptr[i + 1]]))
+        row_values = [values.get(j, 0.0) for j in range(i, end_col)]
+        while len(row_values) < max_bandwidth:
+            row_values.append(0.0)
+        diag = values.get(i)
+        if diag is None or diag == 0:
+            raise RuntimeError(f"Missing or zero transposed Cholesky diagonal at row {i}")
+        row_values[0] = 1.0 / diag
+        L_row[i, :] = row_values
+
     return L_row
 
 
@@ -582,8 +775,32 @@ def testOSQP(l,u, iter):
 
     return res.x
 
-L_banded = convert_chol_to_banded_storage(L)
-LT_banded = convert_chol_transposed_to_banded_storage(L.T)
+chol_bandwidth = get_sparse_lower_bandwidth(L)
+L_banded = convert_sparse_chol_to_banded_storage(L, chol_bandwidth)
+LT_banded = convert_sparse_chol_transposed_to_banded_storage(L, chol_bandwidth)
+generation_elapsed_s = time.time() - generation_start
+
+generator_diagnostics = {
+    "horizon": int(N),
+    "solver_arch": ADMM_SOLVER_ARCH,
+    "admm_iterations": int(ADMM_ITERATIONS),
+    "n_var": int(num_var),
+    "n_constr": int(num_constraints),
+    "n_ineq": int(n_ineq),
+    "kkt_shape": [int(KKT.shape[0]), int(KKT.shape[1])],
+    "kkt_nnz": int(KKT.nnz),
+    "a_full_shape": [int(A_full.shape[0]), int(A_full.shape[1])],
+    "a_full_nnz": int(A_full.nnz),
+    "chol_l_nnz": int(L.nnz),
+    "chol_bandwidth": int(chol_bandwidth),
+    "generation_elapsed_s": float(generation_elapsed_s),
+    "factorization": "cholmod_natural",
+}
+print("HEADER_GENERATOR_DIAGNOSTICS " + json.dumps(generator_diagnostics, sort_keys=True))
+if GENERATOR_DIAGNOSTICS_PATH:
+    diagnostics_path = Path(GENERATOR_DIAGNOSTICS_PATH)
+    diagnostics_path.parent.mkdir(parents=True, exist_ok=True)
+    diagnostics_path.write_text(json.dumps(generator_diagnostics, indent=2, sort_keys=True) + "\n")
 constants = {}
 constants["HORIZON_LENGTH"] = N
 constants["STATE_SIZE"] = n
@@ -642,8 +859,8 @@ if ADMM_SOLVER_ARCH == "staged_a":
     data.append(generate_matrix_header(A_stage_col_vals, "A_stage_col_vals"))
     data.append(generate_matrix_header(B_stage, "B_stage"))
 elif ADMM_SOLVER_ARCH == "full_sparse":
-    A_sparse_data, A_sparse_indexes, A_n_bits_idx = convert_matrix_to_sparse_storage(A_full)
-    AT_sparse_data, AT_sparse_indexes, AT_n_bits_idx = convert_matrix_to_sparse_storage(A_full.T)
+    A_sparse_data, A_sparse_indexes, A_n_bits_idx = convert_sparse_matrix_to_sparse_storage(A_full)
+    AT_sparse_data, AT_sparse_indexes, AT_n_bits_idx = convert_sparse_matrix_to_sparse_storage(A_full.T)
     constants["A_SPARSE_INDEX_BITS"] = A_n_bits_idx
     constants["AT_SPARSE_INDEX_BITS"] = AT_n_bits_idx
 
