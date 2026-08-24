@@ -27,6 +27,8 @@ DEFAULT_ITERS = [5, 10, 20, 30]
 STATE_SIZE = 12
 INPUT_SIZE = 4
 STAGE_SIZE = STATE_SIZE + INPUT_SIZE
+DEFAULT_OSQP_MAX_ITER = 100_000
+OSQP_MAX_ITER = DEFAULT_OSQP_MAX_ITER
 
 os.environ.setdefault("MPLCONFIGDIR", "/tmp/admm_precision_mpl")
 
@@ -432,6 +434,7 @@ def solve_osqp(P: Any, A_full: Any, q: np.ndarray, l: np.ndarray, u: np.ndarray)
         u,
         eps_abs=1e-6,
         eps_rel=1e-6,
+        max_iter=OSQP_MAX_ITER,
         verbose=False,
         polish=True,
     )
@@ -589,6 +592,7 @@ def run_config_subprocess(
     horizon: int,
     iterations: int,
     samples: int,
+    osqp_max_iter: int,
 ) -> tuple[int, int]:
     config_out = output_dir / "configs" / f"H{horizon}_k{iterations}"
     config_out.mkdir(parents=True, exist_ok=True)
@@ -609,6 +613,8 @@ def run_config_subprocess(
         str(iterations),
         "--jobs",
         "1",
+        "--osqp-max-iter",
+        str(osqp_max_iter),
     ]
     run_cmd(
         cmd,
@@ -651,6 +657,7 @@ def run_parallel_configs(
                     horizon=horizon,
                     iterations=iterations,
                     samples=args.samples,
+                    osqp_max_iter=args.osqp_max_iter,
                 ): (horizon, iterations)
                 for horizon, iterations in configs
             }
@@ -720,8 +727,16 @@ def main() -> int:
         action="store_true",
         help="Keep temporary per-configuration Git worktrees after a parallel run.",
     )
+    parser.add_argument(
+        "--osqp-max-iter",
+        type=int,
+        default=DEFAULT_OSQP_MAX_ITER,
+        help="Maximum OSQP iterations for double-precision ground-truth solves.",
+    )
     args = parser.parse_args()
 
+    global OSQP_MAX_ITER
+    OSQP_MAX_ITER = args.osqp_max_iter
     require_python_deps()
     horizons = parse_int_list(args.horizons)
     iter_counts = parse_int_list(args.iters)
@@ -729,6 +744,8 @@ def main() -> int:
         raise ValueError("--samples must be > 0")
     if args.jobs <= 0:
         raise ValueError("--jobs must be > 0")
+    if args.osqp_max_iter <= 0:
+        raise ValueError("--osqp-max-iter must be > 0")
     if not args.output_dir.is_absolute():
         args.output_dir = (REPO_ROOT / args.output_dir).resolve()
     else:
