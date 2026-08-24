@@ -4,12 +4,15 @@
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import csv
 import importlib.util
 import json
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -130,6 +133,13 @@ def run_cmd(
         if proc.stderr:
             print(proc.stderr[-4000:], file=sys.stderr)
         raise subprocess.CalledProcessError(proc.returncode, cmd)
+
+
+def read_csv_rows(path: Path) -> list[dict[str, Any]]:
+    if not path.exists() or path.stat().st_size == 0:
+        return []
+    with path.open(newline="") as f:
+        return list(csv.DictReader(f))
 
 
 def load_header_generator(horizon: int, iterations: int, use_float: bool) -> Any:
@@ -552,6 +562,145 @@ def print_summary_table(summary_rows: list[dict[str, Any]], horizon: int, iterat
         )
 
 
+def make_worktree(repo_root: Path, worktree_path: Path) -> None:
+    if worktree_path.exists():
+        shutil.rmtree(worktree_path)
+    run_cmd(
+        ["git", "worktree", "add", "--detach", str(worktree_path), "HEAD"],
+        cwd=repo_root,
+        env=os.environ.copy(),
+    )
+
+
+def remove_worktree(repo_root: Path, worktree_path: Path) -> None:
+    if not worktree_path.exists():
+        return
+    run_cmd(
+        ["git", "worktree", "remove", "--force", str(worktree_path)],
+        cwd=repo_root,
+        env=os.environ.copy(),
+    )
+
+
+def run_config_subprocess(
+    *,
+    worktree_path: Path,
+    output_dir: Path,
+    horizon: int,
+    iterations: int,
+    samples: int,
+) -> tuple[int, int]:
+    config_out = output_dir / "configs" / f"H{horizon}_k{iterations}"
+    config_out.mkdir(parents=True, exist_ok=True)
+    cmd = [
+        sys.executable,
+        str(worktree_path / "benchmark_precision.py"),
+        "--samples",
+        str(samples),
+        "--horizons",
+        str(horizon),
+        "--iters",
+        str(iterations),
+        "--output-dir",
+        str(config_out),
+        "--summary-horizon",
+        str(horizon),
+        "--summary-iters",
+        str(iterations),
+        "--jobs",
+        "1",
+    ]
+    run_cmd(
+        cmd,
+        cwd=worktree_path,
+        env=os.environ.copy(),
+        stdout_log=config_out / "driver.stdout.log",
+        stderr_log=config_out / "driver.stderr.log",
+    )
+    return horizon, iterations
+
+
+def run_parallel_configs(
+    *,
+    args: argparse.Namespace,
+    horizons: list[int],
+    iter_counts: list[int],
+) -> int:
+    configs = [(horizon, iterations) for horizon in horizons for iterations in iter_counts]
+    jobs = max(1, min(int(args.jobs), len(configs)))
+    worker_root = Path(tempfile.gettempdir()) / f"admm_precision_worktrees_{os.getpid()}"
+    if worker_root.exists():
+        shutil.rmtree(worker_root)
+    worker_root.mkdir(parents=True)
+
+    worktrees: dict[tuple[int, int], Path] = {}
+    try:
+        print(f"Preparing {len(configs)} isolated worktrees in {worker_root}", flush=True)
+        for horizon, iterations in configs:
+            worktree_path = worker_root / f"H{horizon}_k{iterations}"
+            make_worktree(REPO_ROOT, worktree_path)
+            worktrees[(horizon, iterations)] = worktree_path
+
+        print(f"Running {len(configs)} configurations with jobs={jobs}", flush=True)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
+            future_map = {
+                executor.submit(
+                    run_config_subprocess,
+                    worktree_path=worktrees[(horizon, iterations)],
+                    output_dir=args.output_dir,
+                    horizon=horizon,
+                    iterations=iterations,
+                    samples=args.samples,
+                ): (horizon, iterations)
+                for horizon, iterations in configs
+            }
+            for future in concurrent.futures.as_completed(future_map):
+                horizon, iterations = future_map[future]
+                try:
+                    future.result()
+                except Exception as exc:
+                    raise RuntimeError(f"Configuration H={horizon}, k={iterations} failed") from exc
+                print(f"Completed H={horizon}, k={iterations}", flush=True)
+
+        all_rows: list[dict[str, Any]] = []
+        for horizon, iterations in configs:
+            config_out = args.output_dir / "configs" / f"H{horizon}_k{iterations}"
+            all_rows.extend(read_csv_rows(config_out / "precision_instances.csv"))
+
+        summary_rows = summarize(all_rows)
+        write_csv(args.output_dir / "precision_instances.csv", all_rows)
+        write_csv(args.output_dir / "precision_summary.csv", summary_rows)
+        (args.output_dir / "manifest.json").write_text(
+            json.dumps(
+                {
+                    "horizons": horizons,
+                    "iterations": iter_counts,
+                    "samples": args.samples,
+                    "jobs": jobs,
+                    "output_dir": str(args.output_dir),
+                    "mode": "parallel_config_worktrees",
+                },
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n"
+        )
+        print_summary_table(summary_rows, args.summary_horizon, args.summary_iters)
+        print(f"\nSaved merged results to {args.output_dir}")
+        return 0
+    finally:
+        if not args.keep_worktrees:
+            for worktree_path in worktrees.values():
+                try:
+                    remove_worktree(REPO_ROOT, worktree_path)
+                except Exception as exc:
+                    print(f"WARNING: failed to remove worktree {worktree_path}: {exc}", file=sys.stderr)
+            try:
+                worker_root.rmdir()
+            except OSError:
+                pass
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Benchmark Vitis ADMM float/fixed precision against OSQP.")
     parser.add_argument("--horizons", default=",".join(map(str, DEFAULT_HORIZONS)))
@@ -560,6 +709,17 @@ def main() -> int:
     parser.add_argument("--output-dir", type=Path, default=REPO_ROOT / "results" / "precision_benchmark")
     parser.add_argument("--summary-horizon", type=int, default=40)
     parser.add_argument("--summary-iters", type=int, default=10)
+    parser.add_argument(
+        "--jobs",
+        type=int,
+        default=min(24, os.cpu_count() or 1),
+        help="Parallel configuration jobs. Use 1 for sequential execution.",
+    )
+    parser.add_argument(
+        "--keep-worktrees",
+        action="store_true",
+        help="Keep temporary per-configuration Git worktrees after a parallel run.",
+    )
     args = parser.parse_args()
 
     require_python_deps()
@@ -567,10 +727,15 @@ def main() -> int:
     iter_counts = parse_int_list(args.iters)
     if args.samples <= 0:
         raise ValueError("--samples must be > 0")
+    if args.jobs <= 0:
+        raise ValueError("--jobs must be > 0")
     if not args.output_dir.is_absolute():
         args.output_dir = (REPO_ROOT / args.output_dir).resolve()
     else:
         args.output_dir = args.output_dir.resolve()
+
+    if args.jobs > 1 and len(horizons) * len(iter_counts) > 1:
+        return run_parallel_configs(args=args, horizons=horizons, iter_counts=iter_counts)
 
     all_rows: list[dict[str, Any]] = []
     args.output_dir.mkdir(parents=True, exist_ok=True)
