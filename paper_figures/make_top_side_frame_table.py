@@ -27,6 +27,14 @@ PANEL_NAMES = (
     ("top_t37.png", "side_t37.png"),
 )
 
+# Approximate head redaction circles in local top-panel pixel coordinates:
+# (x, y, radius). These are intentionally easy to tune by hand.
+HEAD_COVERS = {
+    "top_t09.png": [(-5, 565, 115), (2235, 825, 130)],
+    "top_t36_25.png": [(500, 750, 125), (1870, 740, 125)],
+    "top_t37.png": [(520, 750, 125), (1860, 725, 125)],
+}
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -438,8 +446,25 @@ def load_panel(path: Path) -> Image.Image:
     return Image.open(path).convert("RGB")
 
 
+def apply_head_covers(panel: Image.Image, panel_name: str) -> Image.Image:
+    from PIL import ImageDraw
+
+    covers = HEAD_COVERS.get(panel_name, [])
+    if not covers:
+        return panel
+
+    redacted = panel.copy()
+    draw = ImageDraw.Draw(redacted)
+    for x, y, radius in covers:
+        draw.ellipse((x - radius, y - radius, x + radius, y + radius), fill="black")
+    return redacted
+
+
 def compose_from_panels(panel_dir: Path, gutter: int, row_gutter: int) -> Image.Image:
-    top_panels = [load_panel(panel_dir / top_name) for top_name, _side_name in PANEL_NAMES]
+    top_panels = [
+        apply_head_covers(load_panel(panel_dir / top_name), top_name)
+        for top_name, _side_name in PANEL_NAMES
+    ]
     side_panels = [load_panel(panel_dir / side_name) for _top_name, side_name in PANEL_NAMES]
 
     row_height = max(max(top.height, side.height) for top, side in zip(top_panels, side_panels))
