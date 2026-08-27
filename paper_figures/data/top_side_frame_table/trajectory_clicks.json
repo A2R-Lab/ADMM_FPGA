@@ -1,0 +1,26 @@
+{
+  "center_px": [
+    441,
+    384
+  ],
+  "left_px": [
+    344,
+    391
+  ],
+  "right_px": [
+    525,
+    384
+  ],
+  "metadata": {
+    "top_video": "output.mp4",
+    "side_video": "IMG_1630 (1).MOV",
+    "log": "TAKE1fpga_bridge_log_20260522_153539.csv",
+    "calibration_image": "calibration_motion.png",
+    "top_start_s": 104.0,
+    "duration_s": 5,
+    "panel_width_px": 960,
+    "panel_height_px": 720,
+    "calibration_samples": 180,
+    "calibration_method": "motion"
+  }
+}
