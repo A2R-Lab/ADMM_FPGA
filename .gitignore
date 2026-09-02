@@ -58,3 +58,6 @@ paper_figures/*.png
 paper_figures/*.svg
 paper_figures/output/
 paper_figures/__pycache__/
+
+# Local high-resolution video source (use the committed 1080p derivative)
+video/constrainedStarTopView.MP4

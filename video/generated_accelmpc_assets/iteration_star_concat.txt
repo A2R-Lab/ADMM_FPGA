@@ -1,0 +1,2 @@
+file '/home/andrea/ADMM_FPGA/video/generated_accelmpc_assets/iteration_star_card.mp4'
+file '/home/andrea/ADMM_FPGA/video/generated_accelmpc_assets/iteration_star_overlay.mp4'
