@@ -34,11 +34,11 @@ FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 TIMINGS = {
     "cover": 5.0,
     "hardware": 8.0,
-    "nominal_card": 2.0,
+    "nominal_card": 3.0,
     "nominal": 16.0,
-    "star_card": 2.0,
+    "star_card": 3.0,
     "star": 23.0,
-    "dynamic_card": 2.0,
+    "dynamic_card": 3.0,
     "dynamic": 38.0,
     "results": 7.0,
 }
@@ -55,6 +55,8 @@ SOURCES = {
     "board_back": ROOT / "board_back_crop.png",
     "figure8": ROOT / "figure8.gif",
     "figure8_top": ROOT / "figure8_topview.gif",
+    "figure8_plot": ROOT / "figure8.jpg",
+    "star_plot": ROOT / "constrainedStar.png",
     "star_lateral": ROOT / "constrainedStarLateralView.MOV",
     "star_top": STAR_TOP_SOURCE,
     "dynamic": ROOT / "dynObstacleAvoidance.mp4",
@@ -99,8 +101,8 @@ def card(path, headline, subline=None, accent=True):
     d.rectangle((120, 170, 132, 910), fill=AMBER if accent else MUTED)
     text(d, (190, 430), headline, 72, WHITE, True)
     if subline:
-        text(d, (194, 550), subline, 32, MUTED)
-    d.line((190, 690, 760, 690), fill=(48, 67, 88, 255), width=2)
+        text(d, (194, 550), subline, 32, WHITE, True)
+    d.line((190, 640, 760, 640), fill=(48, 67, 88, 255), width=2)
     im.save(path)
 
 def cover(path):
@@ -138,7 +140,7 @@ def hardware(path):
     text(d, (1610, 150), "PCB back", 24, WHITE, True)
     d.rectangle((80, 890, 1850, 894), fill=AMBER)
     text(d, (90, 930), "Custom 6 g FPGA accelerator", 38, WHITE, True)
-    text(d, (90, 986), "AMD Artix-7 100T · Fully onboard MPC", 28, MUTED)
+    text(d, (90, 986), "AMD Artix-7 100T · Fully onboard MPC", 28, WHITE, True)
     im.save(path)
 
 def overlay(path, lines, top=70, right=False):
@@ -182,18 +184,22 @@ def render_star_base(out, duration):
     mirrored_sx = tw - sx - sw
     # The views are stacked in 1920x500 panels. force_original_aspect_ratio=
     # decrease preserves each crop's aspect ratio; pad supplies the background.
+    video_w, video_h, plot_w = 1240, 480, 680
     vf = (
         f"[1:v]crop={tw}:{th}:{tx}:{ty},hflip,vflip,drawbox=x={mirrored_sx}:y={th - sy - sh}:w={sw}:h={sh}:"
         f"color={STAR_SQUARE_COLOR}@{STAR_SQUARE_ALPHA}:t={STAR_SQUARE_WIDTH},"
-        f"scale=1920:500:force_original_aspect_ratio=decrease,"
-        f"pad=1920:500:(ow-iw)/2:(oh-ih)/2:color=#09121f[top];"
-        f"[0:v]crop={lw}:{lh}:{lx}:{ly},scale=1920:500:force_original_aspect_ratio=decrease,"
-        f"pad=1920:500:(ow-iw)/2:(oh-ih)/2:color=#09121f[bottom];"
-        f"color=c=#09121f:s=1920x{STAR_PANEL_GAP}:r={FPS}[gap];"
-        f"[top][gap][bottom]vstack=inputs=3,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=#09121f,setsar=1"
+        f"scale={video_w}:{video_h}:force_original_aspect_ratio=decrease,"
+        f"pad={video_w}:{video_h}:(ow-iw)/2:(oh-ih)/2:color=#09121f[top];"
+        f"[0:v]crop={lw}:{lh}:{lx}:{ly},scale={video_w}:{video_h}:force_original_aspect_ratio=decrease,"
+        f"pad={video_w}:{video_h}:(ow-iw)/2:(oh-ih)/2:color=#09121f[bottom];"
+        f"color=c=#09121f:s={video_w}x{STAR_PANEL_GAP}:r={FPS}[gap];"
+        f"[top][gap][bottom]vstack=inputs=3,pad={video_w}:1080:(ow-iw)/2:(oh-ih)/2:color=#09121f[video];"
+        f"[2:v]scale={plot_w}:1080:force_original_aspect_ratio=decrease,"
+        f"pad={plot_w}:1080:(ow-iw)/2:(oh-ih)/2:color=#09121f[plot];"
+        f"[video][plot]hstack=inputs=2,setsar=1"
     )
     run([FFMPEG, "-y", "-ss", str(STAR_LATERAL_START), "-i", str(SOURCES["star_lateral"]),
-         "-ss", str(STAR_TOP_START), "-i", str(SOURCES["star_top"]), "-t", str(duration),
+         "-ss", str(STAR_TOP_START), "-i", str(SOURCES["star_top"]), "-loop", "1", "-i", str(SOURCES["star_plot"]), "-t", str(duration),
          "-an", "-filter_complex", vf, "-r", str(FPS), "-c:v", "libx264", "-preset", "medium",
          "-crf", "18", "-pix_fmt", "yuv420p", "-frames:v", str(round(duration * FPS)), str(out)])
 
@@ -232,12 +238,12 @@ def main():
     card(WORK / "nominal_card.png", "Nominal trajectory tracking", "FPGA MPC preserves the baseline closed-loop behavior")
     card(WORK / "star_card.png", "1 kHz constrained MPC", "The reference leaves the admissible region; the drone does not.")
     card(WORK / "dynamic_card.png", "Dynamic obstacle avoidance", "Runtime constraints updated online while MPC continues at 1 kHz")
-    card(WORK / "results.png", "AccelMPC", "1 kHz constrained MPC onboard a 35 g drone", accent=True)
+    card(WORK / "results.png", "AccelMPC", "1 kHz onboard constrained MPC · 35 g drone", accent=True)
     # Add the headline metrics to the final card, keeping it intentionally sparse.
     im = Image.open(WORK / "results.png").convert("RGBA"); d = ImageDraw.Draw(im)
-    text(d, (194, 665), "Up to 15.6× faster", 34, WHITE, True)
-    text(d, (194, 720), "Up to 195.4× lower energy-delay product", 34, WHITE, True)
-    text(d, (194, 775), "Scales beyond 20,000 optimization variables", 34, WHITE, True)
+    text(d, (194, 690), "Up to 15.6× faster", 34, WHITE, True)
+    text(d, (194, 745), "Up to 195.4× lower energy-delay product", 34, WHITE, True)
+    text(d, (194, 800), "Scales beyond 20,000 optimization variables", 34, WHITE, True)
     im.save(WORK / "results.png")
     overlay(WORK / "nominal_ov.png", ["Nominal figure-eight tracking"], right=True)
     overlay(WORK / "star_ov.png", ["Onboard MPC: 1 kHz", "H = 27, k = 9"], right=True)
@@ -256,9 +262,9 @@ def main():
     if "--nominal-only" in sys.argv:
         card_seg = WORK / "iteration_nominal_card.mp4"
         still_segment(WORK / "nominal_card.png", TIMINGS["nominal_card"], card_seg)
-        nominal_vf = "[0:v]scale=1920:550,setsar=1[top];[1:v]scale=-1:530,setsar=1[small];[small]pad=1920:530:(ow-iw)/2:0:color=#09121f[bottom];[top][bottom]vstack=inputs=2,setsar=1"
+        nominal_vf = "[0:v]scale=1920:550,setsar=1[top];[1:v]scale=1240:530:force_original_aspect_ratio=decrease,setsar=1[small];[small]pad=1240:530:(ow-iw)/2:(oh-ih)/2:color=#09121f[bottom_left];[2:v]scale=680:530:force_original_aspect_ratio=decrease,pad=680:530:(ow-iw)/2:(oh-ih)/2:color=#09121f[bottom_right];[bottom_left][bottom_right]hstack=inputs=2[bottom];[top][bottom]vstack=inputs=2,setsar=1"
         nominal_seg = WORK / "iteration_nominal.mp4"
-        run([FFMPEG, "-y", "-stream_loop", "-1", "-i", str(SOURCES["figure8"]), "-stream_loop", "-1", "-i", str(SOURCES["figure8_top"]), "-t", str(TIMINGS["nominal"]), "-an", "-filter_complex", nominal_vf, "-r", str(FPS), "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", str(nominal_seg)])
+        run([FFMPEG, "-y", "-stream_loop", "-1", "-i", str(SOURCES["figure8"]), "-stream_loop", "-1", "-i", str(SOURCES["figure8_top"]), "-loop", "1", "-i", str(SOURCES["figure8_plot"]), "-t", str(TIMINGS["nominal"]), "-an", "-filter_complex", nominal_vf, "-r", str(FPS), "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", str(nominal_seg)])
         concat = WORK / "iteration_nominal_concat.txt"
         concat.write_text(f"file '{card_seg.as_posix()}'\nfile '{nominal_seg.as_posix()}'\n")
         run([FFMPEG, "-y", "-f", "concat", "-safe", "0", "-i", str(concat), "-an", "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(NOMINAL_OUT)])
@@ -287,9 +293,9 @@ def main():
     add("cover", TIMINGS["cover"], lambda o: still_segment(WORK / "cover.png", TIMINGS["cover"], o))
     add("hardware", TIMINGS["hardware"], lambda o: still_segment(WORK / "hardware.png", TIMINGS["hardware"], o))
     add("nominal_card", TIMINGS["nominal_card"], lambda o: still_segment(WORK / "nominal_card.png", TIMINGS["nominal_card"], o))
-    nominal_vf = "[0:v]scale=1920:550,setsar=1[top];[1:v]scale=-1:530,setsar=1[small];[small]pad=1920:530:(ow-iw)/2:0:color=#09121f[bottom];[top][bottom]vstack=inputs=2,setsar=1"
+    nominal_vf = "[0:v]scale=1920:550,setsar=1[top];[1:v]scale=1240:530:force_original_aspect_ratio=decrease,setsar=1[small];[small]pad=1240:530:(ow-iw)/2:(oh-ih)/2:color=#09121f[bottom_left];[2:v]scale=680:530:force_original_aspect_ratio=decrease,pad=680:530:(ow-iw)/2:(oh-ih)/2:color=#09121f[bottom_right];[bottom_left][bottom_right]hstack=inputs=2[bottom];[top][bottom]vstack=inputs=2,setsar=1"
     nominal_base = WORK / f"{len(segs):02d}_nominal_base.mp4"
-    run([FFMPEG, "-y", "-stream_loop", "-1", "-i", str(SOURCES["figure8"]), "-stream_loop", "-1", "-i", str(SOURCES["figure8_top"]), "-t", str(TIMINGS["nominal"]), "-an", "-filter_complex", nominal_vf, "-r", str(FPS), "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", str(nominal_base)])
+    run([FFMPEG, "-y", "-stream_loop", "-1", "-i", str(SOURCES["figure8"]), "-stream_loop", "-1", "-i", str(SOURCES["figure8_top"]), "-loop", "1", "-i", str(SOURCES["figure8_plot"]), "-t", str(TIMINGS["nominal"]), "-an", "-filter_complex", nominal_vf, "-r", str(FPS), "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", str(nominal_base)])
     nominal_out = WORK / f"{len(segs):02d}_nominal.mp4"
     video_segment(nominal_base, 0, TIMINGS["nominal"], nominal_out, "scale=1920:1080,setsar=1")
     segs.append(nominal_out)
