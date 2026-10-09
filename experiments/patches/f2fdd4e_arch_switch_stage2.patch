@@ -1,0 +1,426 @@
+diff --git a/scripts/header_generator.py b/scripts/header_generator.py
+index dd73d94..cf4fc70 100644
+--- a/scripts/header_generator.py
++++ b/scripts/header_generator.py
+@@ -16,6 +16,8 @@ from parameters import (
+     ADMM_USE_FLOAT,
+     ADMM_ITERATIONS,
+     ADMM_ENABLE_TRAJECTORY,
++    ADMM_SOLVER_ARCH,
++    ADMM_SOLVER_INPUT_WIDTH,
+     MPC_LINEAR_DRAG_XY,
+     MPC_LINEAR_DRAG_Z,
+     STAR_INNER_RATIO,
+@@ -439,6 +441,10 @@ def generate_verilog_params_header(constants_dict):
+     lines.append(f"`define ADMM_N_CONSTR {constants_dict['N_CONSTR']}\n")
+     lines.append(f"`define ADMM_START_INEQ {constants_dict['START_INEQ']}\n")
+     lines.append(f"`define ADMM_DELAY_STEPS {constants_dict['DELAY_STEPS']}\n")
++    lines.append(f"`define ADMM_ENABLE_TRAJECTORY {constants_dict['ADMM_ENABLE_TRAJECTORY']}\n")
++    lines.append(f"`define ADMM_SOLVER_INPUT_WIDTH {constants_dict['ADMM_SOLVER_INPUT_WIDTH']}\n")
++    lines.append(f"`define ADMM_SOLVER_ARCH_STAGED_A {constants_dict['ADMM_SOLVER_ARCH_STAGED_A']}\n")
++    lines.append(f"`define ADMM_SOLVER_ARCH_FULL_SPARSE {constants_dict['ADMM_SOLVER_ARCH_FULL_SPARSE']}\n")
+     lines.append("`endif // ADMM_AUTOGEN_PARAMS_VH\n")
+     return "".join(lines)
+
+@@ -451,6 +457,10 @@ def generate_runtime_config_header() -> str:
+     lines.append(f"#define ADMM_USE_FLOAT {1 if ADMM_USE_FLOAT else 0}\n")
+     lines.append(f"#define ADMM_ITERATIONS {int(ADMM_ITERATIONS)}\n")
+     lines.append(f"#define ADMM_ENABLE_TRAJECTORY {1 if ADMM_ENABLE_TRAJECTORY else 0}\n")
++    lines.append(f"#define ADMM_SOLVER_ARCH_STAGED_A {1 if ADMM_SOLVER_ARCH == 'staged_a' else 0}\n")
++    lines.append(f"#define ADMM_SOLVER_ARCH_FULL_SPARSE {1 if ADMM_SOLVER_ARCH == 'full_sparse' else 0}\n")
++    lines.append(f"#define ADMM_SOLVER_ARCH_NAME \"{ADMM_SOLVER_ARCH}\"\n")
++    lines.append(f"#define ADMM_SOLVER_INPUT_WIDTH {int(ADMM_SOLVER_INPUT_WIDTH)}\n")
+     lines.append("\n#endif // ADMM_RUNTIME_CONFIG_H\n")
+     return "".join(lines)
+
+@@ -589,6 +599,10 @@ constants["U_MAX"] = u_max[0]
+ constants["XY_MIN"] = xy_min_eff
+ constants["XY_MAX"] = xy_max_eff
+ constants["U_HOVER"] = ug[0]
++constants["ADMM_ENABLE_TRAJECTORY"] = 1 if ADMM_ENABLE_TRAJECTORY else 0
++constants["ADMM_SOLVER_INPUT_WIDTH"] = ADMM_SOLVER_INPUT_WIDTH
++constants["ADMM_SOLVER_ARCH_STAGED_A"] = 1 if ADMM_SOLVER_ARCH == "staged_a" else 0
++constants["ADMM_SOLVER_ARCH_FULL_SPARSE"] = 1 if ADMM_SOLVER_ARCH == "full_sparse" else 0
+ if ADMM_ENABLE_TRAJECTORY:
+     constants["TRAJ_LENGTH"] = load_traj_length_from_header(TRAJ_DATA_HEADER_PATH, horizon=N)
+     constants["TRAJ_TICK_DIV"] = TRAJ_TICK_DIV
+@@ -598,22 +612,38 @@ else:
+     constants["TRAJ_TICK_DIV"] = 1
+     constants["TRAJ_WARMSTART_PAD"] = 0
+
+-A_stage_row_counts, A_stage_row_cols, A_stage_row_vals, A_stage_nnz_max = build_sparse_rows(A_stage)
+-A_stage_col_counts, A_stage_col_rows, A_stage_col_vals, A_stage_t_nnz_max = build_sparse_cols(A_stage)
+-constants["A_STAGE_NNZ_MAX"] = A_stage_nnz_max
+-constants["A_STAGE_T_NNZ_MAX"] = A_stage_t_nnz_max
+-
+ data = []
+ data.append(generate_constants_header(constants))
+ data.append(generate_matrix_header(L_banded, "L_banded"))
+ data.append(generate_matrix_header(LT_banded, "LT_banded"))
+-data.append(generate_vector_header(A_stage_row_counts, "A_stage_row_counts", type="int"))
+-data.append(generate_matrix_header(A_stage_row_cols, "A_stage_row_cols", type="int"))
+-data.append(generate_matrix_header(A_stage_row_vals, "A_stage_row_vals"))
+-data.append(generate_vector_header(A_stage_col_counts, "A_stage_col_counts", type="int"))
+-data.append(generate_matrix_header(A_stage_col_rows, "A_stage_col_rows", type="int"))
+-data.append(generate_matrix_header(A_stage_col_vals, "A_stage_col_vals"))
+-data.append(generate_matrix_header(B_stage, "B_stage"))
++
++if ADMM_SOLVER_ARCH == "staged_a":
++    A_stage_row_counts, A_stage_row_cols, A_stage_row_vals, A_stage_nnz_max = build_sparse_rows(A_stage)
++    A_stage_col_counts, A_stage_col_rows, A_stage_col_vals, A_stage_t_nnz_max = build_sparse_cols(A_stage)
++    constants["A_STAGE_NNZ_MAX"] = A_stage_nnz_max
++    constants["A_STAGE_T_NNZ_MAX"] = A_stage_t_nnz_max
++
++    data[0] = generate_constants_header(constants)
++    data.append(generate_vector_header(A_stage_row_counts, "A_stage_row_counts", type="int"))
++    data.append(generate_matrix_header(A_stage_row_cols, "A_stage_row_cols", type="int"))
++    data.append(generate_matrix_header(A_stage_row_vals, "A_stage_row_vals"))
++    data.append(generate_vector_header(A_stage_col_counts, "A_stage_col_counts", type="int"))
++    data.append(generate_matrix_header(A_stage_col_rows, "A_stage_col_rows", type="int"))
++    data.append(generate_matrix_header(A_stage_col_vals, "A_stage_col_vals"))
++    data.append(generate_matrix_header(B_stage, "B_stage"))
++elif ADMM_SOLVER_ARCH == "full_sparse":
++    A_sparse_data, A_sparse_indexes, A_n_bits_idx = convert_matrix_to_sparse_storage(A_full)
++    AT_sparse_data, AT_sparse_indexes, AT_n_bits_idx = convert_matrix_to_sparse_storage(A_full.T)
++    constants["A_SPARSE_INDEX_BITS"] = A_n_bits_idx
++    constants["AT_SPARSE_INDEX_BITS"] = AT_n_bits_idx
++
++    data[0] = generate_constants_header(constants)
++    data.append(generate_matrix_header(A_sparse_data, "A_sparse_data"))
++    data.append(generate_matrix_header(A_sparse_indexes, "A_sparse_indexes", type=f"ap_uint<{A_n_bits_idx}>"))
++    data.append(generate_matrix_header(AT_sparse_data, "AT_sparse_data"))
++    data.append(generate_matrix_header(AT_sparse_indexes, "AT_sparse_indexes", type=f"ap_uint<{AT_n_bits_idx}>"))
++else:
++    raise RuntimeError(f"Unsupported ADMM_SOLVER_ARCH: {ADMM_SOLVER_ARCH}")
+
+ generate_full_header(data, filename=str(DATA_HEADER_PATH))
+ RTL_PARAMS_HEADER_PATH.write_text(generate_verilog_params_header(constants))
+diff --git a/scripts/impl.tcl b/scripts/impl.tcl
+index b84e56f..a27cb6b 100644
+--- a/scripts/impl.tcl
++++ b/scripts/impl.tcl
+@@ -7,6 +7,18 @@ set proj_root [file normalize "$script_dir/.."]
+
+ set build_dir "$proj_root/build"
+ set reports_dir "$build_dir/reports"
++
++set vivado_max_threads 0
++if {[info exists ::env(VIVADO_MAX_THREADS)] && [string is integer -strict $::env(VIVADO_MAX_THREADS)] && $::env(VIVADO_MAX_THREADS) > 0} {
++    set vivado_max_threads $::env(VIVADO_MAX_THREADS)
++} elseif {[info exists ::env(SLURM_CPUS_PER_TASK)] && [string is integer -strict $::env(SLURM_CPUS_PER_TASK)] && $::env(SLURM_CPUS_PER_TASK) > 0} {
++    set vivado_max_threads $::env(SLURM_CPUS_PER_TASK)
++}
++if {$vivado_max_threads > 0} {
++    puts "Vivado max threads: $vivado_max_threads"
++    set_param general.maxThreads $vivado_max_threads
++}
++
+ if {[llength $argv] >= 1} {
+     set synth_dcp [lindex $argv 0]
+ } else {
+diff --git a/scripts/parameters.py b/scripts/parameters.py
+index bc7ec79..92de041 100644
+--- a/scripts/parameters.py
++++ b/scripts/parameters.py
+@@ -5,6 +5,7 @@ Environment overrides are supported to simplify scripted sweeps:
+ - ADMM_ITERATIONS
+ - ADMM_USE_FLOAT
+ - ADMM_ENABLE_TRAJECTORY
++- ADMM_SOLVER_ARCH
+ - ADMM_MPC_LINEAR_DRAG_XY
+ - ADMM_MPC_LINEAR_DRAG_Z
+ - ADMM_RHO_EQ_PARAM
+@@ -68,6 +69,15 @@ def _env_bool(name: str, default: bool) -> bool:
+     raise ValueError(f"Invalid boolean for {name}: {raw}")
+
+
++def _env_choice(name: str, default: str, choices: set[str]) -> str:
++    raw = os.environ.get(name, default)
++    value = raw.strip().lower()
++    if value not in choices:
++        allowed = ", ".join(sorted(choices))
++        raise ValueError(f"Invalid value for {name}: {raw}. Expected one of: {allowed}")
++    return value
++
++
+ def _env_float_list(name: str, default: list[float], expected_len: int) -> list[float]:
+     raw = os.environ.get(name)
+     if raw is None or raw.strip() == "":
+@@ -104,6 +114,8 @@ R_DIAG = [R_SCALE * v for v in _BASE_R_DIAG]
+ ADMM_USE_FLOAT = _env_bool("ADMM_USE_FLOAT", False)  # False: ap_fixed, True: float
+ ADMM_ITERATIONS = _env_int("ADMM_ITERATIONS", 10)
+ ADMM_ENABLE_TRAJECTORY = _env_bool("ADMM_ENABLE_TRAJECTORY", True)
++ADMM_SOLVER_ARCH = _env_choice("ADMM_SOLVER_ARCH", "staged_a", {"staged_a", "full_sparse"})
++ADMM_SOLVER_INPUT_WIDTH = 418
+
+ # Linear drag terms used to bias the MPC linear model (header_generator.py).
+ MPC_LINEAR_DRAG_XY = _env_float("ADMM_MPC_LINEAR_DRAG_XY", 0.12)
+diff --git a/scripts/synth.tcl b/scripts/synth.tcl
+index 285451a..92775db 100644
+--- a/scripts/synth.tcl
++++ b/scripts/synth.tcl
+@@ -11,6 +11,17 @@ set reports_dir "$build_dir/reports"
+ file mkdir $build_dir
+ file mkdir $reports_dir
+
++set vivado_max_threads 0
++if {[info exists ::env(VIVADO_MAX_THREADS)] && [string is integer -strict $::env(VIVADO_MAX_THREADS)] && $::env(VIVADO_MAX_THREADS) > 0} {
++    set vivado_max_threads $::env(VIVADO_MAX_THREADS)
++} elseif {[info exists ::env(SLURM_CPUS_PER_TASK)] && [string is integer -strict $::env(SLURM_CPUS_PER_TASK)] && $::env(SLURM_CPUS_PER_TASK) > 0} {
++    set vivado_max_threads $::env(SLURM_CPUS_PER_TASK)
++}
++if {$vivado_max_threads > 0} {
++    puts "Vivado max threads: $vivado_max_threads"
++    set_param general.maxThreads $vivado_max_threads
++}
++
+ #------------------------------------------------------------------------------
+ # Configuration (top_module, xdc_file, and synth checkpoint name via -tclargs)
+ #------------------------------------------------------------------------------
+diff --git a/vitis_projects/ADMM/ADMM.cpp b/vitis_projects/ADMM/ADMM.cpp
+index 9a55978..33ea2e2 100644
+--- a/vitis_projects/ADMM/ADMM.cpp
++++ b/vitis_projects/ADMM/ADMM.cpp
+@@ -23,7 +23,28 @@ static_assert(TRAJ_TICK_DIV > 0, "TRAJ_TICK_DIV must be > 0");
+ static_assert(DYNAMIC_CONSTRAINT_AXIS == 0 || DYNAMIC_CONSTRAINT_AXIS == 1,
+               "DYNAMIC_CONSTRAINT_AXIS must be 0 (x) or 1 (y)");
+
++#ifndef ADMM_SOLVER_ARCH_STAGED_A
++#error "ADMM_SOLVER_ARCH_STAGED_A must be generated in admm_runtime_config.h"
++#endif
++
++#ifndef ADMM_SOLVER_ARCH_FULL_SPARSE
++#error "ADMM_SOLVER_ARCH_FULL_SPARSE must be generated in admm_runtime_config.h"
++#endif
++
++#ifndef ADMM_SOLVER_INPUT_WIDTH
++#error "ADMM_SOLVER_INPUT_WIDTH must be generated in admm_runtime_config.h"
++#endif
++
++static_assert(ADMM_SOLVER_ARCH_STAGED_A + ADMM_SOLVER_ARCH_FULL_SPARSE == 1,
++              "Exactly one ADMM solver architecture must be selected");
++static_assert(ADMM_SOLVER_INPUT_WIDTH == 418,
++              "The public ADMM_solver input width must remain 418 bits");
++
++#if ADMM_SOLVER_ARCH_FULL_SPARSE
++constexpr int ACC_GUARD_BITS = 12;
++#else
+ constexpr int ACC_GUARD_BITS = 2;
++#endif
+
+ #ifndef RHO_SHIFT_EQ
+ #error "RHO_SHIFT_EQ must be generated in data.h by scripts/header_generator.py"
+@@ -252,6 +273,7 @@ void AT_mul(
+     fp_t ATx[N_VAR]
+ ) {
+ #pragma HLS INLINE
++#if ADMM_SOLVER_ARCH_STAGED_A
+ #pragma HLS ARRAY_PARTITION variable=A_stage_col_counts complete dim=1
+ #pragma HLS ARRAY_PARTITION variable=A_stage_col_rows complete dim=2
+ #pragma HLS ARRAY_PARTITION variable=A_stage_col_vals complete dim=2
+@@ -321,6 +343,18 @@ void AT_mul(
+         ATx[xk_col + 0] += x[row_base + 0];
+         ATx[xk_col + 1] += x[row_base + 1];
+     }
++#else
++    AT_MUL_EXTERN_LOOP:
++    for (int i = 0; i < AT_SPARSE_DATA_ROWS; i++) {
++        acc_t sum_val = 0;
++        AT_MUL_DOT_PRODUCT_LOOP:
++        for (int j = 0; j < AT_SPARSE_DATA_COLS; j++) {
++            const int row_idx = (int)AT_sparse_indexes[i][j];
++            sum_val += (acc_t)AT_sparse_data[i][j] * (acc_t)x[row_idx];
++        }
++        ATx[i] = (fp_t)sum_val;
++    }
++#endif
+ }
+
+ void ADMM_iteration(
+@@ -334,6 +368,7 @@ void ADMM_iteration(
+     fp_t dynamic_max
+ ) {
+ #pragma HLS INLINE
++#if ADMM_SOLVER_ARCH_STAGED_A
+ #pragma HLS ARRAY_PARTITION variable=A_stage_row_counts complete dim=1
+ #pragma HLS ARRAY_PARTITION variable=A_stage_row_cols complete dim=2
+ #pragma HLS ARRAY_PARTITION variable=A_stage_row_vals complete dim=2
+@@ -446,6 +481,60 @@ void ADMM_iteration(
+         }
+     }
+     AT_mul(b_tmp, b);
++#else
++    fp_t tmp[N_VAR];
++    fp_t b_tmp[N_CONSTR];
++
++    forward_substitution(b, use_traj_q, traj_idx, tmp);
++    backward_substitution(tmp, x);
++
++    ADMM_IT_ZY_UPDATE_LOOP:
++    for (int i = 0; i < N_CONSTR; i++) {
++        acc_t Axi_acc = 0;
++        ADMM_IT_A_ROW_LOOP:
++        for (int j = 0; j < A_SPARSE_DATA_COLS; j++) {
++            const int col_idx = (int)A_sparse_indexes[i][j];
++            Axi_acc += (acc_t)A_sparse_data[i][j] * (acc_t)x[col_idx];
++        }
++        const fp_t Axi = (fp_t)Axi_acc;
++
++        if (i < STATE_SIZE) {
++            const fp_t zi = current_state[i];
++            const fp_t yi = y[i] + (Axi - zi);
++            y[i] = yi;
++            b_tmp[i] = rho_mul(zi - yi, false);
++        } else if (i < START_INEQ) {
++            const fp_t yi = y[i] + Axi;
++            y[i] = yi;
++            b_tmp[i] = rho_mul(-yi, false);
++        } else {
++            fp_t zi = Axi + y[i];
++            if (i >= START_XY_INEQ) {
++                const int axis = (i - START_XY_INEQ) & 1;
++                const bool use_dynamic_bound = (axis == DYNAMIC_CONSTRAINT_AXIS);
++                const fp_t min_bound = use_dynamic_bound ? dynamic_min : (fp_t)XY_MIN;
++                const fp_t max_bound = use_dynamic_bound ? dynamic_max : (fp_t)XY_MAX;
++                if (zi < min_bound) {
++                    zi = min_bound;
++                } else if (zi > max_bound) {
++                    zi = max_bound;
++                }
++            } else {
++                if (zi < (fp_t)U_MIN) {
++                    zi = (fp_t)U_MIN;
++                } else if (zi > (fp_t)U_MAX) {
++                    zi = (fp_t)U_MAX;
++                }
++            }
++
++            const fp_t yi = y[i] + (Axi - zi);
++            y[i] = yi;
++            b_tmp[i] = rho_mul(zi - yi, true);
++        }
++    }
++
++    AT_mul(b_tmp, b);
++#endif
+ }
+
+ static void ADMM_solver_core(
+@@ -492,8 +581,9 @@ static void ADMM_solver_core(
+     if (current_in.constraints != 0) {
+         int16_t min_16 = (int16_t)current_in.constraints.range(15, 0);
+         int16_t max_16 = (int16_t)current_in.constraints.range(31, 16);
+-        dynamic_min = (fp_t)min_16 / (fp_t)1000.0f;
+-        dynamic_max = (fp_t)max_16 / (fp_t)1000.0f;
++        const fp_t mm_to_m = (fp_t)0.001;
++        dynamic_min = (fp_t)min_16 * mm_to_m;
++        dynamic_max = (fp_t)max_16 * mm_to_m;
+     }
+
+ ADMM_MAIN_LOOP:
+diff --git a/vitis_projects/ADMM/ADMM_closed_loop_tb.cpp b/vitis_projects/ADMM/ADMM_closed_loop_tb.cpp
+index 5ab4f46..563f612 100644
+--- a/vitis_projects/ADMM/ADMM_closed_loop_tb.cpp
++++ b/vitis_projects/ADMM/ADMM_closed_loop_tb.cpp
+@@ -12,13 +12,8 @@
+
+ namespace {
+
+-ap_uint<386> pack_current_state(const current_state_t &current) {
+-    ap_uint<386> bits = 0;
+-    for (int i = 0; i < 12; ++i) {
+-        bits.range(i * 32 + 31, i * 32) = fp_to_bits(current.state[i]);
+-    }
+-    bits.range(385, 384) = current.traj_cmd;
+-    return bits;
++ap_uint<418> pack_current_state(const current_state_t &current) {
++    return pack_current_state_bits(current);
+ }
+
+ command_out_t unpack_command_out(ap_uint<128> bits) {
+@@ -431,6 +426,7 @@ int main() {
+         for (int i = 0; i < kStateSize; ++i) {
+             current_state.state[i] = static_cast<fp_t>(state[i]);
+         }
++        current_state.constraints = 0;
+         current_state.traj_cmd = 0;
+         if (step == 0) {
+             current_state.traj_cmd[1] = 1;
+diff --git a/vitis_projects/ADMM/ADMM_test.cpp b/vitis_projects/ADMM/ADMM_test.cpp
+index 5711a78..7680297 100644
+--- a/vitis_projects/ADMM/ADMM_test.cpp
++++ b/vitis_projects/ADMM/ADMM_test.cpp
+@@ -8,13 +8,8 @@
+
+ const double REL_ERROR = .03;
+
+-static ap_uint<386> pack_current_state(const current_state_t &current) {
+-    ap_uint<386> bits = 0;
+-    for (int i = 0; i < 12; ++i) {
+-        bits.range(i * 32 + 31, i * 32) = fp_to_bits(current.state[i]);
+-    }
+-    bits.range(385, 384) = current.traj_cmd;
+-    return bits;
++static ap_uint<418> pack_current_state(const current_state_t &current) {
++    return pack_current_state_bits(current);
+ }
+
+ static command_out_t unpack_command_out(ap_uint<128> bits) {
+@@ -58,6 +53,7 @@ int main() {
+     current.state[0] = (fp_t)0.1;
+     current.state[1] = (fp_t)0.1;
+     current.state[2] = (fp_t)-0.1;
++    current.constraints = 0;
+     current.traj_cmd = 0;
+
+     printf("================= ADMM SOLVER %d iterations =================\n", ADMM_ITERATIONS);
+diff --git a/vitis_projects/ADMM/ADMM_uart_smoke_tb.cpp b/vitis_projects/ADMM/ADMM_uart_smoke_tb.cpp
+index 055272a..d20ab8d 100644
+--- a/vitis_projects/ADMM/ADMM_uart_smoke_tb.cpp
++++ b/vitis_projects/ADMM/ADMM_uart_smoke_tb.cpp
+@@ -3,13 +3,8 @@
+ #include "ADMM.h"
+ #include "data_types.h"
+
+-static ap_uint<386> pack_current_state(const current_state_t &current) {
+-    ap_uint<386> bits = 0;
+-    for (int i = 0; i < 12; ++i) {
+-        bits.range(i * 32 + 31, i * 32) = fp_to_bits(current.state[i]);
+-    }
+-    bits.range(385, 384) = current.traj_cmd;
+-    return bits;
++static ap_uint<418> pack_current_state(const current_state_t &current) {
++    return pack_current_state_bits(current);
+ }
+
+ static command_out_t unpack_command_out(ap_uint<128> bits) {
+@@ -37,6 +32,7 @@ int main() {
+     current.state[9] = (fp_t)0.0;
+     current.state[10] = (fp_t)0.0;
+     current.state[11] = (fp_t)0.0;
++    current.constraints = 0;
+     current.traj_cmd = 2;
+
+     ADMM_solver(pack_current_state(current), cmd_out_bits);
+diff --git a/vitis_projects/ADMM/data_types.h b/vitis_projects/ADMM/data_types.h
+index 491b3d6..fb75c25 100644
+--- a/vitis_projects/ADMM/data_types.h
++++ b/vitis_projects/ADMM/data_types.h
+@@ -53,6 +53,17 @@ static inline ap_uint<32> fp_to_bits(fp_t v) {
+ #endif
+ }
+
++static inline ap_uint<418> pack_current_state_bits(const current_state_t &current) {
++    ap_uint<418> bits = 0;
++    for (int i = 0; i < 12; ++i) {
++        bits.range(i * 32 + 31, i * 32) = fp_to_bits(current.state[i]);
++    }
++    // Solver input layout: state[383:0], constraints[415:384], traj_cmd[417:416].
++    bits.range(415, 384) = current.constraints;
++    bits.range(417, 416) = current.traj_cmd;
++    return bits;
++}
++
+ static inline int fp_bit_width() {
+ #if ADMM_USE_FLOAT
+     return 32;

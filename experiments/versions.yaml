@@ -1,0 +1,62 @@
+# Tier 1 benchmark manifest for the ADMM FPGA RAL evaluation.
+#
+# This tier is intentionally narrow: one Slurm job per candidate commit, horizon
+# 40, each version's default ADMM iteration count, star trajectory short
+# closed-loop C simulation, and HLS C synthesis. Full-trajectory CSim, wider
+# guard-bit, horizon, cosim, Vivado, and drone sweeps should be added only after
+# the smoke rows identify viable finalists.
+
+experiment:
+  name: ral_tier1_smoke
+  description: First-pass correctness and HLS synthesis smoke for candidate commits.
+
+defaults:
+  horizon: 40
+  admm_iterations: default
+  trajectory: star_hold
+  enable_trajectory: true
+  run_closed_loop_csim: true
+  run_hls_synthesis: true
+  run_cosim: false
+  run_vivado: false
+  board: custom
+  sim_freq_hz: 500
+  traj_start_step: 0
+  csim_duration_s: 5
+  csim_timeout_s: 1800
+
+candidates:
+  - id: flight_baseline
+    name: Flight baseline
+    commit: 1c23f1fb276b193294ac106037873362d5740f6e
+    role: Known working filmed star trajectory baseline.
+    architecture: full_sparse_A_AT
+    notes: Reliability anchor for 500 Hz flight comparison.
+
+  - id: early_staged_a
+    name: Early staged-A ablation
+    commit: 78cd2c219871d31f3e50b2676a7a11372d2737d0
+    role: Early memory-optimized staged dynamics candidate.
+    architecture: staged_A
+    notes: Likely numerically fragile due to low accumulator guard bits.
+
+  - id: a_memory_optimization
+    name: A memory optimization
+    commit: ee338c643eec3b10c02e64e3ffc29437312c48d4
+    role: Main staged-A memory optimization candidate.
+    architecture: staged_A
+    notes: Scaled ADMM, dynamic constraints, widened interface, low guard-bit setting.
+
+  - id: optimized_1khz
+    name: 1 kHz optimized candidate
+    commit: 565281f
+    role: Resource-sharing and timing-closure candidate.
+    architecture: staged_A_shared_resources
+    notes: Uses the version default 6 ADMM iterations and 8 ns HLS clock target.
+
+  - id: current
+    name: Current working tree baseline
+    commit: f2fdd4e81fb770805409799127642cd99ff34783
+    role: Current staged-A baseline after interface repair.
+    architecture: staged_A
+    notes: Current solver expects 418-bit input; stale 386-bit testbenches must be fixed before interpreting star failures.

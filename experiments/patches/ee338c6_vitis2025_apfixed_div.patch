@@ -1,0 +1,15 @@
+diff --git a/vitis_projects/ADMM/ADMM.cpp b/vitis_projects/ADMM/ADMM.cpp
+--- a/vitis_projects/ADMM/ADMM.cpp
++++ b/vitis_projects/ADMM/ADMM.cpp
+@@ -483,8 +483,9 @@ static void ADMM_solver_core(
+     if (current_in.constraints != 0) {
+         int16_t min_16 = (int16_t)current_in.constraints.range(15, 0);
+         int16_t max_16 = (int16_t)current_in.constraints.range(31, 16);
+-        dynamic_xy_min = (fp_t)min_16 / 1000.0f;
+-        dynamic_xy_max = (fp_t)max_16 / 1000.0f;
++        const fp_t mm_to_m = (fp_t)0.001;
++        dynamic_xy_min = (fp_t)min_16 * mm_to_m;
++        dynamic_xy_max = (fp_t)max_16 * mm_to_m;
+     }
+
+ ADMM_MAIN_LOOP:
