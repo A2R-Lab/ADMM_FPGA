@@ -36,6 +36,8 @@ ARCH_ORDER = ["staged_a", "full_sparse", "tinympc_e"]
 
 # Points intentionally omitted from the published figure. Keep exclusions here
 # rather than editing the source CSV so the presentation choice is reproducible.
+# These horizons were omitted solely to reduce overlap between large bubbles
+# and keep the plot readable; their measurements remain in the source CSV.
 # Example: {("staged_a", 704), ("staged_a", 768)}
 EXCLUDED_POINTS: set[tuple[str, int]] = {("staged_a", 768),("staged_a", 900), ("staged_a", 1000), ("staged_a", 1100), ("staged_a", 1200), ("staged_a", 1300)}
 

@@ -2,6 +2,7 @@ from pathlib import Path
 import re
 import os
 import json
+import inspect
 import time
 import numpy as np
 from crazyloihimodel import CrazyLoihiModel
@@ -449,12 +450,16 @@ except ImportError as exc:
         "large-horizon benchmark generation."
     ) from exc
 
-factor_result = cholesky(KKT, lower=True, order="natural")
+chol_parameters = inspect.signature(cholesky).parameters
+if "lower" in chol_parameters and "order" in chol_parameters:
+    factor_result = cholesky(KKT, lower=True, order="natural")
+else:
+    factor_result = cholesky(KKT, ordering_method="natural")
 if isinstance(factor_result, tuple):
     L, chol_permutation = factor_result
 else:
     L = factor_result.L()
-    chol_permutation = np.arange(KKT.shape[0], dtype=np.int32)
+    chol_permutation = factor_result.P()
 L = L.tocsc()
 if not np.array_equal(np.asarray(chol_permutation), np.arange(KKT.shape[0])):
     raise RuntimeError("CHOLMOD returned a non-identity permutation despite order='natural'")
