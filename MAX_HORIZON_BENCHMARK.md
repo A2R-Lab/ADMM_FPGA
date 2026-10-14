@@ -172,25 +172,33 @@ staged_a,1350
 
 If this file is absent, scalability fields and axes are omitted.
 
-## Publish Results To Git
+## Export Local Campaign Results
 
-Raw experiment directories under `../exp` are working data, not the permanent
-record. Publish only compact, plot-ready data and final figures:
+Raw experiment directories and campaign exports remain outside Git. To export
+compact campaign data, provenance, and figures for local analysis:
 
 ```bash
 python scripts/publish_solver_scalability.py \
   --run-dir ../exp/2026-07-solver-scalability \
   --run-dir ../exp/2026-07-solver-scalability-staged-a \
   --manual-scalability ../exp/2026-07-solver-scalability/scalability_manual.csv \
-  --output results/2026-07-solver-scalability
+  --output ../exp/exports/2026-07-solver-scalability
 ```
 
-Each tracked campaign contains canonical CSVs, a manifest, a README, and final
-figures. Bitstreams, reports, logs, generated headers, and worker repositories
-remain outside Git. Figures can be regenerated without raw artifacts:
+The export contains canonical CSVs, a manifest, and generated figures.
+Figures can be regenerated from an existing local export without raw artifacts:
 
 ```bash
 python scripts/publish_solver_scalability.py \
-  --output results/2026-07-solver-scalability \
+  --output ../exp/exports/2026-07-solver-scalability \
   --regenerate-only
 ```
+
+The committed inputs for the paper figures live in `paper_figures/data/`.
+To regenerate those figures:
+
+```bash
+python3 paper_figures/plot_benchmarks.py
+```
+
+Generated paper figures go to the ignored `paper_figures/output/` directory.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Publish compact solver scalability results and reproducible figures."""
+"""Export compact solver scalability results and figures for local analysis."""
 
 from __future__ import annotations
 
@@ -339,8 +339,8 @@ def main() -> int:
         help="Raw low-horizon run directory; repeat when architectures were run separately",
     )
     parser.add_argument("--manual-scalability", type=Path, help="Manually curated canonical staged scalability CSV")
-    parser.add_argument("--output", required=True, type=Path, help="Tracked campaign result directory")
-    parser.add_argument("--regenerate-only", action="store_true", help="Regenerate figures from tracked canonical CSVs")
+    parser.add_argument("--output", required=True, type=Path, help="Local campaign export directory (prefer a path outside the repository)")
+    parser.add_argument("--regenerate-only", action="store_true", help="Regenerate figures from an existing local export's canonical CSVs")
     args = parser.parse_args()
 
     output = args.output.resolve()
