@@ -58,3 +58,15 @@ paper_figures/*.png
 paper_figures/*.svg
 paper_figures/output/
 paper_figures/__pycache__/
+
+# Local high-resolution video source (use the committed 1080p derivative)
+video/constrainedStarTopView.MP4
+
+# Regenerable video outputs and auxiliary media
+/video/generated_accelmpc_assets/
+/video/AccelMPC_nominal_figure8_iteration.mp4
+/video/AccelMPC_constrained_star_iteration.mp4
+/video/dynObstacleAvoidance.mp4BCK
+/video/topview_motion_trail_raw.png
+/video/topview_motion_trail_cropped_flipped.png
+/video/AccelMPC__RAL_2026_-9.pdf

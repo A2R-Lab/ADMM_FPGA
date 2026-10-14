@@ -1,0 +1,20 @@
+{
+  "_comments": {
+    "top_crop": "[x, y, width, height] in original top-view source pixels; x/y are the top-left corner measured from the source image's left/top edges.",
+    "constraint_square": "[x, y, width, height] in cropped top-view pixels before the video hflip/vflip; x/y are the square's top-left corner measured from the crop's left/top edges.",
+    "preview_time": "Source-video time in seconds used for the displayed editing frame; it does not change video timing."
+  },
+  "top_crop": [
+    145,
+    21,
+    1271,
+    1045
+  ],
+  "constraint_square": [
+    228,
+    107,
+    817,
+    853
+  ],
+  "preview_time": 43.0
+}
