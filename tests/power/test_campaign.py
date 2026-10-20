@@ -83,8 +83,25 @@ class CampaignTests(unittest.TestCase):
         self.assertIn('tests/power/test_power.sh', names)
         self.assertIn('tests/power/test_power_hls.sh', names)
         self.assertIn('experiments/power/requirements.txt', names)
+        self.assertIn('docs/power.md', names)
         self.assertFalse(any(p.startswith(('build/', 'results/', '.git/')) for p in names))
         self.assertFalse(any(Path(p).name in c.GENERATED for p in names))
+
+    def test_aggregate_pending_campaign_creates_csv_without_measurement_claims(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            campaign, local = root/'campaign', root/'measurements'
+            c.prepare(SimpleNamespace(campaign=campaign))
+            manifest = c.campaign_data(campaign)
+            c.aggregate(SimpleNamespace(campaign=campaign, local=local))
+            output = local/'summaries'/manifest['campaign_id']
+            with (output/'summary.csv').open(newline='') as f:
+                rows = list(csv.DictReader(f))
+            self.assertEqual(len(rows), 42)
+            self.assertEqual({r['status'] for r in rows}, {'pending'})
+            self.assertEqual({r['correction_model'] for r in rows}, {c.MODEL['id']})
+            self.assertFalse((output/'summary.json').exists())
+            self.assertFalse((campaign/'smoke_acceptance.json').exists())
 
     def test_snapshot_detects_mutation(self):
         with tempfile.TemporaryDirectory() as d:

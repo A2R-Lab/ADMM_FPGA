@@ -2,7 +2,7 @@
 """Prepare, build, measure and aggregate a reproducible Arty power campaign.
 
 Build and measure on one machine or transfer the campaign between machines.
-Sources, settings and artifacts are checked by hash. See POWER_CAMPAIGN.md.
+Sources, settings and artifacts are checked by hash. See docs/power.md.
 """
 from __future__ import annotations
 
@@ -132,7 +132,7 @@ def matrix(path):
 
 def source_files(root):
     # Copy only the campaign's dependencies, never local mounts or build outputs.
-    files = [root / 'Makefile', root / 'POWER_CAMPAIGN.md']
+    files = [root / 'Makefile', root / 'docs/power.md']
     files += [root / 'scripts' / name for name in CAMPAIGN_SCRIPTS]
     for folder, suffixes in (
         ('vitis_projects/ADMM', {'.cpp', '.h', '.cfg'}),
@@ -631,8 +631,7 @@ def aggregate(args):
                                 key+'_min':min(vals),key+'_max':max(vals)})
         rows.append(row)
     output=args.local/'summaries'/m['campaign_id']
-    save(output/'summary.json',{'campaign_id':m['campaign_id'],'correction':MODEL,'points':rows,
-                              'note':'Spread measures repeatability, not uncertainty in the correction assumptions.'})
+    output.mkdir(parents=True, exist_ok=True)
     keys=sorted({k for r in rows for k in r})
     tmp=output/'summary.csv.tmp'
     with tmp.open('w',newline='') as f:

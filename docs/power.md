@@ -109,7 +109,7 @@ directory to `measure` and `aggregate`.
 
 ## Results and interpretation
 
-`aggregate` prints the output directory and writes `summary.csv` and `summary.json`
+`aggregate` prints the output directory and writes `summary.csv`
 under `<measurement_dir>/summaries/<campaign-id>/`. Each row includes architecture,
 horizon, status, resource use, artifact hashes, valid repetition count, and the
 mean/sample standard deviation/minimum/maximum of the measured quantities.

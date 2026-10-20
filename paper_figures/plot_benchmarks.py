@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Generate the headline latency, energy, and scalability benchmark plot.
 
-Run from this directory with the project plotting environment:
+Run from the repository root:
 
-    source ~/venv/bin/activate
-    python plot_benchmarks.py
+    python paper_figures/plot_benchmarks.py
 """
 
 from __future__ import annotations
@@ -53,8 +52,9 @@ RADAR_METRIC_UNITS = {
     "Scalability": "max H cost",
 }
 
-DATA_DIR = Path("data")
-OUTPUT_DIR = Path("output")
+HERE = Path(__file__).resolve().parent
+DATA_DIR = HERE / "data"
+OUTPUT_DIR = HERE / "output"
 
 BENCHMARK_SUMMARY_CSV = DATA_DIR / "benchmark_summary.csv"
 
