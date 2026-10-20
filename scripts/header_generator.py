@@ -881,60 +881,41 @@ generate_full_header(data, filename=str(DATA_HEADER_PATH))
 RTL_PARAMS_HEADER_PATH.write_text(generate_verilog_params_header(constants))
 RUNTIME_CONFIG_HEADER_PATH.write_text(generate_runtime_config_header())
 
-# Test header generation
-# np.random.seed(0)
-# rand_vec_var = np.random.randn(L_banded.shape[0])
-# rand_vec_constr = np.random.randn(A.shape[0])
-# test_data = []
-# test_data.append(generate_vector_header(rand_vec_var, "random_vector", type="double"))
+def generate_csim_reference():
+    """Write the cold-start, finite-iteration reference for ADMM_test.cpp.
 
-# forw_subst_out = np.linalg.solve(L, rand_vec_var)
-# test_data.append(generate_vector_header(forw_subst_out, "forw_subst_out", type="double"))
+    The testbench supplies this initial state and no trajectory-start command,
+    so q is zero. This double-precision reference checks implementation agreement;
+    it is not an optimal solution or a convergence certificate.
+    """
+    from scipy.linalg import cho_factor, cho_solve
 
-# back_subst_out = np.linalg.solve(L.T, rand_vec_var)
-# test_data.append(generate_vector_header(back_subst_out, "back_subst_out", type="double"))
+    lower, upper = l.copy(), u.copy()
+    lower[:12] = upper[:12] = np.array([.1, .1, -.1] + [0.] * 9)
+    factor = cho_factor(KKT.toarray())
+    x = np.zeros(P_sparse.shape[0])
+    z = np.zeros(A_full.shape[0])
+    dual = np.zeros_like(z)
+    for _ in range(ADMM_ITERATIONS):
+        x = cho_solve(factor, A_full.T @ (rho_vect * (z - dual)))
+        ax = A_full @ x
+        z = np.clip(ax + dual, lower, upper)
+        dual += ax - z
+    if not np.all(np.isfinite(x)):
+        raise ValueError("Nonfinite C simulation reference")
+    generate_full_header(
+        [generate_vector_header(x, "ADMM_x_after_hw_iters", type="double")],
+        filename=str(TEST_DATA_HEADER_PATH), guard="TEST_DATA_H",
+    )
+    print(f"Generated cold-start C simulation reference: H={N}, iterations={ADMM_ITERATIONS}")
 
-# A_mul_out = A @ rand_vec_var
-# test_data.append(generate_vector_header(A_mul_out, "A_mul_out", type="double"))
 
-# AT_mul_out = A.T @ rand_vec_constr
-# test_data.append(generate_vector_header(AT_mul_out, "AT_mul_out", type="double"))
+if __name__ == "__main__":
+    import argparse
 
-# l[0:3] = 0.1, 0.1, -0.1
-# u[0:3] = 0.1, 0.1, -0.1
-
-# x, z, y = ADMM_iteration(l, u, iter=1)
-# test_data.append(generate_vector_header(x, "ADMM_x_after_1_iter", type="double"))
-# test_data.append(generate_vector_header(z, "ADMM_z_after_1_iter", type="double"))
-# test_data.append(generate_vector_header(y, "ADMM_y_after_1_iter", type="double"))
-
-# x, z, y = ADMM_iteration(l, u, iter=10)
-# test_data.append(generate_vector_header(x, "ADMM_x_after_10_iter", type="double"))
-# test_data.append(generate_vector_header(z, "ADMM_z_after_10_iter", type="double"))
-# test_data.append(generate_vector_header(y, "ADMM_y_after_10_iter", type="double"))
-
-# x, z, y = ADMM_iteration(l, u, iter=100)
-# test_data.append(generate_vector_header(x, "ADMM_x_after_100_iter", type="double"))
-# test_data.append(generate_vector_header(z, "ADMM_z_after_100_iter", type="double"))
-# test_data.append(generate_vector_header(y, "ADMM_y_after_100_iter", type="double"))
-
-# x, z, y = ADMM_iteration(l, u, iter=50)
-# test_data.append(generate_vector_header(x, "ADMM_x_after_50_iter", type="double"))
-# test_data.append(generate_vector_header(z, "ADMM_z_after_50_iter", type="double"))
-# test_data.append(generate_vector_header(y, "ADMM_y_after_50_iter", type="double"))
-
-# # Reference snapshot matching the configured hardware iteration count.
-# x, z, y = ADMM_iteration(l, u, iter=ADMM_ITERATIONS)
-# test_data.append(generate_vector_header(x, "ADMM_x_after_hw_iters", type="double"))
-# test_data.append(generate_vector_header(z, "ADMM_z_after_hw_iters", type="double"))
-# test_data.append(generate_vector_header(y, "ADMM_y_after_hw_iters", type="double"))
-
-# generate_full_header(test_data, filename=str(TEST_DATA_HEADER_PATH), guard="TEST_DATA_H")
-
-# OSQP_x = testOSQP(l, u, iter=1000)
-
-# print("Comparing OSQP and ADMM results after 100 iterations:")
-# print(x[-16:])
-# print(OSQP_x[-16:])
-# x_diff = np.linalg.norm(OSQP_x - x) / np.linalg.norm(OSQP_x)
-# print(f"OSQP vs ADMM differences after 100 iterations: norm rel error : {x_diff}")
+    parser = argparse.ArgumentParser(description="Generate solver headers for the configured MPC problem.")
+    parser.add_argument("--csim-reference", action="store_true",
+                        help="also generate the finite-iteration reference for ADMM_test.cpp")
+    args = parser.parse_args()
+    if args.csim_reference:
+        generate_csim_reference()

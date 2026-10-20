@@ -237,13 +237,13 @@ sim-csim: $(DATA_HEADER)
 	@echo "========================================="
 	@echo "Running Vitis HLS C simulation..."
 	@echo "========================================="
-	cd $(HLS_DIR) && $(MAKE) csim
+	cd $(HLS_DIR) && $(MAKE) csim PYTHON="$(PYTHON)"
 
-sim-cosim: $(HLS_IP_MARKER)
+sim-cosim:
 	@echo "========================================="
 	@echo "Running Vitis HLS C/RTL co-simulation..."
 	@echo "========================================="
-	cd $(HLS_DIR) && $(MAKE) cosim
+	cd $(HLS_DIR) && $(MAKE) cosim PYTHON="$(PYTHON)"
 
 hls_closed_loop_sim: $(DATA_HEADER)
 	@echo "========================================="
