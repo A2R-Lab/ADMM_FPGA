@@ -50,12 +50,19 @@ puts "Constraints: $xdc_file"
 # Read RTL Sources (all tops and peripherals; synth_design -top selects which)
 #------------------------------------------------------------------------------
 puts "Reading RTL sources..."
+set_property include_dirs [list $rtl_dir "$build_dir/power"] [current_fileset]
 read_verilog "$rtl_dir/top_uart.v"
 read_verilog "$rtl_dir/uart_rx.v"
 read_verilog "$rtl_dir/uart_tx.v"
 read_verilog "$rtl_dir/top_spi.v"
 read_verilog "$rtl_dir/spi_slave.v"
 read_verilog "$rtl_dir/spi_slave_word.v"
+
+if {$top_module eq "top_uart_power"} {
+    read_verilog "$rtl_dir/power_xadc.v"
+    foreach f [glob "$rtl_dir/power_*.sv"] { read_verilog -sv $f }
+    read_verilog -sv "$rtl_dir/top_uart_power.sv"
+}
 
 #------------------------------------------------------------------------------
 # Read HLS IP
@@ -76,6 +83,7 @@ if {[file exists "$hls_export_dir/hdl/verilog"]} {
 # Read Constraints
 #------------------------------------------------------------------------------
 puts "Reading constraints..."
+if {$top_module eq "top_uart_power"} { read_xdc "$xdc_dir/constraints_arty_a7.xdc" }
 read_xdc "$xdc_dir/$xdc_file"
 
 #------------------------------------------------------------------------------
@@ -90,6 +98,9 @@ synth_design -top $top_module -part $part \
 #------------------------------------------------------------------------------
 # Reports
 #------------------------------------------------------------------------------
+if {$top_module eq "top_uart_power" && [llength [get_clocks sys_clk]] != 1} {
+    error "Power benchmark requires its 100 MHz sys_clk constraint"
+}
 report_utilization -file "$reports_dir/post_synth_utilization.rpt"
 report_timing_summary -file "$reports_dir/post_synth_timing.rpt"
 report_power -file "$reports_dir/post_synth_power.rpt"

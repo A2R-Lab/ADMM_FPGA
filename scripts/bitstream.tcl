@@ -27,6 +27,17 @@ open_checkpoint "$build_dir/$route_dcp"
 #------------------------------------------------------------------------------
 # Generate Bitstream
 #------------------------------------------------------------------------------
+if {$top_module eq "top_uart_power"} {
+    if {[llength [get_clocks sys_clk]] != 1} {
+        error "Missing benchmark clock constraint"
+    }
+    foreach delay_type {max min} {
+        set worst_path [get_timing_paths -delay_type $delay_type -max_paths 1]
+        if {[llength $worst_path] == 0 || [get_property SLACK $worst_path] < 0} {
+            error "Power benchmark has failing or missing $delay_type timing; refusing bitstream"
+        }
+    }
+}
 puts "Generating bitstream..."
 write_bitstream -force "$build_dir/${top_module}.bit"
 
