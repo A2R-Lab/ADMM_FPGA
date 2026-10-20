@@ -1,52 +1,62 @@
-# ADMM_FPGA
+# AccelMPC — FPGA solver
 
-This repository contains the FPGA implementation of an ADMM (Alternating Direction Method of Multipliers) solver developed for real-time linear Model Predictive Control (MPC) on the Crazyflie quadrotor platform.
+FPGA implementation of the ADMM solver in [*AccelMPC: High-Rate, Low-Power
+FPGA-Accelerated Model Predictive Control for Tiny Drones*](https://arxiv.org/abs/2609.09380),
+by Andrea Grillo and Brian Plancher. The design targets an Artix-7 100T and runs
+on the custom Crazyflie FPGA deck or an Arty A7 development board.
 
-The project targets an AMD Xilinx Artix-7 100T FPGA and includes the HLS solver, the FPGA integration files, and support scripts used to build and program the design.
+**[Results and figures](paper_figures/README.md)** ·
+**[Build and program](docs/build.md)** ·
+**[Design and interfaces](docs/architecture.md)** ·
+**[Run benchmarks](docs/benchmarking.md)** ·
+**[Measure power](docs/power.md)**
 
-Late-May flight metrics, bundled recordings and figure generation are documented
-in [the flight-metrics guide](paper_figures/FLIGHT_METRICS.md).
+## Start here
 
-## Project Information
+To regenerate the benchmark and flight figures from bundled data, no FPGA is needed:
 
-This work was developed within the master's thesis:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r paper_figures/requirements-flight.txt
+python paper_figures/plot_benchmarks.py
+python paper_figures/flight_metrics.py
+```
 
-*Hardware-Algorithm Co-Design for Real-Time Linear Model Predictive Control. FPGA Implementation and Deployment on a Resource-Constrained Quadrotor*
+For hardware builds, follow the [toolchain setup](docs/build.md). Python generates
+the model matrices and reference trajectory; Vitis HLS compiles the C++ solver;
+Vivado integrates its RTL with SPI/UART and produces the bitstream.
 
-Author: Andrea Grillo  
-Period: 2025-2026
+## Repository map
 
-## Design Flow
+| Location | Contents |
+|---|---|
+| [vitis_projects/ADMM/](vitis_projects/ADMM/) | Solver C++, numerical types, HLS configurations and testbenches |
+| [vivado_project/](vivado_project/) | FPGA top levels, SPI/UART, power instrumentation and board constraints |
+| [scripts/](scripts/) | Model generation, build support and benchmark runners; see the [workflow guide](docs/benchmarking.md) |
+| [paper_figures/](paper_figures/) | Recorded inputs, analysis, results and figure generation |
+| [experiments/power/](experiments/power/) | Power workload and build dependencies |
+| [tests/power/](tests/power/) | Host, RTL and HLS power-workflow checks |
+| [video/](video/) | [Supplementary demo](video/AccelMPC_supplementary_demo.mp4), recordings and editing assets |
 
-The development flow for this project is managed through the provided Makefiles:
+Generated builds live in `build/`; local experiment outputs live in `results/`;
+full figure exports live in `paper_figures/output/`. These directories are ignored.
 
-1. Python scripts generate the matrices and headers used by the solver.
-2. The ADMM solver is synthesized with Vitis HLS.
-3. The generated IP is integrated in the full FPGA design and built in Vivado.
-4. An Arduino-based SPI test can be used for standalone communication checks.
-5. The final deployment target is the Crazyflie platform, using the companion firmware available here: [crazyflie_fpga_firmware](https://github.com/A2R-Lab/crazyflie_fpga_firmware).
+## Companion projects
 
-## Repository Contents
+- [FPGA deck PCB](https://github.com/A2R-Lab/Crazyflie_FPGA_Deck)
+- [Crazyflie firmware](https://github.com/A2R-Lab/crazyflie_fpga_firmware)
 
-- `vitis_projects/ADMM/`: Vitis HLS project containing the ADMM solver implementation and testbench
-- `vivado_project/`: Vivado project with the top-level FPGA design, SPI/UART modules, constraints, and generated IP
-- `scripts/`: build, programming, simulation, and data/header generation scripts
-- `paper_figures/`: paper figure scripts and committed input data in `data/`; generated figures in `output/` are ignored
-- `arduino_spi_test/`: simple Arduino sketch used for SPI communication tests
-- `Makefile`: top-level build flow for HLS, Vivado, bitstream generation, and programming
+The FPGA/firmware packet interface is described in [the design guide](docs/architecture.md).
+This repository is released under the [MIT license](LICENSE).
 
-## Related Repositories
+## Citation
 
-- FPGA deck hardware repository: [Crazyflie_FPGA_Deck](https://github.com/A2R-Lab/Crazyflie_FPGA_Deck)
-- Crazyflie firmware repository: [crazyflie_fpga_firmware](https://github.com/A2R-Lab/crazyflie_fpga_firmware)
-
-## Reproduce the measured-power campaign
-
-The Arty A7-100T Rev E campaign builds the FPGA configurations selected from the
-paper benchmark data, measures onboard core/BRAM and 5 V supply power, and exports
-CSV/JSON summaries. See [POWER_CAMPAIGN.md](POWER_CAMPAIGN.md) for hardware and
-software setup, commands, result fields, and measurement limits.
-
-The campaign uses `scripts/power_campaign.py` as its entry point. Workload and
-manifest generation and board acquisition are called automatically. The existing
-paper figures use their original input data; the campaign writes separate results.
+```bibtex
+@article{grillo2026accelmpc,
+  title={AccelMPC: High-Rate, Low-Power FPGA-Accelerated Model Predictive Control for Tiny Drones},
+  author={Grillo, Andrea and Plancher, Brian},
+  journal={arXiv preprint arXiv:2609.09380},
+  year={2026}
+}
+```
