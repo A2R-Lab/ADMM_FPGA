@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Source Vivado settings64.sh and activate the Python environment first.
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 python -m unittest discover -s tests/power -v
 python scripts/power_workload.py --csv experiments/power/synthetic_states.csv --output build/power/test_workload >/dev/null
 rtl=vivado_project/vivado_project.srcs/sources_1/new

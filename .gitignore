@@ -29,6 +29,9 @@ vivado_project/vivado_project.ip_user_files/
 /.srcs/
 /ip/
 
+# Python environments
+/.venv/
+
 # IDE / Editor
 **/__pycache__/
 **/.vscode/
@@ -76,4 +79,3 @@ video/constrainedStarTopView.MP4
 /xsim.dir/
 /*.pb
 /*.wdb
-/a2r-main-mount/

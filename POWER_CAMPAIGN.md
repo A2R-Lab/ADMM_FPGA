@@ -1,123 +1,188 @@
-# Measured-power campaign
+# Reproduce the measured-power campaign
 
-## Scope and agreed interpretation
+This workflow builds and measures the 42 timing-clean FPGA architecture/horizon
+pairs selected from `paper_figures/data/benchmark_summary.csv`: 10 full-sparse and
+32 staged configurations, each with 10 ADMM iterations. It uses the source revision
+in this checkout, fixed-point arithmetic, a 100 MHz FPGA clock, and the committed
+256-state synthetic workload. Trajectory generation inside the solver is disabled;
+external DDR3 is unused.
 
-Build all 42 timing-clean K=10 FPGA architecture/horizon pairs from
-`paper_figures/data/benchmark_summary.csv`: 10 full-sparse and 32 staged.
-Include points previously excluded only from presentation. Use the current
-frozen solver sources, 100 MHz, fixed point, no compiled trajectory, no DDR3,
-the 256-state synthetic ROM, and the existing 2,048-bin on-chip capture buffer.
-This reproduces the configuration sweep, not historical source revisions.
-Paper integration and figure updates are deferred.
+These experiments measure power on an **Arty A7-100T Rev E** using its onboard
+supply monitors. They reproduce the measured-power workflow, not the historical
+Vivado power estimates used by the existing paper figures. The campaign does not
+modify `paper_figures/`.
 
-For each active interval, report raw core/BRAM power and energy and separately:
+## Requirements
 
-```
-corrected_power_W = 0.8 * (core_energy_J / active_seconds + 0.032)
-corrected_energy_J_per_solve = 0.8 * (core_energy_J + 0.032 * active_seconds) / completed_solves
-```
+- An Arty A7-100T Rev E configured for USB power, with a USB connection for JTAG
+  programming and UART. Connect only the board to be measured to the programming
+  host; the programming helper selects the first available JTAG target/device.
+- Linux and AMD Vivado/Vitis **2025.2**, with Artix-7 support and JTAG cable drivers.
+  Builds use `vivado`, `v++`, `vitis-run`, GNU Make, and a C++14-capable `g++`.
+  The measurement host needs Vivado and access to the board's serial device.
+- Python **3.11**. The reference dependency versions are recorded in
+  `experiments/power/requirements.txt`. Install the system compiler, Python
+  development headers, and SuiteSparse/CHOLMOD development libraries before
+  installing scikit-sparse.
 
-The 32 mW auxiliary allowance excludes VCCADC. The 20% instrumentation removal
-is the agreed fixed assumption, informed by one design's Vivado analysis; these
-are measurement-based corrected estimates, not direct solver-only measurements.
-Preserve 5 V measurements as diagnostics, incremental core energy, temperature
-drift, all raw captures, and the uncorrected values. Repetition spread describes
-repeatability, not calibration or correction-model uncertainty. See
-`POWER_MEASUREMENT_HANDOFF.md` for earlier measurements and limitations.
-
-## Storage and isolation
-
-`a2r-main-mount` is a local SSHFS mount of
-`agrillo@a2r-main:/home/agrillo/power_measurements`.
-The campaign is prepared in a new subdirectory; the server's existing repository
-is never used or modified. Each attempt gets its own complete source snapshot,
-generated headers, HLS output, Vivado output, logs, and checkpoints.
-Source hashes and the campaign manifest are immutable. A source change requires
-a new campaign. Keep results and failed attempts for diagnosis.
-
-Only timing-clean bitstreams with a build manifest, C++ pilot reference, reports,
-tool versions, and verified hashes enter `ready/<point-id>/`. Builds first use
-the historical selected implementation variant, then retry `route_aggressive`
-once if timing fails. Capacity or tool failures remain explicit failed points.
-No selection is made using estimated power. Ready artifacts resume by hash;
-failed points require `--retry-failed`.
-
-## Commands
-
-From the local repository, freeze a new campaign:
+From the repository root, set up the build environment, substituting your tool
+installation paths:
 
 ```bash
-source ~/venv/bin/activate
-python scripts/power_campaign.py prepare --campaign a2r-main-mount/arty-power-20261017-six
+source /path/to/Vivado/settings64.sh
+source /path/to/Vitis/settings64.sh
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r experiments/power/requirements.txt
 ```
 
-On **a2r-main**, start all 42 configurations with six parallel builds:
+A separate measurement-only host needs `pyserial==3.5` and the Vivado environment;
+Matplotlib is optional for individual trace plots. No external power sensor or
+additional FPGA wiring is required by this design.
+
+## Run the campaign
+
+The commands below use a single machine. Keep this shell's environment active.
+Choose a new campaign directory: `prepare` refuses to overwrite an existing one.
 
 ```bash
-source /home/agrillo/amdfpga/2025.2/Vivado/settings64.sh
-source /home/agrillo/amdfpga/2025.2/Vitis/settings64.sh
-source ~/venv/bin/activate
-cd /home/agrillo/power_measurements/arty-power-20261017-six
-python source/scripts/power_campaign.py build --campaign "$PWD" --jobs 6 --threads 3 --memory-gib 16
+campaign_dir="$PWD/results/power-reproduction"
+measurement_dir="$PWD/results/power-measurements"
+
+python scripts/power_campaign.py prepare --campaign "$campaign_dir"
+campaign_runner="$campaign_dir/source/scripts/power_campaign.py"
+
+python "$campaign_runner" build --campaign "$campaign_dir"
+python "$campaign_runner" status --campaign "$campaign_dir"
+
+# Replace the serial device with the Arty UART on your machine.
+python "$campaign_runner" measure --campaign "$campaign_dir" \
+  --local "$measurement_dir" --port /dev/ttyUSB0
+python "$campaign_runner" aggregate --campaign "$campaign_dir" \
+  --local "$measurement_dir"
 ```
 
-The default budget is eight Vivado threads and 32 GiB RAM/40 GiB scratch per
-worker, reserving four CPUs, 16 GiB RAM and 40 GiB disk for the host. Automatic
-concurrency is capped at eight and respects available resources. The requested six-build configuration uses three threads and a 16 GiB planning
-budget per build (`--jobs 6 --threads 3 --memory-gib 16`), fitting 24 CPUs and
-125 GiB installed RAM. These are planning budgets, not enforced memory limits.
-`--jobs`, `--threads`, `--memory-gib`, and `--scratch-gib` override the budgets.
-Preflight rejects a launch if currently available resources cannot accommodate it. The runner does not manage SSH sessions or detachment.
+`prepare` freezes the source files, workload, configuration selection, and hashes.
+Run the frozen campaign runner as above. Changing the design or workload requires
+a new campaign; editing the frozen source causes integrity checks to fail.
 
-Locally, with the Arty attached, collect finished designs while compilation continues:
+`build` checks tool versions and available resources before starting. By default,
+each worker is budgeted 8 threads, 32 GiB RAM, and 40 GiB scratch space, with 4 CPUs,
+16 GiB RAM, and 40 GiB disk reserved for the host. Concurrency is chosen automatically
+and capped at 8 workers. Use `--jobs`, `--threads`, `--memory-gib`, and `--scratch-gib`
+to adapt these planning budgets to your machine; they are not enforced limits.
+Completed and failed build attempts are retained, so total storage grows across the
+campaign. Only artifacts that pass timing and provenance checks are measured;
+larger instrumented configurations may exceed device capacity.
+
+For a first hardware check, add `--smoke` to both `build` and `measure` to select
+H20 for both architectures. Omit it to continue with the complete campaign.
+`--ids full_sparse_h20_k10,staged_a_h20_k10` selects explicit configurations instead.
+Re-running `build` reuses verified artifacts; add `--retry-failed` to retry failed
+builds. A timing failure gets one retry with the alternative routing directive.
+
+To build on another machine, copy the prepared campaign directory there and invoke
+its frozen runner with that machine's tool/Python environment. Transfer the completed
+campaign directory back to the measurement host, preserving `source/`,
+`campaign.json`, `state/`, and `ready/`. A shared filesystem also works; add `--watch`
+to `measure` to collect newly finished artifacts while builds continue. The runner
+does not manage remote sessions or file transfers.
+
+## Measurement and acceptance
+
+For each design, the runner first programs the FPGA and checks an eight-solve pilot
+against a C++ reference checksum and final output. It then performs three independent
+repetitions, reprogramming before each:
+
+1. Settle for 5 seconds.
+2. Measure idle power for 3 seconds.
+3. Run back-to-back solves for approximately 2 seconds, rounded up to a multiple of
+   256 and at least 1,024 solves.
+4. Measure idle power for another 3 seconds, then download the trace.
+
+UART is quiet during acquisition. Programming is volatile; SPI flash is not written.
+Complete sample coverage, zero fault flags/overruns, constant solve latency, and
+consistent numerical outputs are required. Invalid captures are retained and retried
+once. A serial/JTAG connection error stops collection so the connection can be fixed.
+Re-running `measure` resumes validated captures; always pass the same `--local`
+directory to `measure` and `aggregate`.
+
+## Results and interpretation
+
+`aggregate` prints the output directory and writes `summary.csv` and `summary.json`
+under `<measurement_dir>/summaries/<campaign-id>/`. Each row includes architecture,
+horizon, status, resource use, artifact hashes, valid repetition count, and the
+mean/sample standard deviation/minimum/maximum of the measured quantities.
+
+| Summary field prefix | Meaning |
+|---|---|
+| `raw_core_w` | Active core/BRAM rail power, in watts |
+| `raw_core_energy_uj` | Active core/BRAM energy per completed solve, in microjoules |
+| `incremental_core_energy_uj` | Energy per solve after subtracting the interpolated idle baseline |
+| `five_w` | Active monitored 5 V supply power, in watts |
+| `latency_us` | Solver latency, in microseconds |
+| `temperature_drift_c` | Change between the two idle-window temperatures |
+| `corrected_power_w`, `corrected_energy_uj` | Estimates from the fixed correction model below |
+
+Look for `status=measured` and `valid_repetitions=3`. A finished command does not imply
+all configurations passed. Pending, build-failed, and incomplete measurements remain
+explicit rows; consult the corresponding logs to diagnose them.
+
+Raw `trace.csv`, `metadata.json`, pilot results, and acquisition logs are retained
+under `<measurement_dir>/measurements/<campaign-id>/<configuration-id>/`. Build
+reports and bitstream manifests are in `<campaign_dir>/ready/<configuration-id>/`;
+failed build logs are retained under `<campaign_dir>/work/`. Archive both directories
+with the exported summaries: generated results are not committed to Git.
+
+Core/BRAM and monitored 5 V power have different boundaries. The 5 V reading includes
+other board loads and conversion losses; neither reading directly measures total
+FPGA power. Both include the measurement instrumentation. Core voltage and current
+are sampled at slightly different times; traces are intended for batch averages.
+The 2,048-record trace buffer progressively merges bins while preserving sums and
+durations, so longer runs have coarser time resolution. Scaling uses nominal board
+values without external calibration. Repetition spread measures repeatability,
+not absolute measurement accuracy.
+
+For continuity with the measured-power analysis, the summary also reports:
+
+```text
+corrected_power_W = 0.8 * (active_core_energy_J / active_seconds + 0.032)
+corrected_energy_J_per_solve = 0.8 * (active_core_energy_J + 0.032 * active_seconds) / completed_solves
+```
+
+The 32 mW auxiliary allowance excludes VCCADC; the factor 0.8 assumes a fixed
+instrumentation adjustment. These assumptions came from a single-design Vivado
+analysis and are not independently calibrated across the sweep. Treat the corrected
+columns as model-based estimates, retain the raw columns, and do not substitute
+incremental energy for absolute energy or use these rail measurements alone to
+validate an FPGA-versus-MCU energy ratio.
+
+## Code and validation
+
+Only `scripts/power_campaign.py` is needed as a user-facing campaign command.
+The implementation has three helpers called automatically:
+
+| Helper | Why it is needed |
+|---|---|
+| `scripts/power_benchmark.py` | Programs one design, acquires UART traces, and calculates rail statistics |
+| `scripts/power_workload.py` | Converts the committed workload into the FPGA's initialized ROM |
+| `scripts/power_build_manifest.py` | Binds the bitstream to its workload and solver configuration with hashes |
+
+To check the host code without FPGA hardware:
 
 ```bash
-source /media/andrea/48a1bd03-3653-4c55-8d37-cd7d804e2212/amdfpga/2025.2/Vivado/settings64.sh
-source ~/venv/bin/activate
-python scripts/power_campaign.py measure --campaign a2r-main-mount/arty-power-20261017-six --watch
-python scripts/power_campaign.py aggregate --campaign a2r-main-mount/arty-power-20261017-six
+python -m unittest discover -s tests/power -v
 ```
 
-This copies verified ready artifacts and frozen acquisition tools locally before
-programming. JTAG programming is volatile; SPI flash is not written. Use `--port`
-if the UART is not `/dev/ttyUSB1`. Local results default to `results/power-campaign`;
-use the same `--local` directory for both measure and aggregate if overriding it.
-An eight-solve pilot must match the C++ checksum and final output. Each of three
-repetitions freshly programs the FPGA, settles 5 s, measures 3 s idle, runs a
-multiple of 256 solves (at least 1,024 and approximately 2 s active), then measures
-3 s idle. UART stays quiet during acquisition. One retry is permitted per
-acquisition; failed captures and logs remain available. Per-port locks prevent
-concurrent board measurements. The clock and solve latency must remain fixed,
-all phase samples must be present, and flags/overruns must be zero.
-
-The user waived preliminary smoke builds and the full-sweep gate. Per-artifact
-timing/hash checks and per-design numerical pilots remain required.
-
-Locally, collect available bitstreams sequentially and regenerate summaries:
+For RTL development, load the Vivado/Vitis environment and build the matching power
+configuration before running the simulation checks. These are separate from physical
+measurement validation:
 
 ```bash
-python scripts/power_campaign.py measure --campaign a2r-main-mount/arty-power-20261017-six --watch
-python scripts/power_campaign.py aggregate --campaign a2r-main-mount/arty-power-20261017-six
-python scripts/power_campaign.py status --campaign a2r-main-mount/arty-power-20261017-six
+make BOARD=arty-power
+bash tests/power/test_power.sh
+bash tests/power/test_power_hls.sh
 ```
 
-`measure --watch` checks for new ready bundles every 30 seconds and measures
-them while the server continues compiling. It exits once every selected build
-has either been processed or failed. Ctrl-C stops watching; rerun to resume.
-Without `--watch`, the command processes only currently available artifacts.
-Validated repetitions resume without reprogramming. Run aggregation in another
-local terminal for an interim summary, or after measurement finishes. `--ids full_sparse_h20_k10,staged_a_h20_k10` selects
-specific points. Build status remains separate from local measurement status.
-CSV and JSON summaries under `results/power-campaign/summaries/<campaign-id>`
-include pending/failed points, resource counts, hashes, and mean/sample standard
-deviation/min/max across valid repetitions. Consult state files and logs for
-build failures; a completed runner process does not imply every design passed.
-Largest designs may not fit with instrumentation and must not be replaced by
-estimated measurements. No paper files are modified by the campaign.
-
-## Validation
-
-Run `python -m unittest discover -s tests/power -p 'test*.py'` for host checks.
-Python tests do not validate routing, ADC calibration, or physical measurements.
-Preliminary smoke builds are optional (`--smoke`), not a prerequisite for the
-full sweep. Physical acceptance is recorded separately for every configuration.
+The first script tests capture, scheduling, UART, and the XADC simulation model.
+The second compares real HLS RTL outputs against C++ and exercises the complete top.

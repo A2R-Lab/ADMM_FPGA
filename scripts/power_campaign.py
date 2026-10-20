@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Prepare, build, measure and aggregate an isolated Arty power campaign.
+"""Prepare, build, measure and aggregate a reproducible Arty power campaign.
 
-No SSH sessions or detached processes are managed here. Run build on the server
-and measure locally. Sources, settings and artifacts are checked by hash.
+Build and measure on one machine or transfer the campaign between machines.
+Sources, settings and artifacts are checked by hash. See POWER_CAMPAIGN.md.
 """
 from __future__ import annotations
 
@@ -33,6 +33,15 @@ MODEL = {'id': 'core-plus-32mw-times-0.8-v1', 'auxiliary_w': 0.032,
          'vccadc_included': False}
 GENERATED = {'data.h', 'admm_runtime_config.h', 'traj_data.h', 'traj_data_raw.h',
              'trajectory_refs.csv', 'admm_autogen_params.vh'}
+CAMPAIGN_SCRIPTS = (
+    'power_campaign.py', 'power_benchmark.py', 'power_workload.py',
+    'power_build_manifest.py',
+    'header_generator.py', 'trajectory_generator.py', 'parameters.py',
+    'crazyloihimodel.py',
+    'synth.tcl', 'impl.tcl', 'bitstream.tcl', 'program.tcl',
+    'program_file.tcl', 'program_flash.tcl',
+    'run_max_horizon_parallel.py', 'run_max_horizon_point.py',
+)
 
 
 class AcquisitionTransportError(RuntimeError):
@@ -122,24 +131,21 @@ def matrix(path):
 
 
 def source_files(root):
-    # Explicit source-only allowlist: never walk the SSHFS mount, .git, credentials,
-    # stale IP exports, results, or arbitrary untracked directories.
-    files = [root / 'Makefile']
+    # Copy only the campaign's dependencies, never local mounts or build outputs.
+    files = [root / 'Makefile', root / 'POWER_CAMPAIGN.md']
+    files += [root / 'scripts' / name for name in CAMPAIGN_SCRIPTS]
     for folder, suffixes in (
-        ('scripts', {'.py', '.tcl', '.sh'}),
         ('vitis_projects/ADMM', {'.cpp', '.h', '.cfg'}),
         ('vivado_project/vivado_project.srcs/sources_1/new', {'.v', '.sv', '.vh'}),
         ('vivado_project/vivado_project.srcs/constrs_1/new', {'.xdc'}),
-        ('tests/power', {'.py', '.cpp', '.sv', '.txt'}),
+        ('tests/power', {'.py', '.cpp', '.sv', '.txt', '.sh'}),
     ):
         files += [p for p in (root / folder).iterdir()
                   if p.is_file() and p.suffix in suffixes and p.name not in GENERATED]
     files += [root / p for p in ('vitis_projects/ADMM/Makefile',
                                  'experiments/power/synthetic_states.csv',
+                                 'experiments/power/requirements.txt',
                                  'paper_figures/data/benchmark_summary.csv')]
-    for name in ('POWER_MEASUREMENT_HANDOFF.md', 'POWER_MEASUREMENT_PLAN.md', 'POWER_CAMPAIGN.md'):
-        if (root / name).exists():
-            files.append(root / name)
     for p in files:
         if p.is_symlink():
             raise ValueError(f'Symlinks are not allowed in source snapshot: {p}')
@@ -170,16 +176,13 @@ def prepare(args):
     print(f'Prepared {len(payload["points"])} points at {campaign}\nCampaign: {payload["campaign_id"]}')
 
 
-def campaign_data(campaign, allow_runner_changes=False):
+def campaign_data(campaign):
     m = read(campaign / 'campaign.json')
     body = {k: v for k, v in m.items() if k != 'campaign_id'}
     if digest(body) != m['campaign_id']:
         raise ValueError('Campaign manifest was modified')
     for name, expected in m['source_hashes'].items():
         if sha(campaign / 'source' / name) != expected:
-            if allow_runner_changes and name == 'scripts/power_campaign.py':
-                print('Using user-modified campaign runner; FPGA and acquisition sources remain verified.', flush=True)
-                continue
             raise ValueError(f'Source snapshot changed: {name}')
     return m
 
@@ -213,7 +216,7 @@ def preflight(args):
     versions = {}
     for exe, flag in (('vivado', '-version'), ('v++', '--version'), ('vitis-run', '--version'), ('g++', '--version')):
         if not shutil.which(exe):
-            raise ValueError(f'Missing {exe}; source the server toolchain settings first')
+            raise ValueError(f'Missing {exe}; source the build machine toolchain settings first')
         result = subprocess.run([exe, flag], text=True, capture_output=True, timeout=90, check=True)
         versions[exe] = (result.stdout + result.stderr)[:4000]
         if exe != 'g++' and '2025.2' not in versions[exe]:
@@ -461,12 +464,12 @@ def validate_run(folder, info, expected_count, expected=None):
 
 
 def measure(args):
-    m = campaign_data(args.campaign, allow_runner_changes=True)
+    m = campaign_data(args.campaign)
     save(args.local/'provenance'/m['campaign_id']/'runner.json', {
         'frozen_sha256': m['source_hashes']['scripts/power_campaign.py'],
         'server_sha256': sha(args.campaign/'source/scripts/power_campaign.py'),
         'local_sha256': sha(Path(__file__)),
-        'note': 'User authorized changes to server runner resource/integrity checks; FPGA and acquisition source hashes verified.'})
+        'note': 'Frozen campaign sources and acquisition tools verified before measurement.'})
     # Use the frozen host tools locally; future edits in the working repository
     # must not silently change the acquisition protocol or interpretation.
     host = args.local/'host'/m['campaign_id']
@@ -564,7 +567,7 @@ def measure(args):
 
 
 def aggregate(args):
-    m=campaign_data(args.campaign, allow_runner_changes=True)
+    m=campaign_data(args.campaign)
     rows=[]
     for p in m['points']:
         pid=p['id']

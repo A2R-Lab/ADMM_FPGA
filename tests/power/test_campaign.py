@@ -76,10 +76,14 @@ class CampaignTests(unittest.TestCase):
         self.assertNotIn('VIVADO_ROUTE_DIRECTIVE',env)
         self.assertEqual(env['XILINX_HLS'],'/tools')
 
-    def test_snapshot_ignores_builds_and_mount(self):
+    def test_snapshot_contains_only_campaign_script_dependencies(self):
         names=[str(p.relative_to(c.ROOT)) for p in c.source_files(c.ROOT)]
-        self.assertIn('scripts/power_campaign.py',names)
-        self.assertFalse(any(p.startswith(('build/','a2r-main-mount/','.git/')) for p in names))
+        self.assertEqual({p for p in names if p.startswith('scripts/')},
+                         {'scripts/'+name for name in c.CAMPAIGN_SCRIPTS})
+        self.assertIn('tests/power/test_power.sh', names)
+        self.assertIn('tests/power/test_power_hls.sh', names)
+        self.assertIn('experiments/power/requirements.txt', names)
+        self.assertFalse(any(p.startswith(('build/', 'results/', '.git/')) for p in names))
         self.assertFalse(any(Path(p).name in c.GENERATED for p in names))
 
     def test_snapshot_detects_mutation(self):
@@ -90,6 +94,23 @@ class CampaignTests(unittest.TestCase):
             c.campaign_data(root)
             (root/'source/a').write_text('changed')
             with self.assertRaisesRegex(ValueError,'snapshot changed'): c.campaign_data(root)
+
+    def test_measure_and_aggregate_reject_modified_frozen_runner(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            runner=root/'source/scripts/power_campaign.py'
+            runner.parent.mkdir(parents=True)
+            runner.write_text('original runner')
+            m={'source_hashes':{'scripts/power_campaign.py':c.sha(runner)}}
+            m['campaign_id']=c.digest(m)
+            c.save(root/'campaign.json',m)
+            runner.write_text('changed runner')
+            args=SimpleNamespace(campaign=root,local=root/'measurements')
+            for operation in (c.measure,c.aggregate):
+                with self.subTest(operation=operation.__name__):
+                    with self.assertRaisesRegex(ValueError,'Source snapshot changed'):
+                        operation(args)
+            self.assertFalse(args.local.exists())
 
     def test_timing_rejects_hold_failure(self):
         with tempfile.TemporaryDirectory() as d:

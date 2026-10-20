@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 root_dir=$PWD
 python scripts/power_workload.py --csv experiments/power/synthetic_states.csv --output build/power/test_workload >/dev/null
 mkdir -p build/power/hls_sim

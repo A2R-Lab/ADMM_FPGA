@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 // Register-bank integration test. The separate uart_tb exercises physical framing.
-module top_tb #(parameter PROFILE=0);
+module top_tb;
     reg clk=0;always #5 clk=~clk;
     wire tx;wire [3:0] led;
     reg inject_request=0;
@@ -9,19 +9,11 @@ module top_tb #(parameter PROFILE=0);
     reg [255:0] inject_payload=0;
     reg [2047:0] answer;
     reg [15:0] answer_length;
-    // Profiling stops let xsim record each phase into a separate SAIF file.
-    // These longer baselines contain complete 1 ms bins; normal tests stay fast.
-    initial if(PROFILE) begin
-        wait(dut.phase==1); $stop;
-        wait(dut.phase==2); $stop;
-        wait(dut.phase==3); $stop;
-        wait(dut.phase==0); $stop;
-    end
     top_uart_power dut(.clk(clk),.resetn(1'b0),.uart_rxd(1'b1),.uart_txd(tx),.led(led),
         .vsns5v0_p(1'b0),.vsns5v0_n(1'b0),.isns5v0_p(1'b0),.isns5v0_n(1'b0),
         .isns0v95_p(1'b0),.isns0v95_n(1'b0),.vsnsvu_p(1'b0),.vsnsvu_n(1'b0));
     defparam dut.sensor.CAL_CYCLES=100000;
-    defparam dut.sensor.SIM_MONITOR_FILE=PROFILE ? "../profile_analog.txt" : "../../../tests/power/xadc_analog.txt";
+    defparam dut.sensor.SIM_MONITOR_FILE="../../../tests/power/xadc_analog.txt";
     defparam dut.benchmark.ROM_FILE="../test_workload/power_workload.mem";
     always @(negedge clk) if(dut.active && tx!==1'b1) $fatal(1,"UART TX activity during measurement");
     task command(input [7:0] op,input [15:0] len,input [255:0] data);
@@ -41,10 +33,7 @@ module top_tb #(parameter PROFILE=0);
         wait(dut.adc_ready);@(negedge clk);
         command(1,0,0);
         if(answer_length!=48 || answer[31:0]!=100000000 || answer[63:32]!=256) $fatal(1,"capabilities");
-        if(PROFILE)
-            command(2,24,{64'd0,32'd1000000,32'd200000,32'd200000,32'd0,32'd0,32'd5});
-        else
-            command(2,24,{64'd0,32'd1000000,32'd10000,32'd10000,32'd0,32'd0,32'd5});
+        command(2,24,{64'd0,32'd1000000,32'd10000,32'd10000,32'd0,32'd0,32'd5});
         if(answer!=0) $fatal(1,"configure rejected");
         command(3,0,0);
         if(answer!=0) $fatal(1,"start rejected");
@@ -62,9 +51,4 @@ module top_tb #(parameter PROFILE=0);
         $display("PASS top integration: configuration, quiet capture, real HLS/XADC, BRAM readout, completion");$finish;
     end
     initial begin #50000000;$fatal(1,"top integration timeout");end
-endmodule
-
-// Stable hierarchy for SAIF: xelab otherwise renames a parameterized top.
-module power_activity_tb;
-    top_tb #(.PROFILE(1)) test();
 endmodule
