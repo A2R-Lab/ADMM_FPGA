@@ -23,7 +23,7 @@
 # =============================================================================
 
 # Configuration
-SUPPORTED_MAKE_OVERRIDE_VARS := BOARD REMOTE SSH_PORT VIVADO VITIS_HLS PYTHON HLS_CLOSED_LOOP_ARGS BITSTREAM_FILE
+SUPPORTED_MAKE_OVERRIDE_VARS := BOARD REMOTE SSH_PORT VIVADO VITIS_HLS PYTHON HLS_CLOSED_LOOP_ARGS BITSTREAM_FILE POWER_WORKLOAD
 CMDLINE_OVERRIDE_VARS := $(sort $(foreach tok,$(MAKEOVERRIDES),$(if $(findstring =,$(tok)),$(word 1,$(subst =, ,$(tok))),)))
 UNKNOWN_CMDLINE_OVERRIDE_VARS := $(filter-out $(SUPPORTED_MAKE_OVERRIDE_VARS),$(CMDLINE_OVERRIDE_VARS))
 
@@ -37,10 +37,14 @@ PART          := xc7a100tcsg324-1
 
 ifeq ($(BOARD),arty)
 TOP_MODULE    := top_uart
+else ifeq ($(BOARD),arty-power)
+TOP_MODULE    := top_uart_power
+# The measurement build exercises the solver without the trajectory generator.
+override export ADMM_ENABLE_TRAJECTORY := 0
 else ifeq ($(BOARD),custom)
 TOP_MODULE    := top_spi
 else
-$(error Unsupported BOARD='$(BOARD)'. Use BOARD=arty or BOARD=custom)
+$(error Unsupported BOARD='$(BOARD)'. Use BOARD=arty, BOARD=arty-power or BOARD=custom)
 endif
 # For sync: remote repo path, e.g. user@host:~/ADMM_FPGA (path must exist on server)
 REMOTE       ?=
@@ -64,8 +68,10 @@ IP_DIR        := $(PROJ_ROOT)/vivado_project/vivado_project.gen/sources_1/ip/ADM
 
 # Source files
 HLS_SOURCES   := $(HLS_DIR)/ADMM.cpp $(HLS_DIR)/ADMM.h $(HLS_DIR)/data_types.h $(HLS_DIR)/admm_runtime_config.h
-RTL_SOURCES   := $(wildcard $(RTL_DIR)/*.v) $(wildcard $(RTL_DIR)/*.vh)
-ifeq ($(BOARD),arty)
+RTL_SOURCES   := $(wildcard $(RTL_DIR)/*.v) $(wildcard $(RTL_DIR)/*.sv) $(wildcard $(RTL_DIR)/*.vh)
+ifeq ($(BOARD),arty-power)
+XDC_SOURCES   := $(XDC_DIR)/constraints_arty_power.xdc
+else ifeq ($(BOARD),arty)
 XDC_SOURCES   := $(XDC_DIR)/constraints_arty_a7.xdc
 else
 XDC_SOURCES   := $(XDC_DIR)/constraints.xdc
@@ -75,6 +81,8 @@ TRAJ_SCRIPT   := $(SCRIPTS_DIR)/trajectory_generator.py
 PARAMS_SCRIPT := $(SCRIPTS_DIR)/parameters.py
 HLS_CLOSED_LOOP_SCRIPT := $(SCRIPTS_DIR)/run_hls_closed_loop_once.py
 HLS_CLOSED_LOOP_ARGS ?=
+
+POWER_WORKLOAD ?= experiments/power/synthetic_states.csv
 
 # Generated files
 DATA_HEADER   := $(HLS_DIR)/data.h
@@ -156,7 +164,16 @@ $(TRAJ_REFS) $(TRAJ_HEADER): $(TRAJ_SCRIPT) $(SCRIPTS_DIR)/crazyloihimodel.py $(
 
 headers: $(DATA_HEADER) $(RUNTIME_CONFIG_HEADER)
 
-$(DATA_HEADER) $(RUNTIME_CONFIG_HEADER): $(HEADER_SCRIPT) $(SCRIPTS_DIR)/crazyloihimodel.py $(PARAMS_SCRIPT) $(TRAJ_HEADER)
+# Environment settings are not file dependencies. Regenerate an existing
+# trajectory-enabled header before reusing HLS artifacts for the power build.
+ifeq ($(BOARD),arty-power)
+ifneq ($(shell grep -c '^\#define ADMM_ENABLE_TRAJECTORY 0$$' $(RUNTIME_CONFIG_HEADER) 2>/dev/null),1)
+.PHONY: power-config-changed
+$(DATA_HEADER) $(RUNTIME_CONFIG_HEADER) $(RTL_DIR)/admm_autogen_params.vh: power-config-changed
+endif
+endif
+
+$(DATA_HEADER) $(RUNTIME_CONFIG_HEADER) $(RTL_DIR)/admm_autogen_params.vh &: $(HEADER_SCRIPT) $(SCRIPTS_DIR)/crazyloihimodel.py $(PARAMS_SCRIPT) $(TRAJ_HEADER)
 	@echo "========================================="
 	@echo "Generating headers..."
 	@echo "========================================="
@@ -186,7 +203,7 @@ $(HLS_IP_MARKER): $(HLS_SOURCES) $(DATA_HEADER)
 vivado: $(ROUTE_DCP)
 
 # Synthesis
-$(SYNTH_DCP): $(RTL_SOURCES) $(XDC_SOURCES) $(HLS_IP_MARKER)
+$(SYNTH_DCP): $(RTL_SOURCES) $(XDC_SOURCES) $(HLS_IP_MARKER) $(RTL_DIR)/admm_autogen_params.vh $(SCRIPTS_DIR)/synth.tcl
 	@echo "========================================="
 	@echo "Running Vivado Synthesis (BOARD=$(BOARD), TOP=$(TOP_MODULE))..."
 	@echo "========================================="
@@ -199,7 +216,7 @@ $(SYNTH_DCP): $(RTL_SOURCES) $(XDC_SOURCES) $(HLS_IP_MARKER)
 		-tclargs $(TOP_MODULE) $(notdir $(XDC_SOURCES)) $(notdir $(SYNTH_DCP))
 
 # Implementation (Place & Route)
-$(ROUTE_DCP): $(SYNTH_DCP)
+$(ROUTE_DCP): $(SYNTH_DCP) $(SCRIPTS_DIR)/impl.tcl
 	@echo "========================================="
 	@echo "Running Vivado Implementation..."
 	@echo "========================================="
@@ -216,7 +233,7 @@ $(ROUTE_DCP): $(SYNTH_DCP)
 
 bit: $(BITSTREAM)
 
-$(BITSTREAM): $(ROUTE_DCP)
+$(BITSTREAM): $(ROUTE_DCP) $(SCRIPTS_DIR)/bitstream.tcl
 	@echo "========================================="
 	@echo "Generating Bitstream ($(TOP_MODULE))..."
 	@echo "========================================="
@@ -358,3 +375,16 @@ report:
 	@echo ""
 	@echo "=== Timing Summary ==="
 	@cat $(BUILD_DIR)/reports/post_route_timing.rpt 2>/dev/null | head -50 || echo "No report found"
+
+# Embedded benchmark workload: labeled synthetic default, or an explicit recorded CSV.
+.PHONY: power-workload FORCE_POWER_WORKLOAD
+ifeq ($(BOARD),arty-power)
+all bit program: $(BUILD_DIR)/top_uart_power.json
+$(BUILD_DIR)/top_uart_power.json: $(BITSTREAM) $(SCRIPTS_DIR)/power_build_manifest.py
+	$(PYTHON) $(SCRIPTS_DIR)/power_build_manifest.py --bitstream $(BITSTREAM)
+$(SYNTH_DCP): $(BUILD_DIR)/power/power_workload.vh $(BUILD_DIR)/power/power_workload.mem $(XDC_DIR)/constraints_arty_a7.xdc
+$(BUILD_DIR)/power/power_workload.vh $(BUILD_DIR)/power/power_workload.mem &: FORCE_POWER_WORKLOAD $(RUNTIME_CONFIG_HEADER) $(SCRIPTS_DIR)/power_workload.py
+	@test -n "$(POWER_WORKLOAD)" || (echo 'Set POWER_WORKLOAD=/path/to/recorded_states.csv'; exit 1)
+	$(PYTHON) $(SCRIPTS_DIR)/power_workload.py --csv "$(POWER_WORKLOAD)" --config $(RUNTIME_CONFIG_HEADER) --output $(BUILD_DIR)/power
+endif
+power-workload: $(BUILD_DIR)/power/power_workload.vh

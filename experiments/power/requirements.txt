@@ -1,0 +1,8 @@
+# Reference Python 3.11 environment for campaign generation and acquisition.
+# scikit-sparse also requires system SuiteSparse/CHOLMOD development libraries.
+numpy==1.26.4
+scipy==1.11.4
+scikit-sparse==0.4.16
+autograd==1.7.0
+matplotlib==3.10.1
+pyserial==3.5

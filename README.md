@@ -36,3 +36,14 @@ The development flow for this project is managed through the provided Makefiles:
 
 - FPGA deck hardware repository: [Crazyflie_FPGA_Deck](https://github.com/A2R-Lab/Crazyflie_FPGA_Deck)
 - Crazyflie firmware repository: [crazyflie_fpga_firmware](https://github.com/A2R-Lab/crazyflie_fpga_firmware)
+
+## Reproduce the measured-power campaign
+
+The Arty A7-100T Rev E campaign builds the FPGA configurations selected from the
+paper benchmark data, measures onboard core/BRAM and 5 V supply power, and exports
+CSV/JSON summaries. See [POWER_CAMPAIGN.md](POWER_CAMPAIGN.md) for hardware and
+software setup, commands, result fields, and measurement limits.
+
+The campaign uses `scripts/power_campaign.py` as its entry point. Workload and
+manifest generation and board acquisition are called automatically. The existing
+paper figures use their original input data; the campaign writes separate results.

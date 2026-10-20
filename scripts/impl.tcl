@@ -119,6 +119,7 @@ route_design {*}$route_args
 # Reports
 #------------------------------------------------------------------------------
 report_utilization -file "$reports_dir/post_route_utilization.rpt"
+report_utilization -hierarchical -file "$reports_dir/post_route_hierarchical_utilization.rpt"
 report_timing_summary -file "$reports_dir/post_route_timing.rpt"
 report_power -file "$reports_dir/post_route_power.rpt"
 report_drc -file "$reports_dir/post_route_drc.rpt"

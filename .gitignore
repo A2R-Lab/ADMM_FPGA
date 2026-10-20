@@ -29,6 +29,9 @@ vivado_project/vivado_project.ip_user_files/
 /.srcs/
 /ip/
 
+# Python environments
+/.venv/
+
 # IDE / Editor
 **/__pycache__/
 **/.vscode/
@@ -71,3 +74,8 @@ video/constrainedStarTopView.MP4
 /video/topview_motion_trail_raw.png
 /video/topview_motion_trail_cropped_flipped.png
 /video/AccelMPC__RAL_2026_-9.pdf
+
+# Vivado simulator working files
+/xsim.dir/
+/*.pb
+/*.wdb
