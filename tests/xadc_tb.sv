@@ -3,7 +3,7 @@ module xadc_tb;
     reg clk=0; always #5 clk=~clk;
     reg rst=1;wire valid,ready,fault;
     wire [11:0] vc,ic,v5,i5,temp;
-    power_xadc #(.CAL_CYCLES(100000),.SIM_MONITOR_FILE("tests/power/xadc_analog.txt")) dut(
+    power_xadc #(.CAL_CYCLES(100000),.SIM_MONITOR_FILE("tests/xadc_analog.txt")) dut(
         .clk(clk),.rst(rst),.vsns5v0_p(1'b0),.vsns5v0_n(1'b0),.isns5v0_p(1'b0),.isns5v0_n(1'b0),
         .isns0v95_p(1'b0),.isns0v95_n(1'b0),.vsnsvu_p(1'b0),.vsnsvu_n(1'b0),
         .valid(valid),.ready(ready),.fault(fault),.vcore(vc),.icore(ic),.v5(v5),.i5(i5),.temperature(temp));

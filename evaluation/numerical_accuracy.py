@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """H27/k9 figure-eight numerical accuracy: two small tables and one plot.
 
-    python paper_figures/numerical_accuracy.py
+    python evaluation/numerical_accuracy.py
 
 Runs the simulations on first use; caches results in ignored output/numerical.npz.
 Writes output/numerical_accuracy.txt and output/numerical_convergence.{pdf,png}.
@@ -9,7 +9,7 @@ Subsequent runs regenerate the numbers/plot from that local cache.
 
 First run, or to rerun all simulations:
     HLS_INCLUDE=/path/to/Vitis/include OPENBLAS_NUM_THREADS=1 \
-        python paper_figures/numerical_accuracy.py --simulate
+        python evaluation/numerical_accuracy.py --simulate
 
 The fixed rollout supplies outputs for the replay input sequence.
 Float replays those same inputs with persistent solver memory. The OSQP rollout

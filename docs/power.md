@@ -1,7 +1,7 @@
 # Reproduce the measured-power campaign
 
 This workflow builds and measures the 42 timing-clean FPGA architecture/horizon
-pairs selected from `paper_figures/data/benchmark_summary.csv`: 10 full-sparse and
+pairs selected from `evaluation/data/benchmark_summary.csv`: 10 full-sparse and
 32 staged configurations, each with 10 ADMM iterations. It uses the source revision
 in this checkout, fixed-point arithmetic, a 100 MHz FPGA clock, and the committed
 256-state synthetic workload. Trajectory generation inside the solver is disabled;
@@ -10,7 +10,7 @@ external DDR3 is unused.
 These experiments measure power on an **Arty A7-100T Rev E** using its onboard
 supply monitors. They reproduce the measured-power workflow, not the historical
 Vivado power estimates used by the existing paper figures. The campaign does not
-modify `paper_figures/`.
+modify `evaluation/`.
 
 ## Requirements
 
@@ -21,7 +21,7 @@ modify `paper_figures/`.
   Builds use `vivado`, `v++`, `vitis-run`, GNU Make, and a C++14-capable `g++`.
   The measurement host needs Vivado and access to the board's serial device.
 - Python **3.11**. The reference dependency versions are recorded in
-  `experiments/power/requirements.txt`. Install the system compiler, Python
+  `scripts/requirements.txt`. Install the system compiler, Python
   development headers, and SuiteSparse/CHOLMOD development libraries before
   installing scikit-sparse.
 
@@ -33,7 +33,7 @@ source /path/to/Vivado/settings64.sh
 source /path/to/Vitis/settings64.sh
 python3.11 -m venv .venv
 source .venv/bin/activate
-python -m pip install -r experiments/power/requirements.txt
+python -m pip install -r scripts/requirements.txt
 ```
 
 A separate measurement-only host needs `pyserial==3.5` and the Vivado environment;
@@ -135,27 +135,22 @@ failed build logs are retained under `<campaign_dir>/work/`. Archive both direct
 with the exported summaries: generated results are not committed to Git.
 
 Core/BRAM and monitored 5 V power have different boundaries. The 5 V reading includes
-other board loads and conversion losses; neither reading directly measures total
-FPGA power. Both include the measurement instrumentation. Core voltage and current
-are sampled at slightly different times; traces are intended for batch averages.
-The 2,048-record trace buffer progressively merges bins while preserving sums and
-durations, so longer runs have coarser time resolution. Scaling uses nominal board
-values without external calibration. Repetition spread measures repeatability,
-not absolute measurement accuracy.
+other board loads and conversion losses. Both include the measurement instrumentation.
+Core voltage and current are sampled at slightly different times; traces are intended
+for batch averages. The 2,048-record trace buffer progressively merges bins while
+preserving sums and durations, so longer runs have coarser time resolution. Scaling
+uses nominal board values without external calibration. Repetition spread measures
+repeatability, not absolute measurement accuracy.
 
-For continuity with the measured-power analysis, the summary also reports:
+The summary also reports:
 
 ```text
 corrected_power_W = 0.8 * (active_core_energy_J / active_seconds + 0.032)
 corrected_energy_J_per_solve = 0.8 * (active_core_energy_J + 0.032 * active_seconds) / completed_solves
 ```
 
-The 32 mW auxiliary allowance excludes VCCADC; the factor 0.8 assumes a fixed
-instrumentation adjustment. These assumptions came from a single-design Vivado
-analysis and are not independently calibrated across the sweep. Treat the corrected
-columns as model-based estimates, retain the raw columns, and do not substitute
-incremental energy for absolute energy or use these rail measurements alone to
-validate an FPGA-versus-MCU energy ratio.
+The 32 mW term is an auxiliary-power allowance excluding VCCADC; the factor 0.8
+is a measurement instrumentation adjustment based on Vivado estimate.
 
 ## Code and validation
 
@@ -171,7 +166,7 @@ The implementation has three helpers called automatically:
 To check the host code without FPGA hardware:
 
 ```bash
-python -m unittest discover -s tests/power -v
+python -m unittest discover -s tests -v
 ```
 
 For RTL development, load the Vivado/Vitis environment and build the matching power
@@ -180,8 +175,8 @@ measurement validation:
 
 ```bash
 make BOARD=arty-power
-bash tests/power/test_power.sh
-bash tests/power/test_power_hls.sh
+bash tests/test_power.sh
+bash tests/test_power_hls.sh
 ```
 
 The first script tests capture, scheduling, UART, and the XADC simulation model.

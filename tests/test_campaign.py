@@ -9,7 +9,7 @@ import subprocess
 from types import SimpleNamespace
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import power_campaign as c
 
 
@@ -45,7 +45,7 @@ class CampaignTests(unittest.TestCase):
             self.assertIsNotNone(c.transport_failure(p))
 
     def test_matrix_includes_all_timing_clean_points(self):
-        points = c.matrix(c.ROOT/'paper_figures/data/benchmark_summary.csv')
+        points = c.matrix(c.ROOT/'evaluation/data/benchmark_summary.csv')
         self.assertEqual(len(points), 42)
         self.assertEqual(sum(p['arch']=='full_sparse' for p in points), 10)
         self.assertEqual(max(p['horizon'] for p in points), 1350)
@@ -79,10 +79,11 @@ class CampaignTests(unittest.TestCase):
     def test_snapshot_contains_only_campaign_script_dependencies(self):
         names=[str(p.relative_to(c.ROOT)) for p in c.source_files(c.ROOT)]
         self.assertEqual({p for p in names if p.startswith('scripts/')},
-                         {'scripts/'+name for name in c.CAMPAIGN_SCRIPTS})
-        self.assertIn('tests/power/test_power.sh', names)
-        self.assertIn('tests/power/test_power_hls.sh', names)
-        self.assertIn('experiments/power/requirements.txt', names)
+                         {'scripts/'+name for name in c.CAMPAIGN_SCRIPTS}
+                         | {'scripts/requirements.txt', 'scripts/power_synthetic_states.csv'})
+        self.assertIn('tests/test_power.sh', names)
+        self.assertIn('tests/test_power_hls.sh', names)
+        self.assertIn('scripts/requirements.txt', names)
         self.assertIn('docs/power.md', names)
         self.assertFalse(any(p.startswith(('build/', 'results/', '.git/')) for p in names))
         self.assertFalse(any(Path(p).name in c.GENERATED for p in names))

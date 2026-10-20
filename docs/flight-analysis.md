@@ -1,18 +1,11 @@
-# Recorded-flight metrics
+# Flight-analysis methodology
 
-```bash
-python paper_figures/flight_metrics.py
-```
-
-Run from the repository root with the [plotting dependencies](requirements-flight.txt).
-The script prints results and writes `flight_metrics.txt`, `flight_metrics.csv`
-and PDF/PNG plots under `output/`. `--experiment star` or `--experiment dynamic`
-selects a subset; `--output-dir /path/to/output` changes the destination. Subsets
-use distinct report filenames. See the [results page](README.md) for previews.
+See the [evaluation README](../evaluation/README.md) for results, plots, dependencies
+and reproduction commands. This guide defines the measurements and their limits.
 
 ## Recordings and provenance
 
-The [experiment configuration](data/flight_metrics/experiments.json) records
+The [experiment configuration](../evaluation/data/flight_metrics/experiments.json) records
 source filenames and hashes, evaluation intervals, coordinate conventions and
 reconstruction parameters. Input hashes are checked before analysis.
 
@@ -22,8 +15,8 @@ reconstruction parameters. Input hashes are checked before analysis.
 | May 22 at 18:52:11 | Unique `start_traj` through following `reset_traj`, inclusive | Candidate constrained-star run |
 | May 22 at 18:53:42 | Same start/reset rule | Candidate constrained-star run |
 
-TAKE1 shares its CSV with the panel-figure inputs under `data/top_side_frame_table/`.
-The other logs and reconstructed star geometry are under `data/flight_metrics/`.
+TAKE1 shares its CSV with the panel-figure inputs under `evaluation/data/top_side_frame_table/`.
+The other logs and reconstructed star geometry are under `evaluation/data/flight_metrics/`.
 The star-source association is inferred from source `b82e18d`, session records
 and trajectory behavior; the exact flashed image and video correspondence are
 not verified. Other trial recordings are not bundled.
@@ -94,7 +87,7 @@ use a same-frame reference marked `verified_log_elapsed`, with zero-order hold
 and full interval coverage. Reconstructed geometry alone is insufficient.
 
 ```bash
-python -m unittest discover -s paper_figures -p test_flight_metrics.py -v
+python -m unittest discover -s evaluation -p test_flight_metrics.py -v
 ```
 
 Tests cover units, frame translation, event order, interval selection, zero-bound

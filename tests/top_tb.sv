@@ -13,7 +13,7 @@ module top_tb;
         .vsns5v0_p(1'b0),.vsns5v0_n(1'b0),.isns5v0_p(1'b0),.isns5v0_n(1'b0),
         .isns0v95_p(1'b0),.isns0v95_n(1'b0),.vsnsvu_p(1'b0),.vsnsvu_n(1'b0));
     defparam dut.sensor.CAL_CYCLES=100000;
-    defparam dut.sensor.SIM_MONITOR_FILE="../../../tests/power/xadc_analog.txt";
+    defparam dut.sensor.SIM_MONITOR_FILE="../../../tests/xadc_analog.txt";
     defparam dut.benchmark.ROM_FILE="../test_workload/power_workload.mem";
     always @(negedge clk) if(dut.active && tx!==1'b1) $fatal(1,"UART TX activity during measurement");
     task command(input [7:0] op,input [15:0] len,input [255:0] data);

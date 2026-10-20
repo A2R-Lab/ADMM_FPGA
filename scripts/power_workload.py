@@ -56,7 +56,7 @@ def compile_workload(csv_path, config_path, output):
         f'`define POWER_WORKLOAD_COUNT {len(records)}\n'
         f"`define POWER_WORKLOAD_HASH 256'h{digest}\n"
         f'`define POWER_USE_FLOAT {int(use_float)}\n')
-    metadata = dict(kind=('synthetic' if Path(csv_path).resolve() == Path(__file__).resolve().parents[1]/'experiments/power/synthetic_states.csv' else 'user-supplied'), source=str(Path(csv_path).resolve()), csv_sha256=hashlib.sha256(Path(csv_path).read_bytes()).hexdigest(),
+    metadata = dict(kind=('synthetic' if Path(csv_path).resolve() == Path(__file__).resolve().parents[1]/'scripts/power_synthetic_states.csv' else 'user-supplied'), source=str(Path(csv_path).resolve()), csv_sha256=hashlib.sha256(Path(csv_path).read_bytes()).hexdigest(),
                     workload_sha256=digest, record_count=len(records), use_float=use_float,
                     runtime_config=config, input_bits=418)
     write_changed(out / 'power_workload.json', json.dumps(metadata, indent=2) + '\n')

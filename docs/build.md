@@ -15,11 +15,8 @@ source /path/to/Vivado/settings64.sh
 source /path/to/Vitis/settings64.sh
 python3.11 -m venv .venv
 source .venv/bin/activate
-python -m pip install -r experiments/power/requirements.txt
+python -m pip install -r scripts/requirements.txt
 ```
-
-Alternatively, export `VIVADO_SETTINGS` and `VITIS_SETTINGS` with those settings-file
-paths, then source `scripts/setup_xilinx_2025_2.sh`.
 
 ## Build
 

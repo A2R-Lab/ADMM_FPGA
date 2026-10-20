@@ -42,10 +42,9 @@ so inspect generated bounds when changing reference shapes.
 
 Model discretization defaults to 50 Hz (20 ms), independently of the solver
 invocation rate. Reference playback advances every 20 calls by default; at
-1 kHz this also gives 20 ms. Neither setting establishes the motion-capture or
-obstacle-update rate. Dynamic constraints change bounds on one fixed axis
-(default x) from prediction stage 10 onward. Changing the constraint normals
-or topology requires matrix regeneration and refactorization.
+1 kHz this also gives 20 ms. Dynamic constraints change bounds on one fixed
+axis (default x). Changing the constraint normals or topology requires matrix
+regeneration and refactorization.
 
 ## Solver boundary
 
@@ -59,6 +58,8 @@ or topology requires matrix regeneration and refactorization.
 
 The output contains four 32-bit motor-command values. The default numeric type
 is `ap_fixed<32,10,AP_RND,AP_SAT>`: 22 fractional bits, rounding and saturation.
+Accumulators use `ap_fixed<40,18,AP_RND,AP_SAT>`, adding eight integer guard bits
+while retaining the same fractional precision.
 The float configuration changes the word interpretation to IEEE float32.
 Transport framing is implemented by the board top level; the 418-bit solver
 input is not itself a byte-stream protocol specification.
@@ -75,39 +76,3 @@ word requests compiled defaults. The response is `0xFFFFFFFF` followed by four
 command words. `io2` signals readiness. Keep chip select asserted through receive,
 compute and response. Words shift MSB first, with receive on rising SCK and
 transmit on falling SCK; confirm byte packing in the host firmware.
-
-The 14 input and five output words require at least 608 serial clocks, excluding
-polling, compute wait and host processing. Wire time is therefore `608 / f_SPI`
-seconds. The benchmark feasibility table's 100 µs reserve is a separate assumption.
-
-## Numerical behavior
-
-The current implementation uses scaled dual variables and eight accumulator
-guard bits. Equality and inequality penalties are generated separately and
-implemented with shifts in the fixed-point path.
-
-The default stored range is `[-512, 512 - 2^-22]`, with step `2^-22`.
-Accumulators use `ap_fixed<40,18,AP_RND,AP_SAT>`; rho intermediates use widened
-shift types before conversion back. These formats do not establish absence of
-saturation or a general convergence guarantee.
-
-Earlier 200-step closed-loop experiments demonstrated why widened accumulators
-are needed. These are historical observations, not validation of every model:
-
-| Accumulator guard bits | Observed result |
-|---|---|
-| 0 | Both scaled and unscaled forms stopped at step 6 with out-of-bounds control |
-| 1 | Both forms stopped at step 8 with an excessive control step |
-| 2 or 3 | Both forms completed C/RTL co-simulation with 200/200 transactions |
-| 12 | Scaled form completed C/RTL co-simulation; unscaled C simulation completed, RTL was stopped at 196/200 without mismatch |
-
-For the scaled form, increasing the guard width from 0 to 12 changed latency
-from 136,087 to 175,627 cycles and LUT use from 48,656 to 55,374 in that experiment.
-The tested minimum of two bits is specific to that trajectory and configuration.
-
-After generating headers with `make headers`, the HLS project provides
-`make -C vitis_projects/ADMM csim-closed-loop-strict` and
-`make -C vitis_projects/ADMM cosim-closed-loop`. The
-[numerical analysis](../paper_figures/numerical_accuracy.py) compares fixed point,
-floating point and OSQP for warm-started tracking; it does not establish general
-fixed-point convergence.
