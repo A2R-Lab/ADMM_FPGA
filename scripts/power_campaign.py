@@ -2,7 +2,7 @@
 """Prepare, build, measure and aggregate a reproducible Arty power campaign.
 
 Build and measure on one machine or transfer the campaign between machines.
-Sources, settings and artifacts are checked by hash. See POWER_CAMPAIGN.md.
+Sources, settings and artifacts are checked by hash. See docs/power.md.
 """
 from __future__ import annotations
 
@@ -132,20 +132,20 @@ def matrix(path):
 
 def source_files(root):
     # Copy only the campaign's dependencies, never local mounts or build outputs.
-    files = [root / 'Makefile', root / 'POWER_CAMPAIGN.md']
+    files = [root / 'Makefile', root / 'docs/power.md']
     files += [root / 'scripts' / name for name in CAMPAIGN_SCRIPTS]
     for folder, suffixes in (
         ('vitis_projects/ADMM', {'.cpp', '.h', '.cfg'}),
         ('vivado_project/vivado_project.srcs/sources_1/new', {'.v', '.sv', '.vh'}),
         ('vivado_project/vivado_project.srcs/constrs_1/new', {'.xdc'}),
-        ('tests/power', {'.py', '.cpp', '.sv', '.txt', '.sh'}),
+        ('tests', {'.py', '.cpp', '.sv', '.txt', '.sh'}),
     ):
         files += [p for p in (root / folder).iterdir()
                   if p.is_file() and p.suffix in suffixes and p.name not in GENERATED]
     files += [root / p for p in ('vitis_projects/ADMM/Makefile',
-                                 'experiments/power/synthetic_states.csv',
-                                 'experiments/power/requirements.txt',
-                                 'paper_figures/data/benchmark_summary.csv')]
+                                 'scripts/power_synthetic_states.csv',
+                                 'scripts/requirements.txt',
+                                 'evaluation/data/benchmark_summary.csv')]
     for p in files:
         if p.is_symlink():
             raise ValueError(f'Symlinks are not allowed in source snapshot: {p}')
@@ -159,7 +159,7 @@ def prepare(args):
     files = source_files(ROOT)
     hashes = {str(p.relative_to(ROOT)): sha(p) for p in files}
     payload = {'schema': 1, 'source_hashes': hashes,
-               'points': matrix(ROOT / 'paper_figures/data/benchmark_summary.csv'),
+               'points': matrix(ROOT / 'evaluation/data/benchmark_summary.csv'),
                'correction': MODEL, 'clock_hz': 100_000_000, 'trajectory': False,
                'workload_records': 256, 'repetitions': 3, 'settle_s': 5,
                'idle_s': 3, 'target_active_s': 2, 'minimum_solves': 1024,
@@ -285,7 +285,7 @@ def golden(work, env, log):
     hls = work / 'vitis_projects/ADMM'
     exe = work / 'build/pilot_reference'
     run(['g++', '-std=c++14', '-O1', '-Wno-unknown-pragmas', '-I'+env['XILINX_HLS']+'/include',
-         '-I'+str(hls), str(work/'tests/power/solver_reference.cpp'), str(hls/'ADMM.cpp'), '-o', str(exe)], work, env, log)
+         '-I'+str(hls), str(work/'tests/solver_reference.cpp'), str(hls/'ADMM.cpp'), '-o', str(exe)], work, env, log)
     output = subprocess.check_output([str(exe), str(work/'build/power/power_workload.mem'), '8'], cwd=work, env=env, text=True)
     lines = output.splitlines()
     if len(lines) != 8 or any(not re.fullmatch('[0-9a-fA-F]{32}', v) for v in lines):
@@ -631,8 +631,7 @@ def aggregate(args):
                                 key+'_min':min(vals),key+'_max':max(vals)})
         rows.append(row)
     output=args.local/'summaries'/m['campaign_id']
-    save(output/'summary.json',{'campaign_id':m['campaign_id'],'correction':MODEL,'points':rows,
-                              'note':'Spread measures repeatability, not uncertainty in the correction assumptions.'})
+    output.mkdir(parents=True, exist_ok=True)
     keys=sorted({k for r in rows for k in r})
     tmp=output/'summary.csv.tmp'
     with tmp.open('w',newline='') as f:

@@ -5,12 +5,9 @@ from __future__ import annotations
 
 import argparse
 import csv
-import hashlib
-import json
 import math
 import os
 import subprocess
-from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -80,14 +77,6 @@ def write_csv(path: Path, rows: list[dict[str, str]]) -> None:
         )
         writer.writeheader()
         writer.writerows(rows)
-
-
-def sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as fobj:
-        for chunk in iter(lambda: fobj.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def git_output(repo: Path, *args: str) -> str:
@@ -362,28 +351,23 @@ def main() -> int:
     render_figures(output)
 
     repo = Path(__file__).resolve().parents[1]
-    manifest = {
-        "campaign": output.name,
-        "published_utc": datetime.now(timezone.utc).isoformat(),
-        "board": "custom",
-        "part": "xc7a100tcsg324-1",
-        "admm_iterations": 10,
-        "configured_clock_mhz": 100.0,
-        "trajectory_enabled": False,
-        "low_horizons": LOW_HORIZONS,
-        "architectures": ARCHES,
-        "low_run_dirs": [str(path) for path in run_dirs],
-        "manual_scalability_source": str(manual_path),
-        "publisher_git_head": git_output(repo, "rev-parse", "HEAD"),
-        "publisher_git_status": git_output(repo, "status", "--short", "--untracked-files=no"),
-        "source_git_heads": sorted({row["source_git_head"] for row in low_rows + scale_rows}),
-        "high_horizon_provenance_note": "Existing high-horizon rows were produced from a recorded dirty worktree based on b82e18d; see README.",
-        "files": {},
-    }
-    for path in sorted((output / "data").glob("*.csv")) + sorted((output / "figures").glob("*.png")):
-        manifest["files"][str(path.relative_to(output))] = {"sha256": sha256(path), "bytes": path.stat().st_size}
-    manifest_path = output / "manifest.json"
-    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+    # The CSVs already retain per-row source revisions and working-tree status.
+    # Keep only the export settings and source locations in a readable record.
+    notes = [
+        "Solver scalability export", "",
+        "Artix-7 100T (xc7a100tcsg324-1), custom board, 100 MHz,",
+        "10 ADMM iterations, trajectory disabled.",
+        "Latency and energy cover the solver computation window.",
+        "Power is a post-route Vivado estimate, not measured board power.", "",
+        "Publisher revision: " + git_output(repo, "rev-parse", "HEAD"),
+        "Publisher working-tree changes:",
+        git_output(repo, "status", "--short", "--untracked-files=no") or "(none)",
+        "", "Raw run directories:", *[str(path) for path in run_dirs],
+        "Manual scalability input: " + str(manual_path), "",
+        "Per-point source revisions and modifications are recorded in the CSVs.",
+        "A base revision alone does not identify a modified working tree.",
+    ]
+    (output / "sources.txt").write_text("\n".join(notes) + "\n")
     print(f"Published canonical results under {output}")
     return 0
 

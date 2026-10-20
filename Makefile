@@ -82,7 +82,7 @@ PARAMS_SCRIPT := $(SCRIPTS_DIR)/parameters.py
 HLS_CLOSED_LOOP_SCRIPT := $(SCRIPTS_DIR)/run_hls_closed_loop_once.py
 HLS_CLOSED_LOOP_ARGS ?=
 
-POWER_WORKLOAD ?= experiments/power/synthetic_states.csv
+POWER_WORKLOAD ?= scripts/power_synthetic_states.csv
 
 # Generated files
 DATA_HEADER   := $(HLS_DIR)/data.h
