@@ -3,11 +3,12 @@
 PROJECT = ADMM
 CONFIG = hls_config.cfg
 WORK_DIR = $(PROJECT)
+PYTHON ?= python3
 
 # Source files for dependency tracking
 SOURCES = ADMM.cpp ADMM.h data_types.h data.h
 
-.PHONY: all clean build csim cosim export help ip
+.PHONY: all clean build csim cosim csim-reference export help ip
 
 # Default target
 all: build export
@@ -32,8 +33,12 @@ help:
 	@echo "  clean   - Remove build directory"
 	@echo "  test    - Run full flow"
 
+# Generate production headers and the testbench reference together.
+csim-reference:
+	$(PYTHON) ../../scripts/header_generator.py --csim-reference
+
 # C Simulation
-csim:
+csim: csim-reference
 	vitis-run --mode hls --csim --config ./$(CONFIG) --work_dir $(WORK_DIR)
 
 csim-rho:
@@ -68,7 +73,8 @@ build:
 	v++ -c --mode hls --config ./$(CONFIG) --work_dir $(WORK_DIR)
 
 # C/RTL Co-simulation
-cosim:
+cosim: csim-reference
+	$(MAKE) build
 	vitis-run --mode hls --cosim --config ./$(CONFIG) --work_dir $(WORK_DIR)
 
 # Package/Export RTL

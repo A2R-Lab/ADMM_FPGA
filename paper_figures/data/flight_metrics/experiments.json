@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "provenance": {
+    "recording_source": "ros2-crazyflie-mocap repository, commit 97978073c95b657b55cedc4cd00e7ed1984dbe32, root CSV files",
+    "bridge_revision": "97978073c95b657b55cedc4cd00e7ed1984dbe32",
+    "bridge_commit_message": "adding logging, filmed and logged dyn obst and constr star on 20260522",
+    "bridge_source_sha256": "cc4428cda08baed43ea7eabf1028e572e2578d684790f5cfca935aba43f478cc",
+    "star_revision": "b82e18de9cad81d9eb1ed0e8f80b483730111982",
+    "star_reconstruction": {
+      "source_revision": "b82e18de9cad81d9eb1ed0e8f80b483730111982",
+      "generator_sha256": "9f2c9ecd1effe85a5685e8120c217f5c3a35c1b2d67dfc27e03b079c4b9facd9",
+      "parameters": {
+        "length": 1250,
+        "dt": 0.02,
+        "amp_x": 2.0,
+        "amp_y": 2.0,
+        "z0": 0.0,
+        "cycles": 1.0,
+        "shape": "star_hold",
+        "square_sharpness": 2.8,
+        "star_points": 12,
+        "star_inner_ratio": 0.25,
+        "star_inner_hold": 0.25,
+        "rose_petals": 3,
+        "rose_mod": 0.2,
+        "chicane_mix": 0.2,
+        "hubstar_vertices": 8
+      },
+      "reference_sha256": "a244ba34595d1769bd8aa78479a863cebc1d79eedf14b14c2066a613dd71285b"
+    },
+    "star_parameter_source_sha256": "5b572ea9137640fe6d257628e09e9014e0254f141d0b1a42077cf794bc13bb66",
+    "star_header_generator_sha256": "64b080f8eaf3980dc95db65c27a0fc8629f01b4013adcac3ea5b65a28b649bf9",
+    "star_bound_derivation": "shift = AMP_X * STAR_INNER_RATIO * cos(atan2(AMP_X, AMP_Y)); lower = XY_MIN - shift; upper = XY_MAX - shift; AMP_X=AMP_Y=2 m, STAR_INNER_RATIO=0.25, XY_MIN=-1 m, XY_MAX=1 m.",
+    "star_association_evidence": [
+      "The author identifies b82e18d as the filmed constrained-star source (docs/reproducibility/configurations.md).",
+      "The May 25 bridge commit identifies May 22 as the filmed/logged dynamic-obstacle and constrained-star session.",
+      "The selected 18:52:11 and 18:53:42 logs contain one start and one reset each, stable altitude, repeated motion near a 25 s period, and similar paths after subtracting each logged target origin.",
+      "They were selected for explicit command intervals and stable altitude, not for lowest constraint violation. Other late-May logs remain in the original source repository.",
+      "Exact flashed firmware/bitstream association and association with the paper video are not established. The local star lateral-video metadata gives 2026-05-22T23:00:44Z, which alone does not match a selected log.",
+      "A saved 1khzConstrStar.bit has embedded build date/time 2026/05/22 14:18:07, but no log-to-bitstream identifier. The later server exp checkout has H23/tick-div10; its current headers are not treated as the flight configuration."
+    ],
+    "dynamic_coordinate_evidence": "Bridge code applies identical axis/sign mapping to drone and box x. TAKE1 box*_cf_x equals box*_raw_x; floating bounds are inset by 0.20 m from box markers. This does not establish distance to obstacle surfaces.",
+    "timestamp_convention": "elapsed_s and the misleadingly named monotonic_s are produced from time.time(); mocap_stamp_s is the latest ROS pose header time. State estimates and obstacle poses are cached asynchronously. No controller receive/apply timestamp is recorded.",
+    "zero_bound_word": "In ADMM.cpp a packed zero bound word requests generated static defaults. Dynamic-log samples after a (0,0) transmission are not compared to x=0; static defaults are not source-matched for these runs and those samples are explicitly counted as unavailable.",
+    "dynamic_selection": "TAKE1 is the author-selected dynamic-obstacle demonstration and supplies the paper obstacle panels. Metrics describe this single recording, not a multi-trial aggregate."
+  },
+  "experiments": [
+    {
+      "file": "top_side_frame_table/TAKE1fpga_bridge_log_20260522_153539.csv",
+      "sha256": "f933493caca9b7e51eb5c60fbf619852a3acf20e95b38db52714184c97025010",
+      "bytes": 2409263,
+      "id": "dynamic_take1",
+      "experiment": "dynamic",
+      "label": "May 22 dynamic obstacles — TAKE1",
+      "attribution": "May 22 dynamic-obstacle take; TAKE1 supplies the paper obstacle panels",
+      "interval": {
+        "mode": "full_log",
+        "description": "Complete recording, including any termination/handling; no independently identified flight-only interval."
+      },
+      "origin": "world",
+      "bounds_description": "Last transmitted signed integer x bounds / 1000, held in recorded event order; world coordinates.",
+      "tracking_unavailable_reason": "Matching onboard reference table and verified playback timing are not bundled.",
+      "notes": [
+        "constraint_active means bridge transmission enabled, not acknowledged application.",
+        "Cached drone and obstacle samples are not guaranteed simultaneous; plotted floating bounds are diagnostic only.",
+        "A transmitted (0,0) pair requests compiled static defaults; those samples are excluded from dynamic-bound metrics and counted, not treated as x=0."
+      ]
+    },
+    {
+      "file": "flight_metrics/fpga_bridge_log_20260522_185211.csv",
+      "sha256": "5a7f33bec17a700a78fe2b80f073a8309b91c84888476bd8f3919fcc33d2e595",
+      "bytes": 924944,
+      "id": "star_185211",
+      "experiment": "star",
+      "label": "May 22 star candidate — 18:52:11",
+      "attribution": "Inferred match to constrained-star source b82e18d; bounds and origin conditional on that match",
+      "interval": {
+        "mode": "start_to_reset",
+        "description": "All valid samples from the unique start_traj command through reset_traj, inclusive."
+      },
+      "origin": "logged_target_xyz",
+      "bounds_description": "Static XY box from b82e18d defaults, [-1.3535533905932737, 0.6464466094067263] m relative to logged target origin (inferred).",
+      "tracking_unavailable_reason": "Reference geometry reconstructed from b82e18d; exact flight table, command latency and playback phase are unverified.",
+      "notes": [
+        "constraint_active=0 disables dynamic-bound transmission; it does not disable the FPGA static box.",
+        "Source defaults H27/k9 and a 20-call reference divider at 1 kHz imply 20 ms playback samples, a 0.56 s entry prefix and a 25 s loop; exact flight timing remains unverified.",
+        "This is a conditional source-bound analysis, not confirmation of the exact paper-video take."
+      ],
+      "static_bounds": {
+        "x": [
+          -1.3535533905932737,
+          0.6464466094067263
+        ],
+        "y": [
+          -1.3535533905932737,
+          0.6464466094067263
+        ]
+      },
+      "reference": {
+        "file": "flight_metrics/star_reference_reconstructed.csv",
+        "sha256": "a244ba34595d1769bd8aa78479a863cebc1d79eedf14b14c2066a613dd71285b",
+        "timing": "unverified",
+        "frame": "relative_to_logged_target",
+        "description": "One 25 s geometric cycle at 20 ms spacing, before the source H+1=28 sample entry prefix. Used for XY overlay only."
+      }
+    },
+    {
+      "file": "flight_metrics/fpga_bridge_log_20260522_185342.csv",
+      "sha256": "868e5b57943e5ddd14e5d26ab669774e765f98e1c2da605297cefc86fbd6f1e4",
+      "bytes": 946222,
+      "id": "star_185342",
+      "experiment": "star",
+      "label": "May 22 star candidate — 18:53:42",
+      "attribution": "Inferred match to constrained-star source b82e18d; bounds and origin conditional on that match",
+      "interval": {
+        "mode": "start_to_reset",
+        "description": "All valid samples from the unique start_traj command through reset_traj, inclusive."
+      },
+      "origin": "logged_target_xyz",
+      "bounds_description": "Static XY box from b82e18d defaults, [-1.3535533905932737, 0.6464466094067263] m relative to logged target origin (inferred).",
+      "tracking_unavailable_reason": "Reference geometry reconstructed from b82e18d; exact flight table, command latency and playback phase are unverified.",
+      "notes": [
+        "constraint_active=0 disables dynamic-bound transmission; it does not disable the FPGA static box.",
+        "Source defaults H27/k9 and a 20-call reference divider at 1 kHz imply 20 ms playback samples, a 0.56 s entry prefix and a 25 s loop; exact flight timing remains unverified.",
+        "This is a conditional source-bound analysis, not confirmation of the exact paper-video take."
+      ],
+      "static_bounds": {
+        "x": [
+          -1.3535533905932737,
+          0.6464466094067263
+        ],
+        "y": [
+          -1.3535533905932737,
+          0.6464466094067263
+        ]
+      },
+      "reference": {
+        "file": "flight_metrics/star_reference_reconstructed.csv",
+        "sha256": "a244ba34595d1769bd8aa78479a863cebc1d79eedf14b14c2066a613dd71285b",
+        "timing": "unverified",
+        "frame": "relative_to_logged_target",
+        "description": "One 25 s geometric cycle at 20 ms spacing, before the source H+1=28 sample entry prefix. Used for XY overlay only."
+      }
+    }
+  ]
+}

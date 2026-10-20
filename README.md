@@ -4,6 +4,9 @@ This repository contains the FPGA implementation of an ADMM (Alternating Directi
 
 The project targets an AMD Xilinx Artix-7 100T FPGA and includes the HLS solver, the FPGA integration files, and support scripts used to build and program the design.
 
+Late-May flight metrics, bundled recordings and figure generation are documented
+in [the flight-metrics guide](paper_figures/FLIGHT_METRICS.md).
+
 ## Project Information
 
 This work was developed within the master's thesis:
