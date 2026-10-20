@@ -3,7 +3,7 @@
 
 Run from the repository root:
 
-    python paper_figures/plot_benchmarks.py
+    python evaluation/plot_benchmarks.py
 """
 
 from __future__ import annotations

@@ -1,6 +1,6 @@
 # Benchmarks and reproduction
 
-Start with the [results page](../paper_figures/README.md) to inspect the bundled
+Start with the [results page](../evaluation/README.md) to inspect the bundled
 measurements and regenerate figures without hardware. Use the [build environment](build.md)
 for new FPGA experiments. Run commands below from the repository root.
 
@@ -12,14 +12,12 @@ for new FPGA experiments. Run commands below from the repository root.
 | Summarize those implementation runs | `scripts/aggregate_max_horizon_results.py` | Recorded implementation outputs, NumPy/Matplotlib |
 | Measure Arty supply power | [Power campaign](power.md) | Arty A7-100T Rev E, Vivado and serial access |
 | Closed-loop behavior in simulation | `make hls_closed_loop_sim` | Vitis HLS and Python build dependencies |
-| Fixed/float/OSQP numerical accuracy | `paper_figures/numerical_accuracy.py` | Vitis headers, C++ compiler, build dependencies and OSQP |
-| Broader cold-start precision sweep | `benchmark_precision.py` | Vitis HLS, OSQP; see `--help` for worktree/parallel options |
+| Fixed/float/OSQP numerical accuracy | `evaluation/numerical_accuracy.py` | Vitis headers, C++ compiler, build dependencies and OSQP |
 | UART solver communication | `scripts/uart_solver_smoke_test.py` | Programmed Arty board and pyserial |
 
 The retained tuning and resource sweeps in `scripts/sweep_*.py` are exploratory
 workflows. Their `--help` describes each grid; they are not prerequisites for
-regenerating the published figures. Parallel precision workers use committed
-`HEAD`, so uncommitted changes are not automatically included.
+regenerating the published figures.
 
 ## Implement one point or a sweep
 
@@ -74,7 +72,7 @@ current implementation; regenerating the figures reproduces the stored analysis.
 |---|---|
 | Solver comparison | Bundled CSV; default plots compare 10 iterations, radar at H40 |
 | Maximum horizon | Bundled CSV; capacity experiment, separate from 1 kHz flight operation |
-| Constrained star | Historical source `b82e18d`, H27/k9 staged-A; flight association and timing limits are in the [flight guide](../paper_figures/FLIGHT_METRICS.md) |
+| Constrained star | Historical source `b82e18d`, H27/k9 staged-A; flight association and timing limits are in the [flight guide](flight-analysis.md) |
 | Dynamic obstacle demos | Historical sources `82c068a` (H40/k9) and `a0c021d` (H25/k9), full-sparse; exact flashed-image/log correspondence is not established |
 
 Inspect historical settings with `git show <revision>:scripts/parameters.py`.

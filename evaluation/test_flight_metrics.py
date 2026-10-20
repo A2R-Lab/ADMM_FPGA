@@ -1,6 +1,6 @@
 """Regression checks for flight coordinates, event timing and bundled metrics.
 
-Run: python3 -m unittest discover -s paper_figures -p test_flight_metrics.py
+Run: python3 -m unittest discover -s evaluation -p test_flight_metrics.py
 """
 import csv
 import hashlib

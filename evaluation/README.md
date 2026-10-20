@@ -1,4 +1,4 @@
-# Results and figures
+# Evaluation results
 
 These tables and previews are generated from the bundled benchmark/flight inputs
 and the numerical analysis described below. Full-resolution exports are generated
@@ -91,7 +91,7 @@ an inferred static-bound/source association. Dynamic values use the complete
 TAKE1 recording and last transmitted x bounds, not confirmed application times.
 RMS includes zero violations; percentages are sample-weighted with repeated
 motion-capture frames retained. These values do not measure obstacle clearance.
-See [flight methodology and limitations](FLIGHT_METRICS.md).
+See [flight methodology and limitations](../docs/flight-analysis.md).
 
 <!-- BEGIN GENERATED FLIGHTS -->
 
@@ -110,10 +110,10 @@ See [flight methodology and limitations](FLIGHT_METRICS.md).
 Run from the repository root in a Python 3.10–3.12 environment:
 
 ```bash
-python -m pip install -r paper_figures/requirements-flight.txt
-python paper_figures/plot_benchmarks.py
-python paper_figures/flight_metrics.py
-python paper_figures/make_top_side_frame_table.py
+python -m pip install numpy==1.26.4 matplotlib==3.10.1
+python evaluation/plot_benchmarks.py
+python evaluation/flight_metrics.py
+python evaluation/make_top_side_frame_table.py
 ```
 
 These commands use only bundled CSVs and panel images; no FPGA is required.
@@ -128,17 +128,17 @@ C++14 compiler, AMD's Vitis headers, and OSQP:
 ```bash
 python -m pip install osqp==0.6.7.post3
 HLS_INCLUDE=/path/to/Vitis/include OPENBLAS_NUM_THREADS=1 \
-  python paper_figures/numerical_accuracy.py --simulate
+  python evaluation/numerical_accuracy.py --simulate
 ```
 
-Subsequent `python paper_figures/numerical_accuracy.py` calls reuse the local
+Subsequent `python evaluation/numerical_accuracy.py` calls reuse the local
 `output/numerical.npz`; use `--simulate` after changing solver or model settings.
 The simulation writes a text report and convergence plot.
 
 After regenerating all analyses, refresh the tables and selected previews with:
 
 ```bash
-python paper_figures/summarize_results.py
+python evaluation/summarize_results.py
 ```
 
 This last command updates this page and `previews/` for review. It does not run
@@ -148,7 +148,7 @@ styles in the source scripts; exported figures should be regenerated.
 ## New power measurements
 
 The [Arty power campaign](../docs/power.md) measures core/BRAM and 5 V supply rails.
-Its results are separate from the historical power estimates above. No acquired
+Its results are separate from the power estimates above. No acquired
 campaign summary is bundled here; the guide describes acquisition, output fields
 and interpretation. Current runs and full implementation reports belong in ignored
 `results/` directories.
