@@ -20,3 +20,15 @@ python plot_benchmarks.py
 ```
 
 The script writes the benchmark latency/energy, EDP bar, solver radar, and figure-eight trajectory overlay figures to `output/` in SVG, PNG, and PDF formats.
+
+Late-May physical-flight metrics have a separate entry point:
+
+```bash
+python3 paper_figures/flight_metrics.py
+```
+
+See [FLIGHT_METRICS.md](FLIGHT_METRICS.md) for dependencies, data provenance,
+formulas and limitations. This writes a text/CSV report and PDF/PNG figures to
+`output/`. Experiment settings and new inputs are in `data/flight_metrics/`;
+TAKE1 shares the existing input in `data/top_side_frame_table/`. Keep Figure 7's
+March inputs and benchmark plotting behavior unchanged when editing these metrics.
