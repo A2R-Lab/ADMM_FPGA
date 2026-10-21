@@ -158,7 +158,7 @@ styles in the source scripts; exported figures should be regenerated.
 
 ## New power measurements
 
-The [Arty power campaign](../docs/power.md) measures core/BRAM and 5 V supply rails.
+The committed [Arty power measurements](../docs/power.md) report core/BRAM rail power.
 The [Arty power measurements CSV](data/arty_power_measurements.csv) contains the
 campaign summary for 42 planned configurations: 23 measured with three valid
 repetitions each and 19 marked pending.

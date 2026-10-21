@@ -60,27 +60,6 @@ with repeated `--run-dir`, a `--manual-scalability` CSV and an `--output` direct
 It writes canonical CSVs, figures and a short source/settings record. Its
 `--regenerate-only` option redraws figures from the exported CSVs.
 
-## Interpret and reproduce historical results
-
-The committed benchmark CSV preserves source revisions, working-tree status,
-implementation variants and timing failures. Several FPGA runs used modified
-working trees: the base commit alone cannot recreate those exact builds.
-TinyMPC rows do not record a matching source revision. A fresh build tests the
-current implementation; regenerating the figures reproduces the stored analysis.
-
-| Experiment | Configuration evidence |
-|---|---|
-| Solver comparison | Bundled CSV; default plots compare 10 iterations, radar at H40 |
-| Maximum horizon | Bundled CSV; capacity experiment, separate from 1 kHz flight operation |
-| Constrained star | Historical source `b82e18d`, H27/k9 staged-A; flight association and timing limits are in the [flight guide](flight-analysis.md) |
-| Dynamic obstacle demos | Historical sources `82c068a` (H40/k9) and `a0c021d` (H25/k9), full-sparse; exact flashed-image/log correspondence is not established |
-
-Inspect historical settings with `git show <revision>:scripts/parameters.py`.
-Current defaults should not be substituted for the named experiment settings.
-Matching firmware, PCB and TinyMPC revisions and acquisition settings are needed
-to repeat the complete physical comparison; companion repositories are linked
-from the root README.
-
 ## Energy and timing definitions
 
 FPGA solve latency is HLS cycle count divided by the configured clock (100 MHz
@@ -93,8 +72,7 @@ TinyMPC energy uses the stored MCU latency and the plotting default
 `0.087 A × 3.3 V = 0.2871 W`. This is an active-power estimate, not a direct
 MPC rail measurement. Energy is `P × t`; energy-delay product is `P × t²`.
 The plots compare computation-window energy under these different estimation
-methods. The separate [Arty campaign](power.md) reports measured rails and
-explicitly labelled corrections.
+methods. The separate [Arty campaign](power.md) reports core rail measurements.
 
 The feasibility table reserves 100 µs for FPGA communication within a 1 ms
 control period. A larger feasible horizon does not imply operation at 1 kHz.
