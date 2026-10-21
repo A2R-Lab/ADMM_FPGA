@@ -43,7 +43,13 @@ The maximum-horizon results describe capacity, not 1 kHz operation.
 
 ![Energy-delay product comparison](previews/benchmark_edp_bars.png)
 
-## Numerical accuracy
+## NumericFPGA latency is HLS cycles at 100 MHz, excluding communication. FPGA energy uses
+Vivado post-route power estimates; TinyMPC energy uses the stored MCU timings
+and a 287.1 mW active-power estimate. EDP is energy times solve delay. See
+[benchmark definitions and reproduction](../docs/benchmarking.md) for the power
+boundaries, 100 µs feasibility-table reserve, and historical source limitations.
+The maximum-horizon results describe capacity, not 1 kHz operation.
+al accuracy
 
 The current H27/k9 analysis uses the actual C++ solver and persistent warm starts.
 Independent fixed, float and OSQP closed-loop trajectories use a generated
@@ -71,13 +77,6 @@ Controller   Tracking RMSE (m)   Max XY-bound violation (m)
 
 ![Fixed and floating-point residuals by iteration](previews/numerical_convergence.png)
 
-The displayed numerical results come from the October 20, 2026 analysis run.
-Its cached C++ source hashes match this solver; the analysis and generator sources
-also match. The cache is an ignored local output; the command below recreates it.
-Zero sampled XY-bound violation does not imply exact QP feasibility,
-and these warm-start results do not establish general fixed-point convergence.
-Higher-iteration cold-start failures remain a separate numerical limitation.
-
 ## Recorded flights
 
 The figure-eight overlay uses the original March inputs and the plot script's
@@ -86,10 +85,9 @@ synchronized tracking-error measurement.
 
 ![Recorded figure-eight trajectories](previews/figure8_trajectory_overlay.png)
 
-The following late-May metrics quantify **position-constraint violation**, not
-tracking error. Star values use the larger of the x/y violations per sample and
-an inferred static-bound/source association. Dynamic values use the complete
-TAKE1 recording and last transmitted x bounds, not confirmed application times.
+The following metrics quantify **position-constraint violation**, not tracking
+error. Star values use the larger of the x/y violations per sample. Dynamic 
+values use the complete TAKE1 recording and last transmitted x bounds.
 RMS includes zero violations; percentages are sample-weighted with repeated
 motion-capture frames retained. These values do not measure obstacle clearance.
 See [flight methodology and limitations](../docs/flight-analysis.md).
@@ -149,7 +147,6 @@ styles in the source scripts; exported figures should be regenerated.
 ## New power measurements
 
 The [Arty power campaign](../docs/power.md) measures core/BRAM and 5 V supply rails.
-Its results are separate from the power estimates above. No acquired
-campaign summary is bundled here; the guide describes acquisition, output fields
-and interpretation. Current runs and full implementation reports belong in ignored
-`results/` directories.
+The [Arty power measurements CSV](data/arty_power_measurements.csv) contains the
+campaign summary for 42 planned configurations: 23 measured with three valid
+repetitions each and 19 marked pending.
