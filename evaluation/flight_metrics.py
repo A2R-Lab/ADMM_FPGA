@@ -18,7 +18,6 @@ DYNAMIC_FLIGHT = DATA / "top_side_frame_table/dynamic_obstacle_flight.csv"
 STAR_BOUNDS = (-1.3535533905932737, 0.6464466094067263)
 REFERENCE_DT = 0.02
 REFERENCE_PERIOD = 25.0
-# Previously fitted phase for constrained_star_flight.csv (equivalent to -0.657 s).
 STAR_PHASE_OFFSET_S = 24.343
 
 
@@ -53,6 +52,11 @@ def summarize(values: np.ndarray, times: np.ndarray) -> dict:
         "outside_percent": float(100 * np.mean(values > 0)),
         "max_violation_cm": float(100 * values[i]),
         "rms_violation_cm": float(100 * np.sqrt(np.mean(values**2))),
+        "mean_violation_cm": float(100 * np.mean(values)),
+        "std_violation_cm": float(100 * np.std(values)),
+        "p95_violation_cm": float(100 * np.percentile(values, 95)),
+        "p99_violation_cm": float(100 * np.percentile(values, 99)),
+        "within_1cm_percent": float(100 * np.mean(values <= 0.01)),
         "worst_elapsed_s": float(times[i]) if values[i] > 0 else None,
     }
 
@@ -267,6 +271,12 @@ def render_report(results: list[dict]) -> str:
         for axis, v in r["metrics"].items():
             lines.append(f"  {axis:<10} {v['samples']:>6}   {v['max_violation_cm']:>13.4f}"
                          f"   {v['rms_violation_cm']:>13.4f}   {v['outside_percent']:>11.3f}")
+        lines.append("  Distribution including zeros (cm; population standard deviation):")
+        for axis, v in r["metrics"].items():
+            lines.append(f"  {axis:<10} Mean {v['mean_violation_cm']:.4f}; std {v['std_violation_cm']:.4f}; "
+                         f"p95 {v['p95_violation_cm']:.4f}; p99 {v['p99_violation_cm']:.4f}; "
+                         f"inside {100 - v['outside_percent']:.2f}%; "
+                         f"violation <=1 cm {v['within_1cm_percent']:.2f}%")
         tr = r["tracking"]
         if tr:
             lines += [f"  Tracking: XY RMSE {tr['xy_rmse_cm']:.4f}; 3D RMSE {tr['rmse_cm']:.4f}; "
