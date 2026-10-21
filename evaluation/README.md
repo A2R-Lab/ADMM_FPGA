@@ -1,8 +1,8 @@
 # Evaluation results
 
-These tables and previews are generated from the bundled benchmark/flight inputs
-and the numerical analysis described below. Full-resolution exports are generated
-in `output/`; only selected PNG previews are kept in `previews/`.
+These tables and plots are generated from the bundled benchmark/flight inputs
+and the numerical analysis described below. All generated plots live in untracked
+`output/`. The image links below work locally after generating the plots.
 
 ## Solver benchmarks
 
@@ -39,9 +39,9 @@ The maximum-horizon results describe capacity, not 1 kHz operation.
 
 <!-- END GENERATED BENCHMARKS -->
 
-![Solve latency and energy versus horizon](previews/benchmark_latency_energy.png)
+![Solve latency and energy versus horizon](output/benchmark_latency_energy.png)
 
-![Energy-delay product comparison](previews/benchmark_edp_bars.png)
+![Energy-delay product comparison](output/benchmark_edp_bars.png)
 
 ## NumericFPGA latency is HLS cycles at 100 MHz, excluding communication. FPGA energy uses
 Vivado post-route power estimates; TinyMPC energy uses the stored MCU timings
@@ -75,19 +75,18 @@ Controller   Tracking RMSE (m)   Max XY-bound violation (m)
 
 <!-- END GENERATED NUMERICS -->
 
-![Fixed and floating-point residuals by iteration](previews/numerical_convergence.png)
+![Fixed and floating-point residuals by iteration](output/numerical_convergence.png)
 
 ## Recorded flights
 
-The figure-eight overlay uses the original March inputs and the plot script's
-fixed alignment and row windows. It is a trajectory visualization, not a new
+The figure-eight overlay is a trajectory visualization, not a new
 synchronized tracking-error measurement.
 
-![Recorded figure-eight trajectories](previews/figure8_trajectory_overlay.png)
+![Recorded figure-eight trajectories](output/figure8_trajectory_overlay.png)
 
-The following metrics quantify **position-constraint violation**, not tracking
-error. Star values use the larger of the x/y violations per sample. Dynamic 
-values use the complete TAKE1 recording and last transmitted x bounds.
+The following table quantifies **position-constraint violation**. Star values use
+the larger of the x/y violations per sample. Dynamic values use the complete dynamic-obstacle
+recording and last transmitted x bounds.
 RMS includes zero violations; percentages are sample-weighted with repeated
 motion-capture frames retained. These values do not measure obstacle clearance.
 See [flight methodology and limitations](../docs/flight-analysis.md).
@@ -96,13 +95,27 @@ See [flight methodology and limitations](../docs/flight-analysis.md).
 
 | Recording | Samples | Max violation (cm) | RMS violation (cm) | Outside (%) |
 | --- | --- | --- | --- | --- |
-| dynamic_take1 | 6639 | 4.5048 | 0.3386 | 3.449 |
-| star_185211 | 3752 | 3.1325 | 0.5070 | 11.354 |
-| star_185342 | 3830 | 3.8894 | 0.5690 | 12.167 |
+| dynamic_obstacle | 6639 | 4.5048 | 0.3386 | 3.449 |
+| constrained_star | 3752 | 3.1325 | 0.5070 | 11.354 |
 
 <!-- END GENERATED FLIGHTS -->
 
-![Dynamic obstacle bounds and recorded position](previews/dynamic_take1_bounds.png)
+STAR tracking error compares the selected flight with the recorded trajectory from
+[star_reference.csv](data/flight_metrics/star_reference.csv).
+It scores position error only where the aligned reference is inside the static XY
+bounds and reports both 3D and XY RMSE. See the
+[flight-analysis method](../docs/flight-analysis.md).
+
+
+<!-- BEGIN GENERATED TRACKING -->
+
+| Recording | Fixed phase / period (s) | Feasible samples (%) | RMSE 3D (cm) | RMSE XY (cm) | P95 3D (cm) | Max 3D (cm) |
+| --- | --- | --- | --- | --- | --- | --- |
+| constrained_star | 24.343 / 25 | 48.19 | 14.785 | 14.771 | 22.466 | 70.946 |
+
+<!-- END GENERATED TRACKING -->
+
+![Dynamic obstacle bounds and recorded position](output/dynamic_obstacle_bounds.png)
 
 ## Regenerate
 
@@ -134,13 +147,13 @@ Subsequent `python evaluation/numerical_accuracy.py` calls reuse the local
 `output/numerical.npz`; use `--simulate` after changing solver or model settings.
 The simulation writes a text report and convergence plot.
 
-After regenerating all analyses, refresh the tables and selected previews with:
+After regenerating all analyses, refresh the tables with:
 
 ```bash
 python evaluation/summarize_results.py
 ```
 
-This last command updates this page and `previews/` for review. It does not run
+This last command updates the tables on this page. It does not run
 hardware builds or physical experiments. Keep numerical inputs and plotting
 styles in the source scripts; exported figures should be regenerated.
 

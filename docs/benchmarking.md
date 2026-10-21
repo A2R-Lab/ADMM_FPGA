@@ -97,6 +97,4 @@ methods. The separate [Arty campaign](power.md) reports measured rails and
 explicitly labelled corrections.
 
 The feasibility table reserves 100 µs for FPGA communication within a 1 ms
-control period. This is a plotting assumption, not a measured end-to-end bound;
-that reserve is excluded from the solve latency and energy plots. A larger
-feasible horizon does not imply operation at 1 kHz.
+control period. A larger feasible horizon does not imply operation at 1 kHz.

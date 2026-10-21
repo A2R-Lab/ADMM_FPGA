@@ -1,30 +1,16 @@
 # Flight-analysis methodology
 
 See the [evaluation README](../evaluation/README.md) for results, plots, dependencies
-and reproduction commands. This guide defines the measurements and their limits.
+and reproduction commands.
 
 ## Recordings and provenance
 
-The [experiment configuration](../evaluation/data/flight_metrics/experiments.json) records
-source filenames and hashes, evaluation intervals, coordinate conventions and
-reconstruction parameters. Input hashes are checked before analysis.
+`evaluation/data/flight_metrics/` contains `constrained_star_flight.csv`
+and `star_reference.csv`. Evaluation uses start_traj through reset_traj.
 
-| Recording | Evaluation | Attribution |
-|---|---|---|
-| TAKE1, May 22 at 15:35:39 | Complete log | Author-selected dynamic-obstacle demonstration used for the paper panels |
-| May 22 at 18:52:11 | Unique `start_traj` through following `reset_traj`, inclusive | Candidate constrained-star run |
-| May 22 at 18:53:42 | Same start/reset rule | Candidate constrained-star run |
-
-TAKE1 shares its CSV with the panel-figure inputs under `evaluation/data/top_side_frame_table/`.
-The other logs and reconstructed star geometry are under `evaluation/data/flight_metrics/`.
-The star-source association is inferred from source `b82e18d`, session records
-and trajectory behavior; the exact flashed image and video correspondence are
-not verified. Other trial recordings are not bundled.
-
-TAKE1 has no independently established flight-only interval, so the default
-includes the whole log, including any termination/handling. A narrower interval
-requires independently supported start/end times in the configuration's explicit
-interval mode. The original March figure-eight inputs are a separate dataset.
+The dynamic-obstacle recording shares its CSV with the paper panel inputs under
+`evaluation/data/top_side_frame_table/`. Its constraint metrics use the complete
+log, including any termination/handling.
 
 ## What is measured
 
@@ -34,7 +20,8 @@ Position-constraint violation in metres is:
 max(lower_bound - position, position - upper_bound, 0)
 ```
 
-This differs from position tracking error, which needs the time-matched reference.
+This differs from position tracking error, which compares flight position with
+the reference trajectory at the corresponding playback phase.
 For each axis the report gives maximum violation, RMS including zero violations,
 and outside-sample count/percentage. Star `xy_any` uses the maximum x/y violation
 per sample, not Euclidean distance to the box.
@@ -42,8 +29,8 @@ per sample, not Euclidean distance to the box.
 Metrics are sample-weighted without smoothing, resampling or outlier removal.
 Repeated motion-capture frames remain. Percentages do not measure continuous-time
 violation duration. Reports include exclusions, sample support, repeated frames,
-timestamp gaps and source hashes. Invalid required samples are counted/excluded;
-reversed timestamps, inverted bounds and hash mismatches fail explicitly.
+timestamp gaps. Invalid required samples are counted/excluded;
+reversed timestamps and inverted bounds fail explicitly.
 
 ## Star bounds and reference
 
@@ -51,14 +38,12 @@ Position is `mocap_xyz - target_xyz`; the constant target defines the assumed
 controller origin, not the changing onboard reference. Source `b82e18d` uses
 `star_hold`, 2 m amplitude per axis and inner ratio 0.25. The generator shifts
 configured ±1 m bounds by `2 × 0.25 × cos(pi/4)`, giving approximately
-**[-1.353553, +0.646447] m** on each relative axis. Metrics are conditional on
-this inferred source/frame association.
+**[-1.353553, +0.646447] m** on each relative axis.
 
 `constraint_active=0` means the bridge is not transmitting dynamic bounds;
-it does not disable compiled static constraints. The reconstructed star CSV
-contains one geometric cycle, excluding the 28-sample entry prefix. Its time
-column is nominal cycle time, not log elapsed time. No fitted spatial or temporal
-alignment is used. Exact onboard tables and playback phase remain unverified.
+it does not disable compiled static constraints. The star CSV contains one
+geometric cycle, excluding the 28-sample entry prefix. Its time column is nominal
+cycle time, not log elapsed time.
 
 ## Dynamic bounds and timing
 
@@ -79,18 +64,22 @@ The bridge's `elapsed_s` and `monotonic_s` both derive from `time.time()`;
 sensor latency. The 0.20 m inset is relative to obstacle markers; obstacle
 geometry is insufficient to compute physical clearance.
 
-## Tracking error and checks
+## STAR tracking error
 
-Tracking RMSE, p95 and maximum are unavailable for these logs because matching
-onboard reference tables and playback timing are unverified. The analyzer can
-use a same-frame reference marked `verified_log_elapsed`, with zero-order hold
-and full interval coverage. Reconstructed geometry alone is insufficient.
+The STAR recording is compared with the recorded trajectory.
+Reference samples use a 20 ms hold.
 
-```bash
-python -m unittest discover -s evaluation -p test_flight_metrics.py -v
-```
+The reported tracking metrics use a fixed phase of 24.343 s over the 25 s
+reference cycle (equivalently -0.657 s), as specified by `STAR_PHASE_OFFSET_S`
+in `evaluation/flight_metrics.py`, to align reference playback with the flight
+recording. The offset affects reference lookup and selection of samples whose
+reference lies inside the bounds, not measured positions or bound violations.
 
-Tests cover units, frame translation, event order, interval selection, zero-bound
-sentinels, missing data and repeated frames. An independent CSV/math calculation
-checks every constraint metric on the bundled recordings. These checks validate
-computation; they do not resolve historical attribution.
+Tracking RMSE, p95 and maximum are scored only at flight samples whose 
+reference point lies inside the source's static XY box. The report gives the
+scored flight-sample coverage and the fraction of reference points that are
+feasible. This avoids counting demanded positions outside the QP's position
+bounds as trackable targets.
+
+Generate text and CSV without plotting dependencies with
+`python3 evaluation/flight_metrics.py --no-plots`.

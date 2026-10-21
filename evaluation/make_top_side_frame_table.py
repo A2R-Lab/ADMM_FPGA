@@ -53,7 +53,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--log",
-        default=str(DATA_DIR / "TAKE1fpga_bridge_log_20260522_153539.csv"),
+        default=str(DATA_DIR / "dynamic_obstacle_flight.csv"),
         help="CSV log with mocap data.",
     )
     parser.add_argument(

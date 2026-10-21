@@ -14,7 +14,7 @@
   "metadata": {
     "top_video": "output.mp4",
     "side_video": "IMG_1630 (1).MOV",
-    "log": "TAKE1fpga_bridge_log_20260522_153539.csv",
+    "log": "dynamic_obstacle_flight.csv",
     "calibration_image": "calibration_motion.png",
     "top_start_s": 104.0,
     "duration_s": 5,
