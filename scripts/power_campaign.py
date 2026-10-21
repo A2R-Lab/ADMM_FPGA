@@ -28,9 +28,6 @@ import uuid
 ROOT = Path(__file__).resolve().parents[1]
 GIB = 1024**3
 SMOKE = ('full_sparse_h20_k10', 'staged_a_h20_k10')
-MODEL = {'id': 'core-plus-32mw-times-0.8-v1', 'auxiliary_w': 0.032,
-         'retained_fraction': 0.8, 'label': 'measurement-based corrected FPGA power/energy',
-         'vccadc_included': False}
 GENERATED = {'data.h', 'admm_runtime_config.h', 'traj_data.h', 'traj_data_raw.h',
              'trajectory_refs.csv', 'admm_autogen_params.vh'}
 CAMPAIGN_SCRIPTS = (
@@ -160,7 +157,7 @@ def prepare(args):
     hashes = {str(p.relative_to(ROOT)): sha(p) for p in files}
     payload = {'schema': 1, 'source_hashes': hashes,
                'points': matrix(ROOT / 'evaluation/data/benchmark_summary.csv'),
-               'correction': MODEL, 'clock_hz': 100_000_000, 'trajectory': False,
+               'clock_hz': 100_000_000, 'trajectory': False,
                'workload_records': 256, 'repetitions': 3, 'settle_s': 5,
                'idle_s': 3, 'target_active_s': 2, 'minimum_solves': 1024,
                'smoke_ids': list(SMOKE), 'parameter_policy': 'frozen source defaults; sanitized environment'}
@@ -410,13 +407,6 @@ def build(args):
                     print(f'{p["id"]}: runner failure: {exc}', flush=True)
 
 
-def corrected(core_energy, duration, count):
-    if duration <= 0 or count <= 0:
-        raise ValueError('Positive duration and completed count required')
-    energy = MODEL['retained_fraction']*(core_energy+MODEL['auxiliary_w']*duration)
-    return energy/duration, energy/count
-
-
 def solve_count(latency_cycles, clock_hz=100_000_000):
     if latency_cycles <= 0:
         raise ValueError('Invalid pilot latency')
@@ -573,8 +563,7 @@ def aggregate(args):
         pid=p['id']
         row={k:p[k] for k in ('id','arch','horizon','iterations')}
         state=args.campaign/'state'/(pid+'.json')
-        row.update(campaign_id=m['campaign_id'],status=read(state)['status'] if state.exists() else 'pending',
-                   correction_model=MODEL['id'])
+        row.update(campaign_id=m['campaign_id'],status=read(state)['status'] if state.exists() else 'pending')
         if state.exists():
             row['failed_stage']=read(state).get('stage','')
         bundle=args.campaign/'ready'/pid
@@ -605,10 +594,8 @@ def aggregate(args):
                         if r['status']['latency_max'] != pilot['status']['latency_max']:
                             raise ValueError('Pilot/repetition latency mismatch')
                         rail=r['summary']['rails']['core']
-                        power,energy=corrected(rail['active']['energy_j'],rail['active']['duration_s'],count)
-                        runs.append({'raw_core_w':rail['active']['power_w'], 'corrected_power_w':power,
+                        runs.append({'raw_core_w':rail['active']['power_w'],
                                      'raw_core_energy_uj':rail['energy_per_solve_j']*1e6,
-                                     'corrected_energy_uj':energy*1e6,
                                      'incremental_core_energy_uj':rail['incremental_energy_per_solve_j']*1e6,
                                      'five_w':r['summary']['rails']['five']['active']['power_w'],
                                      'latency_us':r['status']['latency_total']/count/r['clock_hz']*1e6,

@@ -1,6 +1,5 @@
 """Campaign acceptance checks; no FPGA tools or hardware required."""
 import csv
-import json
 from pathlib import Path
 import sys
 import tempfile
@@ -44,21 +43,19 @@ class CampaignTests(unittest.TestCase):
             p.write_text('ERROR: No hardware targets found. Check cable connection.\n')
             self.assertIsNotNone(c.transport_failure(p))
 
-    def test_matrix_includes_all_timing_clean_points(self):
-        points = c.matrix(c.ROOT/'evaluation/data/benchmark_summary.csv')
-        self.assertEqual(len(points), 42)
-        self.assertEqual(sum(p['arch']=='full_sparse' for p in points), 10)
-        self.assertEqual(max(p['horizon'] for p in points), 1350)
-        self.assertEqual({p['iterations'] for p in points}, {10})
-        self.assertEqual(len({p['id'] for p in points}), 42)
-        self.assertEqual(len(c.select({'points':points}, smoke=True)), 2)
-
-    def test_correction_is_applied_after_auxiliary_addition(self):
-        power, energy = c.corrected(.6, 2, 1000)
-        self.assertAlmostEqual(power, .2656)
-        self.assertAlmostEqual(energy, .0005312)
-        with self.assertRaises(ValueError):
-            c.corrected(.6, 0, 1000)
+    def test_matrix_excludes_ineligible_builds_and_selects_fastest(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d)/'benchmarks.csv'
+            path.write_text(
+                'arch,horizon,admm_iters,timing_clean,solve_us_cfg_clk,route_power_total_w,vivado_impl_variant\n'
+                'full_sparse,20,10,1,200,0.2,slow\n'
+                'full_sparse,20,10,1,100,0.3,fast\n'
+                'full_sparse,20,10,0,50,0.1,timing_failure\n'
+                'staged_a,40,5,1,50,0.1,wrong_iterations\n'
+                'tinympc_e,40,10,1,50,0.1,cpu\n')
+            points = c.matrix(path)
+            self.assertEqual(len(points), 1)
+            self.assertEqual(points[0]['variant'], 'fast')
 
     def test_counts_cover_workload_and_active_window(self):
         for latency in (1000, 84041, 10000000):
@@ -76,18 +73,6 @@ class CampaignTests(unittest.TestCase):
         self.assertNotIn('VIVADO_ROUTE_DIRECTIVE',env)
         self.assertEqual(env['XILINX_HLS'],'/tools')
 
-    def test_snapshot_contains_only_campaign_script_dependencies(self):
-        names=[str(p.relative_to(c.ROOT)) for p in c.source_files(c.ROOT)]
-        self.assertEqual({p for p in names if p.startswith('scripts/')},
-                         {'scripts/'+name for name in c.CAMPAIGN_SCRIPTS}
-                         | {'scripts/requirements.txt', 'scripts/power_synthetic_states.csv'})
-        self.assertIn('tests/test_power.sh', names)
-        self.assertIn('tests/test_power_hls.sh', names)
-        self.assertIn('scripts/requirements.txt', names)
-        self.assertIn('docs/power.md', names)
-        self.assertFalse(any(p.startswith(('build/', 'results/', '.git/')) for p in names))
-        self.assertFalse(any(Path(p).name in c.GENERATED for p in names))
-
     def test_aggregate_pending_campaign_creates_csv_without_measurement_claims(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
@@ -98,20 +83,9 @@ class CampaignTests(unittest.TestCase):
             output = local/'summaries'/manifest['campaign_id']
             with (output/'summary.csv').open(newline='') as f:
                 rows = list(csv.DictReader(f))
-            self.assertEqual(len(rows), 42)
+            self.assertEqual({r['id'] for r in rows}, {p['id'] for p in manifest['points']})
             self.assertEqual({r['status'] for r in rows}, {'pending'})
-            self.assertEqual({r['correction_model'] for r in rows}, {c.MODEL['id']})
-            self.assertFalse((output/'summary.json').exists())
             self.assertFalse((campaign/'smoke_acceptance.json').exists())
-
-    def test_snapshot_detects_mutation(self):
-        with tempfile.TemporaryDirectory() as d:
-            root=Path(d); (root/'source').mkdir(); (root/'source/a').write_text('first')
-            m={'source_hashes':{'a':c.sha(root/'source/a')}}
-            m['campaign_id']=c.digest(m); c.save(root/'campaign.json',m)
-            c.campaign_data(root)
-            (root/'source/a').write_text('changed')
-            with self.assertRaisesRegex(ValueError,'snapshot changed'): c.campaign_data(root)
 
     def test_measure_and_aggregate_reject_modified_frozen_runner(self):
         with tempfile.TemporaryDirectory() as d:

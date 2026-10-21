@@ -122,7 +122,6 @@ mean/sample standard deviation/minimum/maximum of the measured quantities.
 | `five_w` | Active monitored 5 V supply power, in watts |
 | `latency_us` | Solver latency, in microseconds |
 | `temperature_drift_c` | Change between the two idle-window temperatures |
-| `corrected_power_w`, `corrected_energy_uj` | Estimates from the fixed correction model below |
 
 Look for `status=measured` and `valid_repetitions=3`. A finished command does not imply
 all configurations passed. Pending, build-failed, and incomplete measurements remain
@@ -136,8 +135,8 @@ with the exported summaries: generated results are not committed to Git.
 
 The October 2026 campaign summary is committed as
 [`evaluation/data/arty_power_measurements.csv`](../evaluation/data/arty_power_measurements.csv).
-It includes all planned configurations, with pending rows retained. Raw traces,
-acquisition metadata, and full build products remain in local `results/` directories.
+It contains core/BRAM measurements for all planned configurations, with pending rows
+retained.
 
 Core/BRAM and monitored 5 V power have different boundaries. The 5 V reading includes
 other board loads and conversion losses. Both include the measurement instrumentation.
@@ -146,16 +145,6 @@ for batch averages. The 2,048-record trace buffer progressively merges bins whil
 preserving sums and durations, so longer runs have coarser time resolution. Scaling
 uses nominal board values without external calibration. Repetition spread measures
 repeatability, not absolute measurement accuracy.
-
-The summary also reports:
-
-```text
-corrected_power_W = 0.8 * (active_core_energy_J / active_seconds + 0.032)
-corrected_energy_J_per_solve = 0.8 * (active_core_energy_J + 0.032 * active_seconds) / completed_solves
-```
-
-The 32 mW term is an auxiliary-power allowance excluding VCCADC; the factor 0.8
-is a measurement instrumentation adjustment based on Vivado estimate.
 
 ## Code and validation
 
