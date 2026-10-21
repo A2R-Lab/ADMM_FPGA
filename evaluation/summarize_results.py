@@ -50,6 +50,14 @@ def main():
           f'{float(r["rms_violation_cm"]):.4f}', f'{float(r["outside_percent"]):.3f}')
          for r in flight],
     )
+    flights += "\n\n" + table(
+        ["Recording", "Inside bounds (%)", "Violation ≤1 cm (%)", "Mean (cm)", "Std (cm)", "P95 (cm)", "P99 (cm)"],
+        [(r["recording"], f'{100 - float(r["outside_percent"]):.2f}',
+          f'{float(r["within_1cm_percent"]):.2f}',
+          *(f'{float(r[key]):.4f}' for key in (
+              "mean_violation_cm", "std_violation_cm", "p95_violation_cm", "p99_violation_cm")))
+         for r in flight],
+    )
     tracking = [r for r in load_rows(OUTPUT_DIR / "flight_metrics.csv")
                 if r["experiment"] == "star" and r["axis"] == "xy_any"
                 and r.get("tracking_rmse_cm", "")]

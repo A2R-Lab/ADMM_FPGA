@@ -91,12 +91,21 @@ RMS includes zero violations; percentages are sample-weighted with repeated
 motion-capture frames retained. These values do not measure obstacle clearance.
 See [flight methodology and limitations](../docs/flight-analysis.md).
 
+The distribution statistics include zero violations; standard deviation is over
+the full evaluated population. “Violation ≤1 cm” includes samples inside the
+bounds. These are percentages of logged samples, not continuous-time durations.
+
 <!-- BEGIN GENERATED FLIGHTS -->
 
 | Recording | Samples | Max violation (cm) | RMS violation (cm) | Outside (%) |
 | --- | --- | --- | --- | --- |
 | dynamic_obstacle | 6639 | 4.5048 | 0.3386 | 3.449 |
 | constrained_star | 3752 | 3.1325 | 0.5070 | 11.354 |
+
+| Recording | Inside bounds (%) | Violation ≤1 cm (%) | Mean (cm) | Std (cm) | P95 (cm) | P99 (cm) |
+| --- | --- | --- | --- | --- | --- | --- |
+| dynamic_obstacle | 96.55 | 97.97 | 0.0502 | 0.3348 | 0.0000 | 2.0244 |
+| constrained_star | 88.65 | 94.03 | 0.1417 | 0.4868 | 1.2276 | 2.6178 |
 
 <!-- END GENERATED FLIGHTS -->
 
