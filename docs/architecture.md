@@ -7,6 +7,9 @@ commands. See the [paper](https://arxiv.org/abs/2609.09380) for the formulation.
 
 ## Follow the implementation
 
+For the equations, offline factorization and a step-by-step runtime explanation,
+read [How one FPGA solve works](solver-walkthrough.md).
+
 | Stage | Source | Role |
 |---|---|---|
 | Model and settings | [parameters.py](../scripts/parameters.py), [crazyloihimodel.py](../scripts/crazyloihimodel.py) | Horizon, costs, bounds, dynamics and trajectory settings |

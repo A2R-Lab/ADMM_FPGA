@@ -8,6 +8,7 @@ on the custom Crazyflie FPGA deck or an Arty A7 development board.
 **[Evaluation results](evaluation/README.md)** ·
 **[Build and program](docs/build.md)** ·
 **[Design and interfaces](docs/architecture.md)** ·
+**[Solver walkthrough](docs/solver-walkthrough.md)** ·
 **[Run benchmarks](docs/benchmarking.md)** ·
 **[Measure power](docs/power.md)**
 

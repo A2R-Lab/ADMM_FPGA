@@ -12,7 +12,6 @@ from pathlib import Path
 
 ALL_FIELDS = [
     "campaign",
-    "source_summary",
     "slug",
     "arch",
     "horizon",
@@ -56,9 +55,6 @@ ALL_FIELDS = [
     "vivado_impl_variant",
     "vivado_place_seed",
     "vivado_route_seed",
-    "git_head",
-    "git_status_short",
-    "point_dir",
 ]
 
 
@@ -88,7 +84,6 @@ BEST_FIELDS = [
     "tinympc_other",
     "campaign",
     "slug",
-    "source_summary",
 ]
 
 
@@ -129,7 +124,6 @@ def read_summary(path: Path) -> list[dict[str, str]]:
             out.update(
                 {
                     "campaign": campaign,
-                    "source_summary": str(path),
                     "timing_clean": "1" if timing_clean(row) else "0",
                     "solve_us_per_iter_cfg_clk": compact(solve_us / iters) if iters > 0 else "",
                     "hls_latency_cycles_per_iter": compact(cycles / iters) if iters > 0 else "",
@@ -169,7 +163,6 @@ def read_tinympc(path: Path) -> list[dict[str, str]]:
         out.update(
             {
                 "campaign": "tinympc",
-                "source_summary": str(path),
                 "slug": f"tinympc_e_h{horizon}_k{iters}",
                 "arch": "tinympc_e",
                 "horizon": horizon,
