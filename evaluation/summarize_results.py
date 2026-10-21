@@ -1,18 +1,10 @@
 #!/usr/bin/env python3
-"""Refresh the results-page tables and selected previews after regenerating analyses."""
-import shutil
+"""Refresh the results-page tables after regenerating analyses."""
 
 from plot_benchmarks import (
     HERE, OUTPUT_DIR, BENCHMARK_SUMMARY_CSV, LABELS, DEFAULT_TINYMPC_POWER_W,
     load_rows, best_rows, f, energy_mj, edp_uj_us,
 )
-
-PREVIEWS = (
-    "benchmark_latency_energy.png", "benchmark_edp_bars.png",
-    "figure8_trajectory_overlay.png", "dynamic_take1_bounds.png",
-    "numerical_convergence.png",
-)
-
 
 def table(headers, rows):
     return "\n".join([
@@ -23,8 +15,7 @@ def table(headers, rows):
 
 
 def main():
-    required = [OUTPUT_DIR / name for name in PREVIEWS]
-    required += [OUTPUT_DIR / "flight_metrics.csv", OUTPUT_DIR / "numerical_accuracy.txt"]
+    required = [OUTPUT_DIR / "flight_metrics.csv", OUTPUT_DIR / "numerical_accuracy.txt"]
     missing = [str(p) for p in required if not p.is_file()]
     if missing:
         raise SystemExit("Regenerate the analyses first; missing:\n" + "\n".join(missing))
@@ -59,8 +50,21 @@ def main():
           f'{float(r["rms_violation_cm"]):.4f}', f'{float(r["outside_percent"]):.3f}')
          for r in flight],
     )
+    tracking = [r for r in load_rows(OUTPUT_DIR / "flight_metrics.csv")
+                if r["experiment"] == "star" and r["axis"] == "xy_any"
+                and r.get("tracking_rmse_cm", "")]
+    tracking_table = table(
+        ["Recording", "Fixed phase / period (s)", "Feasible samples (%)", "RMSE 3D (cm)", "RMSE XY (cm)", "P95 3D (cm)", "Max 3D (cm)"],
+        [(r["recording"], f'{float(r["tracking_phase_offset_s"]):.3f} / {float(r["tracking_period_s"]):g}',
+          f'{float(r["tracking_coverage_percent"]):.2f}',
+          f'{float(r["tracking_rmse_cm"]):.3f}',
+          f'{float(r["tracking_xy_rmse_cm"]):.3f}',
+          f'{float(r["tracking_p95_cm"]):.3f}',
+          f'{float(r["tracking_max_cm"]):.3f}') for r in tracking],
+    )
     numerical = (OUTPUT_DIR / "numerical_accuracy.txt").read_text().split("\nPlot:", 1)[0].strip()
     sections = {"BENCHMARKS": benchmark, "FLIGHTS": flights,
+                "TRACKING": tracking_table,
                 "NUMERICS": "```text\n" + numerical + "\n```"}
     page = HERE / "README.md"
     text = page.read_text()
@@ -70,11 +74,7 @@ def main():
         _, after = rest.split(end)
         text = before + start + "\n\n" + body + "\n\n" + end + after
     page.write_text(text)
-    previews = HERE / "previews"
-    previews.mkdir(exist_ok=True)
-    for name in PREVIEWS:
-        shutil.copyfile(OUTPUT_DIR / name, previews / name)
-    print(f"Updated {page} and {len(PREVIEWS)} previews.")
+    print(f"Updated {page}.")
 
 
 if __name__ == "__main__":
