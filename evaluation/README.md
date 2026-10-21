@@ -55,16 +55,23 @@ Independent fixed, float and OSQP closed-loop trajectories use a generated
 figure-eight and nonlinear plant. The command-error comparison instead replays
 identical fixed-rollout inputs through float and OSQP, avoiding trajectory
 feedback differences. These are reconstructed simulations, separate from flights.
+All three command-error comparisons use the same 25,600 control instants.
+Each error is the maximum absolute difference across the
+four motor commands.
 
 <!-- BEGIN GENERATED NUMERICS -->
 
 ```text
 H27 / 9 iterations / figure-eight / persistent warm start
 
-First-command error, p95 (normalized motor units; 257 identical-input samples):
-  fixed–float: 4.73499e-05
-  fixed–OSQP: 0.00450374
-  float–OSQP: 0.00447495
+First-command error distribution (normalized motor units):
+Per-instant error = max absolute difference across the four motor commands.
+Inputs match across solvers at each instant; instants come from one trajectory.
+Std is population standard deviation; percentiles use linear interpolation.
+Comparison       Samples          Min         Mean          Std       Median          P95          P99          Max
+  fixed–float     25600  5.96046e-08  1.85024e-05  1.36375e-05   1.4782e-05  4.72665e-05  4.95911e-05   5.1856e-05
+  fixed–OSQP      25600  6.27034e-08  0.000774416  0.000725098  0.000610885   0.00221414   0.00354063   0.00518347
+  float–OSQP      25600  3.09876e-09  0.000764815  0.000720861  0.000600955   0.00219602   0.00351816   0.00515903
 
 Controller   Tracking RMSE (m)   Max XY-bound violation (m)
   fixed      0.05672986          0
@@ -168,7 +175,10 @@ HLS_INCLUDE=/path/to/Vitis/include OPENBLAS_NUM_THREADS=1 \
 
 Subsequent `python evaluation/numerical_accuracy.py` calls reuse the local
 `output/numerical.npz`; use `--simulate` after changing solver or model settings.
-The simulation writes a text report and convergence plot.
+The simulation writes a text report and convergence plot, plus
+`output/numerical_command_distribution.csv` with distribution statistics and
+`output/numerical_command_errors.csv` with per-instant errors and zero-based
+control-step indices. These outputs can also be regenerated from the cache.
 
 After regenerating all analyses, refresh the tables with:
 
