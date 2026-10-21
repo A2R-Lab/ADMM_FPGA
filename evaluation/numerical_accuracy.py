@@ -5,6 +5,10 @@
 
 Runs the simulations on first use; caches results in ignored output/numerical.npz.
 Writes output/numerical_accuracy.txt and output/numerical_convergence.{pdf,png}.
+Also writes numerical_command_distribution.csv (summary statistics) and
+numerical_command_errors.csv (per-instant errors). Fixed–float uses all 25,600
+instants; new OSQP replays also use all instants. Older caches retain their
+original OSQP sample count until refreshed with --replay-osqp.
 Subsequent runs regenerate the numbers/plot from that local cache.
 
 First run, or to rerun all simulations:
@@ -18,6 +22,7 @@ Dependencies: numpy, matplotlib; simulation also needs scipy, osqp, autograd,
 scikit-sparse/SuiteSparse, g++, and Vitis headers.
 """
 import argparse
+import csv
 import json
 import os
 from pathlib import Path
@@ -190,6 +195,71 @@ np.savez('problem.npz', P=g.P_sparse.toarray(), A=g.A_full.toarray(),
     return d
 
 
+def osqp_reference(d):
+    """Construct the same reference QP for replay and closed-loop evaluation."""
+    import osqp
+    from scipy import sparse
+
+    solver = osqp.OSQP()
+    solver.setup(P=sparse.csc_matrix(d["P"]), A=sparse.csc_matrix(d["A"]),
+                 q=np.zeros(len(d["P"])), l=d["l"], u=d["u"],
+                 eps_abs=1e-7, eps_rel=1e-7, max_iter=100000, polish=True, verbose=False)
+
+    def reference(state, index, float_interface=False):
+        q = np.zeros(len(d["P"]))
+        values = np.round(d["q"][index:index+28], 8)
+        if float_interface:
+            values = values.astype(np.float32).astype(float)
+            state = state.astype(np.float32).astype(float)
+        for k in range(28):
+            q[k*16:k*16+3] = values[k]
+        lo, hi = d["l"].copy(), d["u"].copy()
+        lo[:12] = hi[:12] = state
+        solver.update(q=q, l=lo, u=hi)
+        r = solver.solve()
+        if r.info.status_val != 1:
+            raise RuntimeError(f"OSQP reference failed: {r.info.status}")
+        residuals = [getattr(r.info, "prim_res", getattr(r.info, "pri_res", np.nan)),
+                     getattr(r.info, "dual_res", getattr(r.info, "dua_res", np.nan))]
+        return r.x[12:16], residuals
+
+    return solver, reference
+
+
+def replay_osqp(d):
+    """Evaluate every cached fixed-rollout input without rerunning the plant."""
+    import time
+    import osqp
+
+    _, reference = osqp_reference(d)
+    steps = np.arange(len(d["state"]))
+    commands, residuals = [], []
+    started = time.monotonic()
+    for step in steps:
+        u, residual = reference(d["state"][step], d["reference_index"][step])
+        if not np.isfinite(u).all() or not np.isfinite(residual).all():
+            raise RuntimeError(f"Non-finite OSQP replay result at step {step}")
+        commands.append(u + HOVER)
+        residuals.append(residual)
+        if (step + 1) % 1000 == 0 or step + 1 == len(steps):
+            print(f"OSQP replay: {step+1}/{len(steps)} "
+                  f"({time.monotonic()-started:.1f} s)", flush=True)
+    d["osqp_steps"], d["osqp_command"] = steps, np.array(commands)
+    d["osqp_reference_residuals"] = np.array(residuals)
+    settings = json.loads(str(d["settings"]))
+    settings["osqp_replay"] = dict(samples=len(steps), osqp=osqp.__version__,
+        numpy=np.__version__, eps_abs=1e-7, eps_rel=1e-7, max_iter=100000,
+        polish=True, elapsed_seconds=time.monotonic()-started)
+    d["settings"] = json.dumps(settings, indent=2)
+
+
+def save_cache(d):
+    OUT.mkdir(exist_ok=True)
+    temporary = DATA.with_suffix(".partial.npz")
+    np.savez_compressed(temporary, **d)
+    temporary.replace(DATA)
+
+
 def simulate(d, include):
     import ctypes
     import hashlib
@@ -197,7 +267,6 @@ def simulate(d, include):
     import subprocess
     import tempfile
     import osqp
-    from scipy import sparse
 
     if not include:
         raise SystemExit("--simulate requires HLS_INCLUDE=/path/to/Vitis/include")
@@ -230,37 +299,9 @@ def simulate(d, include):
         np.testing.assert_array_equal(replay[0], d["command_float"][0])
         d["replay_float"] = replay
 
-        solver = osqp.OSQP()
-        solver.setup(P=sparse.csc_matrix(d["P"]), A=sparse.csc_matrix(d["A"]),
-                     q=np.zeros(len(d["P"])), l=d["l"], u=d["u"],
-                     eps_abs=1e-7, eps_rel=1e-7, max_iter=100000, polish=True, verbose=False)
-
-        def reference(state, index, float_interface=False):
-            q = np.zeros(len(d["P"]))
-            values = np.round(d["q"][index:index+28], 8)
-            if float_interface:
-                values = values.astype(np.float32).astype(float)
-                state = state.astype(np.float32).astype(float)
-            for k in range(28):
-                q[k*16:k*16+3] = values[k]
-            lo, hi = d["l"].copy(), d["u"].copy()
-            lo[:12] = hi[:12] = state
-            solver.update(q=q, l=lo, u=hi)
-            r = solver.solve()
-            if r.info.status_val != 1:
-                raise RuntimeError(f"OSQP reference failed: {r.info.status}")
-            residuals = [getattr(r.info, "prim_res", getattr(r.info, "pri_res", np.nan)),
-                         getattr(r.info, "dual_res", getattr(r.info, "dua_res", np.nan))]
-            return r.x[12:16], residuals
-
-        steps = np.unique(np.r_[np.arange(0, 25600, 100), 25599])
-        commands, residuals = [], []
-        for step in steps:
-            u, residual = reference(d["state"][step], d["reference_index"][step])
-            commands.append(u+HOVER)
-            residuals.append(residual)
-        d["osqp_steps"], d["osqp_command"] = steps, np.array(commands)
-        d["osqp_reference_residuals"] = np.array(residuals)
+        replay_osqp(d)
+        settings = json.loads(str(d["settings"]))
+        solver, reference = osqp_reference(d)
 
         state, actuator = recorded[0, 1:13].copy(), recorded[0, 13:17].copy()
         trajectory = [recorded[0].copy()]
@@ -289,10 +330,7 @@ def simulate(d, include):
             compiler=subprocess.check_output(["g++", "--version"], text=True).splitlines()[0],
             bridge_sha256=hashlib.sha256(BRIDGE.encode()).hexdigest())
         d["settings"] = json.dumps(settings, indent=2)
-        OUT.mkdir(exist_ok=True)
-        temporary = DATA.with_suffix(".partial.npz")
-        np.savez_compressed(temporary, **d)
-        temporary.replace(DATA)
+        save_cache(d)
 
 
 def report(d):
@@ -302,13 +340,36 @@ def report(d):
 
     OUT.mkdir(exist_ok=True)
     steps = d["osqp_steps"]
-    fixed, floating = d["command_fixed"][steps], d["replay_float"][steps]
+    fixed, floating = d["command_fixed"], d["replay_float"]
+    assert fixed.shape == floating.shape == (25600, 4), "Incomplete matched-input replay"
     lines = ["H27 / 9 iterations / figure-eight / persistent warm start", "",
-             "First-command error, p95 (normalized motor units; 257 identical-input samples):"]
-    for name, a, b in (("fixed–float", fixed, floating),
-                       ("fixed–OSQP", fixed, d["osqp_command"]),
-                       ("float–OSQP", floating, d["osqp_command"])):
-        lines.append(f"  {name}: {np.percentile(np.max(abs(a-b), axis=1), 95):.6g}")
+             "First-command error distribution (normalized motor units):",
+             "Per-instant error = max absolute difference across the four motor commands.",
+             "Inputs match across solvers at each instant; instants come from one trajectory.",
+             "Std is population standard deviation; percentiles use linear interpolation.",
+             "Comparison       Samples          Min         Mean          Std       Median          P95          P99          Max"]
+    summaries, errors = [], []
+    for name, a, b, indices in (
+            ("fixed–float", fixed, floating, np.arange(len(fixed))),
+            ("fixed–OSQP", fixed[steps], d["osqp_command"], steps),
+            ("float–OSQP", floating[steps], d["osqp_command"], steps)):
+        error = np.max(abs(a-b), axis=1)
+        assert np.isfinite(error).all(), f"Non-finite {name} errors"
+        median, p95, p99 = np.percentile(error, [50, 95, 99])
+        stats = dict(min=error.min(), mean=error.mean(), std=error.std(),
+                     median=median, p95=p95, p99=p99, max=error.max())
+        summaries.append(dict(comparison=name, samples=len(error), **stats))
+        errors.extend((name, int(step), float(value)) for step, value in zip(indices, error))
+        lines.append(f"  {name:13s} {len(error):7d} " +
+                     " ".join(f"{value:12.6g}" for value in stats.values()))
+    with (OUT / "numerical_command_distribution.csv").open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=list(summaries[0]))
+        writer.writeheader()
+        writer.writerows(summaries)
+    with (OUT / "numerical_command_errors.csv").open("w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["comparison", "step", "command_error_inf"])
+        writer.writerows(errors)
     lines += ["", "Controller   Tracking RMSE (m)   Max XY-bound violation (m)"]
     target = d["reference"][np.r_[d["reference_index"], d["reference_index"][-1]], :3]
     lo, hi = d["l"][444:446], d["u"][444:446]
@@ -350,11 +411,19 @@ def report(d):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--simulate", action="store_true")
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument("--simulate", action="store_true")
+    modes.add_argument("--replay-osqp", action="store_true",
+                       help="Solve OSQP at every cached input; preserve existing rollouts")
     args = parser.parse_args()
+    if args.replay_osqp and not DATA.exists():
+        parser.error("--replay-osqp requires an existing numerical.npz cache")
     if args.simulate or not DATA.exists():
         data = generate_rollouts(os.environ.get("HLS_INCLUDE"))
         simulate(data, os.environ.get("HLS_INCLUDE"))
     else:
         data = dict(np.load(DATA, allow_pickle=False))
+    if args.replay_osqp:
+        replay_osqp(data)
+        save_cache(data)
     report(data)
