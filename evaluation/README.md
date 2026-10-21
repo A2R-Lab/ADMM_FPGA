@@ -1,8 +1,13 @@
 # Evaluation results
 
-These tables and plots are generated from the bundled benchmark/flight inputs
-and the numerical analysis described below. All generated plots live in untracked
-`output/`. The image links below work locally after generating the plots.
+These results use the bundled benchmark and flight data, plus the numerical
+simulation described below. Preview figures are included in `figures/` so this
+page can be read directly on GitHub or in a fresh checkout. Full generated
+exports are written to untracked `output/`.
+
+See [regeneration instructions](#regenerate) to recreate the analysis and
+[benchmark methodology](../docs/benchmarking.md) for measurement definitions
+and the limits of reproducing historical experiments.
 
 ## Solver benchmarks
 
@@ -39,17 +44,11 @@ The maximum-horizon results describe capacity, not 1 kHz operation.
 
 <!-- END GENERATED BENCHMARKS -->
 
-![Solve latency and energy versus horizon](output/benchmark_latency_energy.png)
+![Solve latency and energy versus horizon](figures/benchmark_latency_energy.png)
 
-![Energy-delay product comparison](output/benchmark_edp_bars.png)
+![Energy-delay product comparison](figures/benchmark_edp_bars.png)
 
-## NumericFPGA latency is HLS cycles at 100 MHz, excluding communication. FPGA energy uses
-Vivado post-route power estimates; TinyMPC energy uses the stored MCU timings
-and a 287.1 mW active-power estimate. EDP is energy times solve delay. See
-[benchmark definitions and reproduction](../docs/benchmarking.md) for the power
-boundaries, 100 µs feasibility-table reserve, and historical source limitations.
-The maximum-horizon results describe capacity, not 1 kHz operation.
-al accuracy
+## Numerical accuracy
 
 The current H27/k9 analysis uses the actual C++ solver and persistent warm starts.
 Independent fixed, float and OSQP closed-loop trajectories use a generated
@@ -75,14 +74,15 @@ Controller   Tracking RMSE (m)   Max XY-bound violation (m)
 
 <!-- END GENERATED NUMERICS -->
 
-![Fixed and floating-point residuals by iteration](output/numerical_convergence.png)
+The convergence plot is generated locally as `output/numerical_convergence.png`
+by the numerical simulation command below; it is not bundled with this page.
 
 ## Recorded flights
 
 The figure-eight overlay is a trajectory visualization, not a new
 synchronized tracking-error measurement.
 
-![Recorded figure-eight trajectories](output/figure8_trajectory_overlay.png)
+![Recorded figure-eight trajectories](figures/figure8_trajectory_overlay.png)
 
 The following table quantifies **position-constraint violation**. Star values use
 the larger of the x/y violations per sample. Dynamic values use the complete dynamic-obstacle
@@ -115,13 +115,15 @@ bounds and reports both 3D and XY RMSE. See the
 
 <!-- END GENERATED TRACKING -->
 
-![Dynamic obstacle bounds and recorded position](output/dynamic_obstacle_bounds.png)
+![Dynamic obstacle bounds and recorded position](figures/dynamic_obstacle_bounds.png)
 
 ## Regenerate
 
-Run from the repository root in a Python 3.10–3.12 environment:
+Run from the repository root with Python 3.10–3.12 in an isolated environment:
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
 python -m pip install numpy==1.26.4 matplotlib==3.10.1
 python evaluation/plot_benchmarks.py
 python evaluation/flight_metrics.py
@@ -133,6 +135,19 @@ The first produces latency/energy, EDP, H40 radar, figure-eight overlay and the
 iteration-budget table. The flight script writes text/CSV metrics and trajectory/
 bounds figures. The panel script composes the paper's video-frame figure from
 tracked PNGs. Original videos are needed only for its optional `--extract-panels`.
+
+To refresh the four bundled previews after regenerating the plots:
+
+```bash
+mkdir -p evaluation/figures
+cp evaluation/output/benchmark_latency_energy.png evaluation/figures/
+cp evaluation/output/benchmark_edp_bars.png evaluation/figures/
+cp evaluation/output/figure8_trajectory_overlay.png evaluation/figures/
+cp evaluation/output/dynamic_obstacle_bounds.png evaluation/figures/
+```
+
+Include the updated previews when committing analysis changes. Keep full PDF/SVG
+exports in `output/`.
 
 Numerical simulation also needs the [build dependencies](../docs/build.md), a
 C++14 compiler, AMD's Vitis headers, and OSQP:
