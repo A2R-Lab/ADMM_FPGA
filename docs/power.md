@@ -134,6 +134,11 @@ reports and bitstream manifests are in `<campaign_dir>/ready/<configuration-id>/
 failed build logs are retained under `<campaign_dir>/work/`. Archive both directories
 with the exported summaries: generated results are not committed to Git.
 
+The October 2026 campaign summary is committed as
+[`evaluation/data/arty_power_measurements.csv`](../evaluation/data/arty_power_measurements.csv).
+It includes all planned configurations, with pending rows retained. Raw traces,
+acquisition metadata, and full build products remain in local `results/` directories.
+
 Core/BRAM and monitored 5 V power have different boundaries. The 5 V reading includes
 other board loads and conversion losses. Both include the measurement instrumentation.
 Core voltage and current are sampled at slightly different times; traces are intended
