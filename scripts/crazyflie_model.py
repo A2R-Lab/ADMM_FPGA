@@ -1,11 +1,11 @@
-# src/quadrotor.py
+"""Quadrotor dynamics and linearization for the ADMM controller."""
 import autograd.numpy as np
 from autograd.numpy.linalg import norm
 from autograd.numpy.linalg import inv
 from autograd import jacobian
 import math
 
-class CrazyLoihiModel:
+class CrazyFlieModel:
     def __init__(self, freq=50.0):
         # Quadrotor parameters
         self.mass = 0.048
@@ -104,7 +104,7 @@ class CrazyLoihiModel:
         v = q[1:4]
         return np.vstack([
             np.hstack([s, -v]),
-            np.hstack([v.reshape(3,1), s*np.eye(3) + CrazyLoihiModel.hat(v)])
+            np.hstack([v.reshape(3,1), s*np.eye(3) + CrazyFlieModel.hat(v)])
         ])
 
     # Constants

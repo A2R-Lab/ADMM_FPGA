@@ -11,7 +11,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-from crazyloihimodel import CrazyLoihiModel
+from crazyflie_model import CrazyFlieModel
 
 # Configuration
 SERIAL_PORT = '/dev/ttyUSB1'  # Change to COM port on Windows (e.g., 'COM3')
@@ -92,7 +92,7 @@ def main():
     ser.reset_input_buffer()
     ser.reset_output_buffer()
 
-    model = CrazyLoihiModel(freq=200)
+    model = CrazyFlieModel(freq=200)
 
     state = np.zeros(model.nx)
     state[0] = 0.1

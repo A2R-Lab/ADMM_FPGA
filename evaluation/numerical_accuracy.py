@@ -94,7 +94,7 @@ def generate_rollouts(include):
         scripts.mkdir()
         project.mkdir(parents=True)
         (work / "vivado_project/vivado_project.srcs/sources_1/new").mkdir(parents=True)
-        for name in ("parameters.py", "crazyloihimodel.py", "trajectory_generator.py",
+        for name in ("parameters.py", "crazyflie_model.py", "trajectory_generator.py",
                      "header_generator.py"):
             shutil.copy2(root / "scripts" / name, scripts / name)
         for name in sources:

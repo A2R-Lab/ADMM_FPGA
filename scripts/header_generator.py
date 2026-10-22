@@ -5,7 +5,7 @@ import json
 import inspect
 import time
 import numpy as np
-from crazyloihimodel import CrazyLoihiModel
+from crazyflie_model import CrazyFlieModel
 from parameters import (
     AMP_X,
     AMP_Y,
@@ -54,7 +54,7 @@ GENERATOR_DIAGNOSTICS_PATH = os.environ.get("ADMM_GENERATOR_DIAGNOSTICS_PATH", "
 xg = np.zeros(13)
 xg[3] = 1.0  # unit quaternion
 # Create quadrotor instance
-quad = CrazyLoihiModel(freq=MODEL_FREQ)
+quad = CrazyFlieModel(freq=MODEL_FREQ)
 ug = quad.hover_thrust
 mass_kg = quad.mass
 

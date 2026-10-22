@@ -34,7 +34,7 @@ CAMPAIGN_SCRIPTS = (
     'power_campaign.py', 'power_benchmark.py', 'power_workload.py',
     'power_build_manifest.py',
     'header_generator.py', 'trajectory_generator.py', 'parameters.py',
-    'crazyloihimodel.py',
+    'crazyflie_model.py',
     'synth.tcl', 'impl.tcl', 'bitstream.tcl', 'program.tcl',
     'program_file.tcl', 'program_flash.tcl',
     'run_max_horizon_parallel.py', 'run_max_horizon_point.py',

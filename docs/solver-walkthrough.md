@@ -81,7 +81,7 @@ uses `q=0`. The benchmark helper can instead accept an explicit full `q` vector.
 [parameters.py](../scripts/parameters.py) selects the horizon, cost weights,
 penalties, numerical mode and trajectory settings.
 [header_generator.py](../scripts/header_generator.py) obtains the linearized
-discrete dynamics from [crazyloihimodel.py](../scripts/crazyloihimodel.py), assembles
+discrete dynamics from [crazyflie_model.py](../scripts/crazyflie_model.py), assembles
 the problem and computes its factorization.
 
 Let `D` be a diagonal matrix of ADMM penalties: equality rows use `rho_eq`, while
