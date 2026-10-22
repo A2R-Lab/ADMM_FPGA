@@ -223,6 +223,32 @@ casts still quantize values, so the equations above describe the mathematical
 update rather than every rounding operation. See
 [data_types.h](../vitis_projects/ADMM/data_types.h) and `acc_t` in the solver.
 
+The integer-bit count includes the sign bit. Thus `fp_t` represents
+`[-512, 512 - 2^-22]`, with resolution `2^-22` (approximately `2.384e-7`).
+The default `acc_t` represents `[-131072, 131072 - 2^-22]`. `AP_RND` rounds
+to the nearest representable value, resolving halfway cases toward positive
+infinity; `AP_SAT` clamps overflow to the destination type's endpoints.
+These rules apply when values are assigned or converted to the destination
+fixed-point type, not as a blanket rule for every intermediate expression.
+See AMD's [quantization modes](https://docs.amd.com/r/2023.2-English/ug1399-vitis-hls/Quantization-Modes).
+
+The implementation uses a common binary point rather than per-variable or
+block-floating scaling. Model coefficients, costs, and cached factors are
+converted to `fp_t`; the model's physical coordinates and normalized motor
+commands are retained, with inputs expressed relative to hover. The separate
+packed dynamic-bound fields use signed integer millimetres and are converted
+to metres on entry. This transport encoding is distinct from the solver's
+22-bit fractional representation.
+
+Penalty shifts use a separate intermediate `rho_acc_t`, with
+`32 + max(RHO_SHIFT_EQ, RHO_SHIFT_INEQ)` total bits and
+`10 + max(RHO_SHIFT_EQ, RHO_SHIFT_INEQ)` integer bits, retaining 22 fractional
+bits. It uses `AP_TRN, AP_WRAP`; the extra integer bits accommodate the configured
+left shifts before conversion back to saturating `fp_t`. Right shifts discard
+low bits. Consequently, not every internal type uses `AP_RND, AP_SAT`.
+These representable ranges describe the arithmetic, not a guarantee that
+all problem instances avoid saturation or meet a given optimization tolerance.
+
 Three timing quantities have separate roles: the model timestep, the interval
 between solver calls, and the reference playback interval. Defaults use a 50 Hz
 model and advance playback every 20 calls; at a 1 kHz invocation rate both the
