@@ -214,6 +214,61 @@ fixed-point results need not be bit-identical between architectures. Achieved
 latency and resource tradeoffs must be read from synthesis and implementation
 reports.
 
+### Staged operator access order
+
+The constraint operator `C` in this walkthrough is implemented by the `A_*`
+arrays and `AT_mul` in `ADMM.cpp`; it is distinct from the small dynamics matrix
+`A_stage`. No dense horizon-wide operator is reconstructed at runtime.
+
+After forward and backward substitution, `ADMM_iteration` processes constraint
+rows in this order:
+
+1. Initial-state rows: read the first 12 primal entries and project onto the
+   incoming measured state.
+2. Dynamics rows, stage `k = 0..H-1`: load `x_k`, `u_k`, and `x_{k+1}` from
+   offsets `16k`, `16k+12`, and `16(k+1)`. Evaluate each residual
+   `x_{k+1}[r] - A_stage[r,:] x_k - B_stage[r,:] u_k`. Row counts and column
+   indices select the nonzero dynamics coefficients; equality projection is
+   zero. Update the dual and store the penalty-weighted contribution in `b_tmp`.
+3. Input-bound rows, followed by predicted XY-bound rows: select the relevant
+   primal entries, clip to the bounds, update the dual, and store `b_tmp`.
+4. `AT_mul` processes dynamics stages in ascending order. For each state block
+   it combines the preceding stage contribution (initial-state rows at `k=0`)
+   with `-A_stage^T` times the current dynamics rows; input blocks receive
+   `-B_stage^T` times those rows. It writes the terminal state contribution,
+   then adds input-bound and XY-bound contributions to form the next `b`.
+
+The stage state/input buffers and the substitution windows are completely
+partitioned. Dynamics coefficient tables are partitioned along their nonzero
+entry dimension; `B_stage` is partitioned along its input dimension. The dynamics
+row loop requests unrolling by two, and stage-loop flattening is disabled.
+Horizon-dependent factors and work vectors remain stored arrays; their final
+BRAM/LUTRAM mapping depends on synthesis and implementation.
+
+### Pipeline and resource reports
+
+The checked-in source does not prescribe a pipeline initiation interval (II).
+Vitis may automatically pipeline loops, so an unroll factor of two must not be
+reported as an achieved II of one or two. For each reproduced configuration,
+inspect the loop latency, achieved II, and trip count in
+`ADMM_solver_csynth.rpt` and its generated pipeline-subfunction reports under
+`vitis_projects/ADMM/ADMM/hls/syn/report/`. The benchmark runner archives the
+top-level synthesis report/XML and post-route reports in the point's `reports/`
+directory. The aggregate CSV records total solve cycles, not per-loop IIs.
+
+For the committed `2026-07-common-h40-radar` campaign (`H=40`, ten iterations,
+100 MHz), [benchmark_summary.csv](../evaluation/data/benchmark_summary.csv)
+contains:
+
+| Mapping | Solve cycles | Solve time (us) | LUTs | Registers | DSPs | BRAM tiles |
+|---|---:|---:|---:|---:|---:|---:|
+| `full_sparse` | 148467 | 1484.67 | 9280 | 12051 | 77 | 78.5 |
+| `staged_a` | 136507 | 1365.07 | 22127 | 26540 | 80 | 36 |
+
+Cycles are HLS solve latencies; resources are post-route counts. Transport is
+excluded. These rows describe the named campaign, not every horizon or the
+instrumented Arty power builds.
+
 ## Arithmetic and timing
 
 The default numerical type is `ap_fixed<32,10,AP_RND,AP_SAT>`: 22 fractional bits
