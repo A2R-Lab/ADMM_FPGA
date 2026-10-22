@@ -12,7 +12,7 @@ read [How one FPGA solve works](solver-walkthrough.md).
 
 | Stage | Source | Role |
 |---|---|---|
-| Model and settings | [parameters.py](../scripts/parameters.py), [crazyloihimodel.py](../scripts/crazyloihimodel.py) | Horizon, costs, bounds, dynamics and trajectory settings |
+| Model and settings | [parameters.py](../scripts/parameters.py), [crazyflie_model.py](../scripts/crazyflie_model.py) | Horizon, costs, bounds, dynamics and trajectory settings |
 | Offline generation | [header_generator.py](../scripts/header_generator.py), [trajectory_generator.py](../scripts/trajectory_generator.py) | Cached matrices, runtime configuration and reference tables |
 | Solver | [ADMM.cpp](../vitis_projects/ADMM/ADMM.cpp) | ADMM updates, triangular solves and trajectory control |
 | Numerical/packet types | [data_types.h](../vitis_projects/ADMM/data_types.h) | Fixed-point representation and bit packing |

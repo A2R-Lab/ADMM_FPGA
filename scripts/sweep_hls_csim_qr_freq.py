@@ -357,7 +357,7 @@ def evaluate_candidate(task: tuple[CandidateEval, str, str]) -> dict[str, Any]:
         shutil.copy2(src_admm_dir / filename, src_dir / filename)
 
     src_scripts_dir = repo_root / "scripts"
-    for filename in ["header_generator.py", "trajectory_generator.py", "parameters.py", "crazyloihimodel.py"]:
+    for filename in ["header_generator.py", "trajectory_generator.py", "parameters.py", "crazyflie_model.py"]:
         shutil.copy2(src_scripts_dir / filename, scripts_dir / filename)
 
     qdiag_str = ",".join(f"{v:.12g}" for v in cand.q_diag)

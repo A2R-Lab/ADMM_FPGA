@@ -152,7 +152,7 @@ help:
 
 traj: $(TRAJ_HEADER)
 
-$(TRAJ_REFS) $(TRAJ_HEADER): $(TRAJ_SCRIPT) $(SCRIPTS_DIR)/crazyloihimodel.py $(PARAMS_SCRIPT)
+$(TRAJ_REFS) $(TRAJ_HEADER): $(TRAJ_SCRIPT) $(SCRIPTS_DIR)/crazyflie_model.py $(PARAMS_SCRIPT)
 	@echo "========================================="
 	@echo "Generating trajectory references..."
 	@echo "========================================="
@@ -173,7 +173,7 @@ $(DATA_HEADER) $(RUNTIME_CONFIG_HEADER) $(RTL_DIR)/admm_autogen_params.vh: power
 endif
 endif
 
-$(DATA_HEADER) $(RUNTIME_CONFIG_HEADER) $(RTL_DIR)/admm_autogen_params.vh &: $(HEADER_SCRIPT) $(SCRIPTS_DIR)/crazyloihimodel.py $(PARAMS_SCRIPT) $(TRAJ_HEADER)
+$(DATA_HEADER) $(RUNTIME_CONFIG_HEADER) $(RTL_DIR)/admm_autogen_params.vh &: $(HEADER_SCRIPT) $(SCRIPTS_DIR)/crazyflie_model.py $(PARAMS_SCRIPT) $(TRAJ_HEADER)
 	@echo "========================================="
 	@echo "Generating headers..."
 	@echo "========================================="

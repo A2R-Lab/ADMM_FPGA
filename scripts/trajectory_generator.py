@@ -17,7 +17,7 @@ import numpy as np
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from crazyloihimodel import CrazyLoihiModel
+from crazyflie_model import CrazyFlieModel
 from parameters import (
     AMP_X,
     AMP_Y,
@@ -116,7 +116,7 @@ def _motor_mixer_inv() -> np.ndarray:
 
 
 def _rollout_states_from_controls(u_abs: np.ndarray, dt: float, x0: np.ndarray) -> np.ndarray:
-    model = CrazyLoihiModel(freq=1.0 / dt)
+    model = CrazyFlieModel(freq=1.0 / dt)
     k_len = u_abs.shape[0]
     x_hist = np.zeros((k_len, 12), dtype=np.float64)
     x = np.array(x0, dtype=np.float64)
