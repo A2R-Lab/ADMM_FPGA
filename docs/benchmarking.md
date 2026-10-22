@@ -62,17 +62,67 @@ It writes canonical CSVs, figures and a short source/settings record. Its
 
 ## Energy and timing definitions
 
-FPGA solve latency is HLS cycle count divided by the configured clock (100 MHz
-in the stored benchmark), subject to route timing closure. It excludes SPI and
-host processing. FPGA power is Vivado's total on-chip post-route estimate;
-`scripts/impl.tcl` does not load measured switching activity. Board regulators,
-support components and host energy are outside that estimate.
+Synthesis-derived FPGA solve latency is HLS cycle count divided by 100 MHz, 
+subject to route timing closure. It excludes SPI and host processing. 
+All latency coordinates in the bubble plot, the feasibility table and
+resource/scalability results use these synthesized implementations. They are separate from the Arty measurement campaign.
 
-TinyMPC energy uses the stored MCU latency and the plotting default
-`0.087 A × 3.3 V = 0.2871 W`. This is an active-power estimate, not a direct
-MPC rail measurement. Energy is `P × t`; energy-delay product is `P × t²`.
-The plots compare computation-window energy under these different estimation
-methods. The separate [Arty campaign](power.md) reports core rail measurements.
+Both post-route power estimates and [Arty measurements](power.md) are provided.
+At all 24 configurations with measurements, the post-route benchmark estimates
+are higher than the measurement-based values, giving a more conservative power
+comparison. The latency/energy and EDP figures use measured active
+core/BRAM rail power plus the auxiliary and I/O supply estimates
+from each configuration's matching post-route report. At the report's printed
+precision these contributions are 32.4 mW VCCAUX and 13.2 mW VCCO33 for all 24
+measured configurations. VCCADC is excluded as it is tied to ground in the custom 
+PCB. The EDP comparison requires measured core/BRAM power. The latency/energy plot
+uses post-route estimates for configurations without measurements, marked by an
+asterisk. Each such bubble uses the matching synthesis-derived latency.
 
-The feasibility table reserves 100 µs for FPGA communication within a 1 ms
-control period. A larger feasible horizon does not imply operation at 1 kHz.
+The monitored core rail includes measurement instrumentation. Vivado estimates
+that this instrumentation accounts for approximately 30% of total power consumption. 
+We retain this overhead in the reported measurements, giving a conservative assessment
+of solver power rather than introducing uncertainty by subtracting an estimated
+contribution. The added estimates use total supply current (including static current).
+Regulators, external board support circuitry, host processing and SPI-transfer energy
+remain outside the metric. The measurements are from the Arty, not the custom flight
+deck; trajectory generation is disabled.
+
+FPGA energy uses the campaign's mean active core energy plus auxiliary/I/O power
+times that configuration's measured solve latency. EDP multiplies this combined
+energy by the same latency. Synthesis-derived latency is never substituted into these
+energy calculations. TinyMPC uses the stored MCU latency and the nominal active
+power `0.087 A × 3.3 V = 0.2871 W`. TinyMPC keeps the MCU active within FreeRTOS without
+voluntarily yielding or blocking during the solve, occupying time during which it
+would otherwise be idle. We attribute the active MCU energy consumed throughout
+this directly measured execution interval to MPC. Energy
+consumed during the rest of the autopilot cycle is excluded. For both platforms,
+`E = P × t` and `EDP = E × t` exclude communication.
+
+The 18 unmeasured campaign configurations have failed instrumented builds;
+none are awaiting measurement in this dataset. Staged H250 and
+full-sparse H90 failed routed timing; the other failures occurred during HLS,
+implementation or capacity checks. The measurement instrumentation increases
+FPGA resource usage and can make timing closure more difficult, limiting the
+horizons supported by the instrumented build relative to the solver alone.
+The bubble plot uses asterisked estimates for unmeasured configurations. The 
+feasibility table separately reserves 100 µs for FPGA communication within 
+a 1 ms period. A larger supported horizon does not imply operation at 1 kHz.
+
+Regenerate the figures from the bundled CSVs:
+
+```bash
+python evaluation/plot_benchmarks.py
+python evaluation/summarize_results.py --benchmarks-only
+```
+
+`evaluation/data/arty_power_measurements.csv` stores measured core/BRAM values
+and the missing supply estimates in `estimated_aux_w` and `estimated_io_w`.
+The estimates were taken from the matching post-route supply reports using
+voltage times total current. Failed configurations keep these fields empty.
+The existing plotter adds these contributions when calculating energy and EDP;
+no separate preprocessing step or combined CSV is needed.
+
+The architecture radar retains the synthesis-derived latency, post-route power
+estimates and resource/scalability data from `benchmark_summary.csv`. It does not
+use the Arty measurements.
