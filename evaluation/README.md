@@ -7,29 +7,38 @@ exports are written to untracked `output/`.
 
 See [regeneration instructions](#regenerate) to recreate the analysis and
 [benchmark methodology](../docs/benchmarking.md) for measurement definitions
-and the limits of reproducing historical experiments.
+and the scope of the supplied experiment data.
 
 ## Solver benchmarks
 
-The [benchmark CSV](data/benchmark_summary.csv) contains the historical measurements,
+The [benchmark CSV](data/benchmark_summary.csv) contains MCU timing measurements,
 implementation estimates and failed points. The table uses the same row selection
 as `plot_benchmarks.py`: timing-clean implementations, lowest latency then lowest
 power, with the figure's explicit readability exclusions. The default comparison
 uses 10 iterations; the common-horizon resource comparison is H40.
 
-FPGA latency is HLS cycles at 100 MHz, excluding communication. FPGA energy uses
-Vivado post-route power estimates; TinyMPC energy uses the stored MCU timings
-and a 287.1 mW active-power estimate. EDP is energy times solve delay. See
-[benchmark definitions and reproduction](../docs/benchmarking.md) for the power
-boundaries, 100 µs feasibility-table reserve, and historical source limitations.
-The maximum-horizon results describe capacity, not 1 kHz operation.
+Both post-route power estimates and Arty measurements are available. At the
+measured configurations, the post-route benchmark estimates give more conservative
+power values. The latency/energy and EDP figures use measured Arty core/BRAM power
+plus matching estimated auxiliary/I/O supply contributions (VCCADC excluded because
+it is tied to ground in the custom PCB), with energy and EDP calculated using the
+campaign's measured solve latency. Bubble positions retain synthesis-derived FPGA
+timing for the latency comparison. 
+TinyMPC uses its recorded timing and a 287.1 mW active-power estimate. Both energy
+and EDP exclude communication and board support circuitry. Asterisked bubbles use
+post-route estimates where instrumented measurement builds failed; unmeasured
+configurations remain absent from the EDP comparison. The resource table and maximum-horizon results also use implementation reports;
+they do not imply 1 kHz operation at the largest horizons. See [benchmark methodology](../docs/benchmarking.md#energy-and-timing-definitions)
+for measurement boundaries and the separate 100 µs feasibility reserve.
+The architecture radar retains synthesis-derived timing and post-route power
+estimates from the benchmark CSV.
 
 <!-- BEGIN GENERATED BENCHMARKS -->
 
 | H40 / 10 iterations | Solve (ms) | Energy (mJ) | EDP (mJ·ms) |
 | --- | --- | --- | --- |
-| Staged FPGA | 1.365 | 0.932 | 1.273 |
-| Full-sparse FPGA | 1.485 | 0.494 | 0.734 |
+| Staged FPGA | 1.339 | 0.424 | 0.568 |
+| Full-sparse FPGA | 1.484 | 0.412 | 0.612 |
 | TinyMPC | 20.899 | 6.000 | 125.396 |
 
 | H40 FPGA resources | LUTs | FFs | BRAM tiles | DSPs |
@@ -195,5 +204,5 @@ styles in the source scripts; exported figures should be regenerated.
 
 The committed [Arty power measurements](../docs/power.md) report core/BRAM rail power.
 The [Arty power measurements CSV](data/arty_power_measurements.csv) contains the
-campaign summary for 42 planned configurations: 23 measured with three valid
-repetitions each and 19 marked pending.
+campaign summary for 42 planned configurations: 24 measured with three valid
+repetitions each and 18 marked failed.

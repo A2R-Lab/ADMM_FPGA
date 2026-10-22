@@ -8,9 +8,10 @@ in this checkout, fixed-point arithmetic, a 100 MHz FPGA clock, and the committe
 external DDR3 is unused.
 
 These experiments measure power on an **Arty A7-100T Rev E** using its onboard
-supply monitors. They reproduce the measured-power workflow, not the historical
-Vivado power estimates used by the existing paper figures. The campaign does not
-modify `evaluation/`.
+supply monitors. They measure active core/BRAM supply power; the auxiliary/I/O
+contributions used in the paper figures come from matching Vivado supply reports.
+The campaign runner does not modify `evaluation/`; the paper analysis imports its
+validated results as described in [benchmark methodology](benchmarking.md).
 
 ## Requirements
 
@@ -135,7 +136,7 @@ with the exported summaries: generated results are not committed to Git.
 
 The October 2026 campaign summary is committed as
 [`evaluation/data/arty_power_measurements.csv`](../evaluation/data/arty_power_measurements.csv).
-It contains core/BRAM measurements for all planned configurations, with pending rows
+It contains core/BRAM measurements for all planned configurations, with failed-build rows
 retained.
 
 Core/BRAM and monitored 5 V power have different boundaries. The 5 V reading includes
@@ -175,3 +176,12 @@ bash tests/test_power_hls.sh
 
 The first script tests capture, scheduling, UART, and the XADC simulation model.
 The second compares real HLS RTL outputs against C++ and exercises the complete top.
+
+## Paper energy figures
+
+Both post-route estimates and measurements are available; the benchmark estimates
+are more conservative at the measured configurations. Measured points use active
+core/BRAM power plus matching estimated auxiliary/I/O supply power, excluding 
+VCCADC as on the custom board VCCADC is tied to ground. The latency/energy plot
+uses asterisked post-route estimates where instrumented builds failed. See the
+[definitions and regeneration procedure](benchmarking.md#energy-and-timing-definitions).

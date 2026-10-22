@@ -33,11 +33,8 @@ COLORS = {
 
 ARCH_ORDER = ["staged_a", "full_sparse", "tinympc_e"]
 
-# Points intentionally omitted from the published figure. Keep exclusions here
-# rather than editing the source CSV so the presentation choice is reproducible.
-# These horizons were omitted solely to reduce overlap between large bubbles
-# and keep the plot readable; their measurements remain in the source CSV.
-# Example: {("staged_a", 704), ("staged_a", 768)}
+# Use a consistent selection of synthesis-derived timing and resource results.
+# These readability exclusions do not remove any measured-power configuration.
 EXCLUDED_POINTS: set[tuple[str, int]] = {("staged_a", 768),("staged_a", 900), ("staged_a", 1000), ("staged_a", 1100), ("staged_a", 1200), ("staged_a", 1300)}
 
 DEFAULT_TINYMPC_POWER_W = 0.087 * 3.3
@@ -335,33 +332,46 @@ def best_rows(rows: list[dict[str, str]], compare_iters: int) -> list[dict[str, 
     )
 
 
-def power_w(row: dict[str, str], tinympc_power_w: float) -> float:
+def attach_measured_power(rows, path=DATA_DIR / "arty_power_measurements.csv"):
+    """Join only matching architecture/horizon/iteration rows; retain synthesis-derived timing."""
+    measured = {(r["arch"], int(r["horizon"]), int(r["iterations"])): r
+                for r in load_rows(path) if r["status"] == "measured"}
+    result = []
+    for original in rows:
+        row = dict(original)
+        key = (row["arch"], int(f(row, "horizon")), int(f(row, "admm_iters")))
+        if key in measured:
+            r = measured[key]
+            extra_power = f(r, "estimated_aux_w") + f(r, "estimated_io_w")
+            if not math.isfinite(extra_power) or extra_power < 0:
+                raise ValueError(f"Missing or invalid auxiliary/I/O estimate for {key}")
+            row.update(measured_power_w=f(r, "raw_core_w_mean") + extra_power,
+                       measured_energy_uj=f(r, "raw_core_energy_uj_mean") + extra_power * f(r, "latency_us_mean"),
+                       measured_latency_us=r["latency_us_mean"],
+                       measured_energy_std_uj=r["raw_core_energy_uj_std"])
+        result.append(row)
+    return result
+
+
+def comparison_latency_us(row):
     if row["arch"] == "tinympc_e":
-        return tinympc_power_w
-    return f(row, "route_power_total_w")
+        return f(row, "solve_us_cfg_clk")
+    return f(row, "measured_latency_us")
+
+
+def power_w(row: dict[str, str], tinympc_power_w: float) -> float:
+    return tinympc_power_w if row["arch"] == "tinympc_e" else f(row, "measured_power_w")
 
 
 def energy_mj(row: dict[str, str], tinympc_power_w: float) -> float:
-    """Return energy per solve in mJ.
-
-    FPGA rows carry post-route energy in microjoules. TinyMPC has no energy
-    column, so derive it from its measured solve latency and the documented
-    MCU active-power estimate. The same derivation is also a safe fallback for
-    FPGA rows if an otherwise usable aggregate omits its energy column.
-    """
-
-    reported_uj = f(row, "energy_per_solve_cfg_uj")
-    if math.isfinite(reported_uj) and reported_uj > 0:
-        return reported_uj / 1000.0
-    watts = power_w(row, tinympc_power_w)
-    solve_us = f(row, "solve_us_cfg_clk")
-    return watts * solve_us / 1000.0
+    """Measured core/BRAM plus estimated auxiliary/I/O; no total-power-estimate fallback."""
+    if row["arch"] == "tinympc_e":
+        return tinympc_power_w * comparison_latency_us(row) / 1000
+    return f(row, "measured_energy_uj") / 1000
 
 
 def edp_uj_us(row: dict[str, str], tinympc_power_w: float) -> float:
-    """Return energy-delay product in uJ*us."""
-
-    return energy_mj(row, tinympc_power_w) * 1000.0 * f(row, "solve_us_cfg_clk")
+    return energy_mj(row, tinympc_power_w) * 1000 * comparison_latency_us(row)
 
 
 def normalized_costs(values: dict[str, float]) -> dict[str, float]:
@@ -398,14 +408,20 @@ def format_radar_value(metric: str, value: float, max_horizon: int) -> str:
 def _plot_points(ax, rows: list[dict[str, str]], tinympc_power_w: float) -> None:
     """Draw larger bubbles first so smaller overlapping points remain visible."""
 
-    points = sorted(rows, key=lambda row: energy_mj(row, tinympc_power_w), reverse=True)
+    def bubble_energy(row):
+        measured = energy_mj(row, tinympc_power_w)
+        return measured if math.isfinite(measured) else f(row, "energy_per_solve_cfg_uj") / 1000
+
+    points = sorted(rows, key=bubble_energy, reverse=True)
     for row in points:
-        millijoules = energy_mj(row, tinympc_power_w)
+        millijoules = bubble_energy(row)
         if not math.isfinite(millijoules) or millijoules <= 0:
             continue
+        estimated = not math.isfinite(energy_mj(row, tinympc_power_w))
+        latency = f(row, "solve_us_cfg_clk") / 1000
         ax.scatter(
             f(row, "horizon"),
-            f(row, "solve_us_cfg_clk") / 1000.0,
+            latency,
             s=ENERGY_AREA_SCALE * millijoules,
             color=COLORS.get(row["arch"], "#424141"),
             alpha=0.78,
@@ -413,6 +429,10 @@ def _plot_points(ax, rows: list[dict[str, str]], tinympc_power_w: float) -> None
             linewidth=1.25,
             zorder=3,
         )
+        if estimated:
+            ax.annotate("*", (f(row, "horizon"), latency), xytext=(0, 2),
+                        textcoords="offset points", ha="center", va="center",
+                        color="#333333", fontsize=11, zorder=4)
 
 
 def plot_headline(
@@ -491,8 +511,20 @@ def plot_headline(
     right_ax.plot((-break_size, +break_size), (1 - break_size, 1 + break_size),
                   transform=right_ax.transAxes, **break_style)
 
+    baseline = {int(f(r, "horizon")): r for r in rows if r["arch"] == "tinympc_e"}
+    compared = [r for r in rows if r["arch"] != "tinympc_e"
+                and int(f(r, "horizon")) in baseline
+                and math.isfinite(energy_mj(r, tinympc_power_w))]
+    speedups = [f(baseline[int(f(r, "horizon"))], "solve_us_cfg_clk") /
+                f(r, "solve_us_cfg_clk") for r in rows
+                if r["arch"] != "tinympc_e" and int(f(r, "horizon")) in baseline]
+    staged = [r for r in compared if r["arch"] == "staged_a"]
+    savings = [energy_mj(baseline[int(f(r, "horizon"))], tinympc_power_w) /
+               energy_mj(r, tinympc_power_w) for r in staged]
+    staged_horizons = [int(f(r, "horizon")) for r in staged]
+
     left_ax.annotate(
-        "TinyMPC\n13.6–15.6× slower",
+        f"TinyMPC\n{min(speedups):.1f}–{max(speedups):.1f}× slower",
         xy=(80, 42.012),
         xytext=(50, 9),
         color=COLORS["tinympc_e"],
@@ -518,7 +550,8 @@ def plot_headline(
     left_ax.text(
         25,
         0.33,
-        "Staged FPGA uses 5.8–6.4× less energy\nthan TinyMPC over H=10–80",
+        f"Staged FPGA uses {min(savings):.1f}–{max(savings):.1f}× less energy\n"
+        f"than TinyMPC over H={min(staged_horizons)}–{max(staged_horizons)}",
         color=COLORS["staged_a"],
         fontsize=11,
         fontweight="semibold",
@@ -548,7 +581,7 @@ def plot_headline(
     right_ax.legend(
         legend_handles,
         [f"{millijoules:g} mJ" for millijoules in legend_energies],
-        title="Bubble area = energy/solve",
+        title="Bubble area = energy/solve\n* Post-route estimate",
         loc="lower right",
         bbox_to_anchor=(0.985, 0.075),
         frameon=False,
@@ -623,11 +656,14 @@ def plot_edp_bars(
     horizons = [
         horizon
         for horizon in range(10, 81, 10)
-        if all((arch, horizon) in rows_by_key for arch in ARCH_ORDER)
+        if ("tinympc_e", horizon) in rows_by_key and
+           any((arch, horizon) in rows_by_key and
+               math.isfinite(edp_uj_us(rows_by_key[(arch, horizon)], tinympc_power_w))
+               for arch in RADAR_ARCHES)
     ]
     bar_order = ["tinympc_e", "staged_a", "full_sparse"]
     if not horizons:
-        raise ValueError("No horizons have complete EDP rows for all plotted architectures")
+        raise ValueError("No horizons have measured FPGA EDP and a TinyMPC baseline")
 
     fig, ax = plt.subplots(figsize=(9.2, 4.8))
     fig.patch.set_facecolor("white")
@@ -642,7 +678,8 @@ def plot_edp_bars(
     }
     x_positions = list(range(len(horizons)))
     edp_by_arch = {
-        arch: [edp_uj_us(rows_by_key[(arch, horizon)], tinympc_power_w) for horizon in horizons]
+        arch: [edp_uj_us(rows_by_key[(arch, horizon)], tinympc_power_w)
+               if (arch, horizon) in rows_by_key else math.nan for horizon in horizons]
         for arch in ARCH_ORDER
     }
 
@@ -660,7 +697,7 @@ def plot_edp_bars(
         )
 
     ax.set_yscale("log")
-    all_edp = [value for values in edp_by_arch.values() for value in values]
+    all_edp = [value for values in edp_by_arch.values() for value in values if math.isfinite(value)]
     ax.set_ylim(min(all_edp) * 0.55, max(all_edp) * 2.0)
     ax.yaxis.set_major_formatter(LogFormatterMathtext())
     ax.grid(True, axis="y", which="major", color="#D9D9D9", linewidth=0.9)
@@ -689,10 +726,15 @@ def plot_edp_bars(
         shared_arrow_bottom = max(
             edp_by_arch[arch][idx] * 1.08
             for arch, _arrow_color, _label_offset_points in arrow_specs
+            if math.isfinite(edp_by_arch[arch][idx])
         )
         shared_label_y = shared_arrow_bottom * (arrow_top / shared_arrow_bottom) ** 0.50
         for arch, arrow_color, label_offset_points in arrow_specs:
             target_edp = edp_by_arch[arch][idx]
+            if not math.isfinite(target_edp):
+                ax.text(idx + offsets[arch], min(all_edp) * .65, "n/a",
+                        ha="center", color=arrow_color, fontsize=10)
+                continue
             target_x = idx + offsets[arch]
             tiny_x = idx + offsets["tinympc_e"] + bar_width / 2.0
             improvement = tiny_edp / target_edp
@@ -800,8 +842,11 @@ def plot_solver_radar(
 
     raw_by_arch = {}
     for arch, row in selected.items():
+        # The architecture radar retains the synthesis/post-route benchmark data.
         latency_ms = f(row, "solve_us_cfg_clk") / 1000.0
-        energy = energy_mj(row, tinympc_power_w)
+        energy = f(row, "energy_per_solve_cfg_uj") / 1000.0
+        if not math.isfinite(energy) or energy <= 0:
+            energy = f(row, "route_power_total_w") * latency_ms
         raw_by_arch[arch] = {
             "Latency": latency_ms,
             "Energy/solve": energy,
@@ -1022,7 +1067,7 @@ def main() -> int:
         "--tinympc-power-w",
         type=float,
         default=DEFAULT_TINYMPC_POWER_W,
-        help="TinyMPC active power estimate used for bubble area (default: 87 mA at 3.3 V)",
+        help="TinyMPC active power estimate for energy/EDP (default: 87 mA at 3.3 V)",
     )
     parser.add_argument("--svg-output", type=Path, default=OUTPUT_DIR / "benchmark_latency_energy.svg")
     parser.add_argument("--png-output", type=Path, default=OUTPUT_DIR / "benchmark_latency_energy.png")
@@ -1064,7 +1109,7 @@ def main() -> int:
         parser.error(str(exc))
 
     rows = load_rows(args.input)
-    selected = best_rows(rows, args.compare_iters)
+    selected = attach_measured_power(best_rows(rows, args.compare_iters))
     plot_headline(
         selected,
         args.svg_output,

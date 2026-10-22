@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Refresh the results-page tables after regenerating analyses."""
 
+import argparse
+
 from plot_benchmarks import (
     HERE, OUTPUT_DIR, BENCHMARK_SUMMARY_CSV, LABELS, DEFAULT_TINYMPC_POWER_W,
-    load_rows, best_rows, f, energy_mj, edp_uj_us,
+    load_rows, best_rows, f, energy_mj, edp_uj_us, attach_measured_power, comparison_latency_us,
 )
 
 def table(headers, rows):
@@ -15,16 +17,20 @@ def table(headers, rows):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--benchmarks-only', action='store_true',
+                        help='Refresh only benchmark tables, leaving flight/numerical analyses untouched.')
+    args = parser.parse_args()
     required = [OUTPUT_DIR / "flight_metrics.csv", OUTPUT_DIR / "numerical_accuracy.txt"]
     missing = [str(p) for p in required if not p.is_file()]
-    if missing:
+    if missing and not args.benchmarks_only:
         raise SystemExit("Regenerate the analyses first; missing:\n" + "\n".join(missing))
 
-    rows = best_rows(load_rows(BENCHMARK_SUMMARY_CSV), 10)
+    rows = attach_measured_power(best_rows(load_rows(BENCHMARK_SUMMARY_CSV), 10))
     common = [r for r in rows if int(f(r, "horizon")) == 40]
     benchmark = table(
         ["H40 / 10 iterations", "Solve (ms)", "Energy (mJ)", "EDP (mJ·ms)"],
-        [(LABELS[r["arch"]], f'{f(r, "solve_us_cfg_clk") / 1000:.3f}',
+        [(LABELS[r["arch"]], f'{comparison_latency_us(r) / 1000:.3f}',
           f'{energy_mj(r, DEFAULT_TINYMPC_POWER_W):.3f}',
           f'{edp_uj_us(r, DEFAULT_TINYMPC_POWER_W) / 1e6:.3f}') for r in common],
     )
@@ -42,6 +48,14 @@ def main():
         [(LABELS[r["arch"]], r["horizon"], r["gen_n_var"], r["gen_n_constr"],
           f'{f(r, "solve_us_cfg_clk") / 1000:.3f}') for r in largest],
     )
+    if args.benchmarks_only:
+        page = HERE / "README.md"
+        start, end = "<!-- BEGIN GENERATED BENCHMARKS -->", "<!-- END GENERATED BENCHMARKS -->"
+        before, rest = page.read_text().split(start)
+        _, after = rest.split(end)
+        page.write_text(before + start + "\n\n" + benchmark + "\n\n" + end + after)
+        print(f"Updated benchmark tables in {page}.")
+        return
     flight = [r for r in load_rows(OUTPUT_DIR / "flight_metrics.csv")
               if (r["experiment"], r["axis"]) in {("dynamic", "x"), ("star", "xy_any")}]
     flights = table(
