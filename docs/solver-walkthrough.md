@@ -164,6 +164,13 @@ The production core declares `x`, `b` and `y` as static arrays initialized to
 zero. They persist between calls.
 Although `x` persists too, the next triangular solve overwrites it; the carried
 `b` and `y` provide the numerical warm start.
+Neither array is shifted along the horizon. The auxiliary projection `z` is
+recomputed within each iteration; it is not a persistent array shifted between
+calls. Its contribution is retained indirectly in `b = Cᵀ D (z - y)`.
+Trajectory start/reset commands change reference playback only, leaving this
+numerical state intact. Clearing it requires a core reset. Thus reference
+playback advancing and numerical warm starting are separate operations.
+
 
 ```text
 persistent w = 0, b = 0, y = 0
