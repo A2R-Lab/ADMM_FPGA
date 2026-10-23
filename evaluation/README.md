@@ -90,8 +90,46 @@ Controller   Tracking RMSE (m)   Max XY-bound violation (m)
 
 <!-- END GENERATED NUMERICS -->
 
-The convergence plot is generated locally as `output/numerical_convergence.png`
-by the numerical simulation command below; it is not bundled with this page.
+The numerical simulation command below generates `output/numerical_convergence.png`.
+The bundled star result is shown below.
+
+### Constrained-star comparison with OSQP
+
+The star reference contains sharp corners and deliberately extends beyond the
+admissible XY box. Tracking error therefore reflects the reference geometry,
+constraints and controller dynamics as well as numerical solution accuracy.
+To contextualize the recorded flight's tracking error, we compare the fixed-point
+and float implementations with OSQP on the same star reference in simulation.
+The fixed-point and float solvers use H27/k9 and persistent warm starts; OSQP
+solves the same constrained MPC problem to its configured tolerances.
+
+All controllers use the same plant, hard XY bounds and motor limits, and update
+at 1 kHz. The plant model is regenerated at 1 ms while the MPC prediction timestep
+remains 20 ms. The reference is checked against the star reference CSV. Tracking
+RMSE covers the feasible-reference portions of one 25 s cycle: 12,040 of 25,000
+samples (48.16%).
+
+
+| Controller | 3D RMSE (cm) | Max XY violation over full rollout (cm) |
+| --- | --- | --- |
+| Fixed-point | 19.5297 | 1.3363 |
+| Float | 19.4932 | 1.3382 |
+| OSQP | 19.6230 | 0.002328 |
+
+![Constrained-star solver convergence and fixed-point versus OSQP trajectory overlay](figures/numerical_convergence.png)
+
+The right-hand panel overlays the fixed-point trajectory (green), OSQP trajectory
+(red), recorded reference (dashed grey) and hard XY box. The left and middle
+panels show fixed-point and float solver residuals. This figure shows simulated
+trajectories, not the recorded flight.
+
+The trajectory overlay shows similar corner rounding, and the three controllers
+achieve comparable tracking RMSE. Thus, the star's tracking error also occurs
+when OSQP solves the MPC problem: it cannot be attributed solely to the FPGA
+solver's fixed iteration budget or arithmetic. This supports interpreting the
+flight RMSE in the context of this demanding reference, rather than judging
+solver quality from its absolute magnitude alone.
+
 
 ## Recorded flights
 
@@ -189,6 +227,28 @@ The simulation writes a text report and convergence plot, plus
 `output/numerical_command_distribution.csv` with distribution statistics and
 `output/numerical_command_errors.csv` with per-instant errors and zero-based
 control-step indices. These outputs can also be regenerated from the cache.
+
+For the unchanged constrained star, add `--trajectory star --plant matched --simulate` to the
+same command. This checks the generated reference against the bundled star CSV
+and uses the same hard static box, dynamics constraints and motor limits for all
+controllers. The simulated plant uses the MPC model's RK4 integration, hover
+linearization and drag correction, regenerated at 1 ms; the controller retains its
+20 ms prediction model. There is no added motor lag or plant disturbance. This
+uses the same model at different timesteps, not a matrix root or exact equality
+between twenty plant steps and one prediction step. The FPGA solver is unchanged.
+All controllers update at 1 kHz; OSQP computation adds no simulated delay.
+The report includes 3D RMSE over one 25 s cycle, restricted to feasible reference
+points, and percentage excess relative to OSQP only if its full rollout succeeds.
+Unsolved replay inputs are counted by status; a failed OSQP rollout is saved and
+marked incomplete, without a full-cycle RMSE. The tracking definition is given
+in the constrained-star comparison above.
+The existing convergence figure includes an XY overlay of the reference and
+fixed-point/OSQP trajectories.
+
+The existing numerical output files/cache hold the most recent scenario. Use
+`--trajectory star --plant matched` to reread its cache, or
+`--trajectory fig8 --plant nonlinear --simulate` to regenerate the original
+figure-eight scenario before refreshing the tables below.
 
 After regenerating all analyses, refresh the tables with:
 
