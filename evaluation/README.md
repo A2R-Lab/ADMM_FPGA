@@ -33,6 +33,12 @@ for measurement boundaries and the separate 100 µs feasibility reserve.
 The architecture radar retains synthesis-derived timing and post-route power
 estimates from the benchmark CSV.
 
+The [device power comparison CSV](data/device_power_comparison.csv) compares
+routed Artix-7 50T designs with matching 100T estimates using the same
+architecture, horizon and 10 ADMM iterations. Power is Vivado total on-chip power 
+in watts. The percentage change is `100 * (50T / 100T - 1)`. The CSV also records 
+50T distributed RAM LUT and BRAM tile counts.
+
 <!-- BEGIN GENERATED BENCHMARKS -->
 
 | H40 / 10 iterations | Solve (ms) | Energy (mJ) | EDP (mJ·ms) |
