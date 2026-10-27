@@ -186,6 +186,17 @@ bounds and reports both 3D and XY RMSE. See the
 
 ## Regenerate
 
+### Paper Figure 2
+
+`plot_sparsity.py` outputs the paper's matrix sparsity figure as PDF and PNG
+in `evaluation/output/`:
+
+```bash
+python evaluation/plot_sparsity.py
+```
+
+### Benchmark and flight plots
+
 Run from the repository root with Python 3.10–3.12 in an isolated environment:
 
 ```bash
