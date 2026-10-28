@@ -1,0 +1,1 @@
+Here, the drone follows a figure-eight reference. The plot compares the recorded path with the reference.

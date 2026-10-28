@@ -79,3 +79,8 @@ video/constrainedStarTopView.MP4
 /xsim.dir/
 /*.pb
 /*.wdb
+
+# Generated TTS audio and subtitle files; narration/*.txt remain editable sources
+/video/narration/*.mp3
+/video/narration/*.wav
+/video/narration/*.srt

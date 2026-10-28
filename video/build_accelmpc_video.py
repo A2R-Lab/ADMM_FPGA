@@ -14,7 +14,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent
 WORK = ROOT / "generated_accelmpc_assets"
-OUT = ROOT / "AccelMPC_supplementary_demo.mp4"
+OUT = ROOT / "AccelMPC_supplementary_revised.mp4"
 NOMINAL_OUT = ROOT / "AccelMPC_nominal_figure8_iteration.mp4"
 STAR_OUT = ROOT / "AccelMPC_constrained_star_iteration.mp4"
 TOP_TRAIL_RAW = ROOT / "topview_motion_trail_raw.png"
@@ -32,16 +32,10 @@ FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
 TIMINGS = {
-    "cover": 5.0,
-    "hardware": 8.0,
-    "nominal_card": 3.0,
-    "nominal": 16.0,
-    "star_card": 3.0,
-    "star": 23.0,
-    "dynamic_card": 3.0,
-    "dynamic": 38.0,
-    "results": 7.0,
+    "cover": 7, "system": 12, "hardware": 6,
+    "nominal": 10, "star": 26, "dynamic": 38, "closing": 16.5,
 }
+
 
 STAR_TOP_ORIGINAL = ROOT / "constrainedStarTopView.MP4"
 STAR_TOP_REDUCED = ROOT / "constrainedStarTopView_1080p.mp4"
@@ -55,8 +49,6 @@ SOURCES = {
     "board_back": ROOT / "board_back_crop.png",
     "figure8": ROOT / "figure8.gif",
     "figure8_top": ROOT / "figure8_topview.gif",
-    "figure8_plot": ROOT / "figure8.jpg",
-    "star_plot": ROOT / "constrainedStar.png",
     "star_lateral": ROOT / "constrainedStarLateralView.MOV",
     "star_top": STAR_TOP_SOURCE,
     "dynamic": ROOT / "dynObstacleAvoidance.mp4",
@@ -67,14 +59,10 @@ SOURCES = {
 # top-view image, so it remains attached when the crop is changed.
 STAR_LATERAL_START = 13.0
 STAR_TOP_START = 20.5
-STAR_DURATION = TIMINGS["star"]
 STAR_LATERAL_CROP = (80, 180, 1120, 500)      # x, y, width, height; crop starts near curtain bottom
 STAR_TOP_CROP = (249, 85, 1420, 888)        # reference 1920x1080 coordinates
 STAR_CONSTRAINT_SQUARE = (419, 199, 497, 497) # reference cropped-image coordinates
-STAR_SQUARE_COLOR = "#f7b12c"
-STAR_SQUARE_ALPHA = 0.20
-STAR_SQUARE_WIDTH = 5
-STAR_PANEL_GAP = 12
+STAR_SAFE_DURATION = 26.0
 DYNAMIC_START = 0.0
 
 def font(size, bold=False):
@@ -94,16 +82,6 @@ def load_manual_star_config():
 
 def text(draw, xy, value, size, fill=WHITE, bold=False, anchor=None):
     draw.text(xy, value, font=font(size, bold), fill=fill, anchor=anchor)
-
-def card(path, headline, subline=None, accent=True):
-    im = Image.new("RGBA", (W, H), BG)
-    d = ImageDraw.Draw(im)
-    d.rectangle((120, 170, 132, 910), fill=AMBER if accent else MUTED)
-    text(d, (190, 430), headline, 72, WHITE, True)
-    if subline:
-        text(d, (194, 550), subline, 32, WHITE, True)
-    d.line((190, 640, 760, 640), fill=(48, 67, 88, 255), width=2)
-    im.save(path)
 
 def cover(path):
     src = Image.open(SOURCES["drone"]).convert("RGB")
@@ -143,27 +121,16 @@ def hardware(path):
     text(d, (90, 986), "AMD Artix-7 100T · Fully onboard MPC", 28, WHITE, True)
     im.save(path)
 
-def overlay(path, lines, top=70, right=False):
-    im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    d = ImageDraw.Draw(im)
-    widths = [d.textbbox((0, 0), s, font=font(26, True))[2] for s in lines]
-    bw = max(widths) + 44
-    bh = 38 + len(lines) * 36
-    x = W - bw - 60 if right else 60
-    d.rounded_rectangle((x, top, x+bw, top+bh), radius=12, fill=(7, 16, 28, 190), outline=(93, 112, 132, 180), width=2)
-    for i, line in enumerate(lines):
-        text(d, (x+22, top+18+i*36), line, 26, WHITE, True)
-    im.save(path)
-
 def run(args):
+    print("Rendering:", args[-1], flush=True)
     subprocess.run(args, check=True)
 
 def still_segment(image, duration, out):
-    run([FFMPEG, "-y", "-loop", "1", "-i", str(image), "-t", str(duration), "-r", str(FPS),
+    run([FFMPEG, "-y", "-loglevel", "error", "-loop", "1", "-i", str(image), "-t", str(duration), "-r", str(FPS),
          "-vf", "format=yuv420p", "-an", "-c:v", "libx264", "-preset", "medium", "-crf", "18", str(out)])
 
 def video_segment(source, start, duration, out, vf=None, overlay_img=None, loop=False):
-    args = [FFMPEG, "-y"]
+    args = [FFMPEG, "-y", "-loglevel", "error"]
     if loop:
         args += ["-stream_loop", "-1"]
     args += ["-ss", str(start), "-i", str(source)]
@@ -175,33 +142,6 @@ def video_segment(source, start, duration, out, vf=None, overlay_img=None, loop=
         args += ["-vf", vf or "null"]
     args += ["-t", str(duration), "-an", "-r", str(FPS), "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", str(out)]
     run(args)
-
-def render_star_base(out, duration):
-    """Render the aligned/cropped star views on a padded 1920x1080 canvas."""
-    lx, ly, lw, lh = STAR_LATERAL_CROP
-    tx, ty, tw, th = STAR_TOP_CROP
-    sx, sy, sw, sh = STAR_CONSTRAINT_SQUARE
-    mirrored_sx = tw - sx - sw
-    # The views are stacked in 1920x500 panels. force_original_aspect_ratio=
-    # decrease preserves each crop's aspect ratio; pad supplies the background.
-    video_w, video_h, plot_w = 1240, 480, 680
-    vf = (
-        f"[1:v]crop={tw}:{th}:{tx}:{ty},hflip,vflip,drawbox=x={mirrored_sx}:y={th - sy - sh}:w={sw}:h={sh}:"
-        f"color={STAR_SQUARE_COLOR}@{STAR_SQUARE_ALPHA}:t={STAR_SQUARE_WIDTH},"
-        f"scale={video_w}:{video_h}:force_original_aspect_ratio=decrease,"
-        f"pad={video_w}:{video_h}:(ow-iw)/2:(oh-ih)/2:color=#09121f[top];"
-        f"[0:v]crop={lw}:{lh}:{lx}:{ly},scale={video_w}:{video_h}:force_original_aspect_ratio=decrease,"
-        f"pad={video_w}:{video_h}:(ow-iw)/2:(oh-ih)/2:color=#09121f[bottom];"
-        f"color=c=#09121f:s={video_w}x{STAR_PANEL_GAP}:r={FPS}[gap];"
-        f"[top][gap][bottom]vstack=inputs=3,pad={video_w}:1080:(ow-iw)/2:(oh-ih)/2:color=#09121f[video];"
-        f"[2:v]scale={plot_w}:1080:force_original_aspect_ratio=decrease,"
-        f"pad={plot_w}:1080:(ow-iw)/2:(oh-ih)/2:color=#09121f[plot];"
-        f"[video][plot]hstack=inputs=2,setsar=1"
-    )
-    run([FFMPEG, "-y", "-ss", str(STAR_LATERAL_START), "-i", str(SOURCES["star_lateral"]),
-         "-ss", str(STAR_TOP_START), "-i", str(SOURCES["star_top"]), "-loop", "1", "-i", str(SOURCES["star_plot"]), "-t", str(duration),
-         "-an", "-filter_complex", vf, "-r", str(FPS), "-c:v", "libx264", "-preset", "medium",
-         "-crf", "18", "-pix_fmt", "yuv420p", "-frames:v", str(round(duration * FPS)), str(out)])
 
 def motion_trail(source, out, vf=None):
     """Accumulate all decoded frames with a per-pixel lighten composite."""
@@ -230,88 +170,295 @@ def motion_trail(source, out, vf=None):
     composite.save(out)
     print(f"Wrote {out} ({out.stat().st_size / 1e6:.1f} MB)")
 
+
+# The revised cut uses fixed, readable panels. Plots summarize recorded runs;
+# they are deliberately not animated against footage with unverified log sync.
+BLUE = (83, 197, 244, 255)
+GREEN = (112, 211, 159, 255)
+
+def lines(draw, x, y, values, size=32, color=WHITE, step=48):
+    for i, value in enumerate(values):
+        text(draw, (x, y + i * step), value, size, color)
+
+def explanation(path, title, values):
+    im = Image.new("RGBA", (W, H), BG)
+    d = ImageDraw.Draw(im)
+    text(d, (100, 100), title, 58, AMBER, True)
+    lines(d, 105, 285, values, 37, step=85)
+    im.save(path)
+
+def system_card(path):
+    im = Image.new("RGBA", (W, H), BG); d = ImageDraw.Draw(im)
+    text(d, (90, 80), "How the flight experiment works", 58, WHITE, True)
+    text(d, (90, 190), "External sensing", 34, AMBER, True)
+    text(d, (800, 190), "Onboard the drone", 34, BLUE, True)
+    d.rounded_rectangle((750, 250, 1830, 780), 24, outline=BLUE, width=3)
+    boxes = [(90, 330, 630, 600), (800, 330, 1240, 600), (1350, 330, 1780, 600)]
+    labels = [["Motion capture", "Drone / obstacle poses"],
+              ["Microcontroller", "State feedback"], ["FPGA accelerator", "MPC optimization"]]
+    for box, label in zip(boxes, labels):
+        d.rounded_rectangle(box, 18, fill=(25, 42, 60), outline=MUTED, width=2)
+        for i, value in enumerate(label):
+            text(d, ((box[0]+box[2])/2, 400+i*55), value, 29, anchor='mt')
+    for x1, x2 in [(640, 790), (1250, 1340)]:
+        d.line((x1, 465, x2, 465), fill=AMBER, width=5)
+        d.polygon([(x2,465),(x2-16,455),(x2-16,475)], fill=AMBER)
+    text(d, (880, 665), "Motor commands → drone motion → feedback", 30, WHITE)
+    lines(d, 95, 850, ["Model predictive control (MPC) predicts motion and optimizes motor commands.",
+                       "Position limits constrain the optimization; obstacle motion updates those limits."], 33, step=60)
+    im.save(path)
+
+def trajectory_panel(path, curves, limits, bounds=None):
+    """Raster plot with metre axes and consistent colors, sized for video."""
+    im = Image.new("RGBA", (800, 800), BG); d = ImageDraw.Draw(im)
+    lo, hi = limits
+    def xy(p):
+        return (135+(float(p[0])-lo)/(hi-lo)*570, 680-(float(p[1])-lo)/(hi-lo)*570)
+    if bounds:
+        a, b = bounds
+        d.rectangle((*xy((a,b)), *xy((b,a))), fill=(35,65,58), outline=GREEN, width=3)
+    for j in range(5):
+        v = lo+(hi-lo)*j/4
+        x,y = xy((v,v))
+        d.line((x,110,x,680), fill=(54,67,79), width=1)
+        d.line((135,y,705,y), fill=(54,67,79), width=1)
+        text(d,(x,700),f"{v:.1f}",23,anchor="mt")
+        text(d,(95,y),f"{v:.1f}",23,anchor="rm")
+    text(d,(420,755),"x [m]",27,anchor="mt")
+    text(d,(20,65),"y [m]",27)
+    for i,(label, points, color) in enumerate(curves):
+        pts=[xy(p) for p in points]
+        d.line(pts,fill=color,width=3)
+        d.line((110,25+i*35,155,25+i*35),fill=color,width=4)
+        text(d,(170,10+i*35),label,25,color)
+    im.save(path)
+
+def evidence_assets():
+    import csv
+    import hashlib
+    import numpy as np
+    sys.path.insert(0, str(ROOT.parent / "evaluation"))
+    from flight_metrics import analyze, STAR_FLIGHT, STAR_REFERENCE, DYNAMIC_FLIGHT
+    data = ROOT.parent / "evaluation" / "data"
+    def read(name):
+        with (data/name).open() as stream:
+            return list(csv.DictReader(stream))
+    ref = np.array([[float(r['x0']),float(r['x1'])] for r in read('figure8_ref_trajectory.csv')])
+    rows = read('figure8_fpga_trajectory.csv')[500:1300]
+    measured = np.array([[float(r['state_x'])-.383558,float(r['state_y'])+.598284] for r in rows])
+    # Point-to-segment distance measures spatial path deviation, not temporal error.
+    a, delta = ref[:-1], np.diff(ref,axis=0)
+    denom = np.sum(delta*delta,axis=1)
+    distances=[]
+    for point in measured:
+        u=np.divide(np.sum((point-a)*delta,axis=1),denom,out=np.zeros_like(denom),where=denom>0)
+        closest=a+np.clip(u,0,1)[:,None]*delta
+        distances.append(float(np.min(np.linalg.norm(point-closest,axis=1))))
+    rms=100*float(np.sqrt(np.mean(np.square(distances))))
+    p95=100*float(np.percentile(distances,95))
+    trajectory_panel(WORK/'nominal_plot.png', [('Reference',ref,AMBER),('Measured FPGA state',measured,BLUE)],(-.7,.7))
+    # The author identified 18:52:11 as the run shown in the footage.
+    results=[analyze(STAR_FLIGHT, 'star', STAR_REFERENCE)]
+    results[0]['spec'] = {'id': 'star_185211'}
+    r=results[0]
+    dynamic = analyze(DYNAMIC_FLIGHT, 'dynamic')['metrics']['x']
+    star_bounds = (-1.3535533905932737, .6464466094067263)
+    star_center = sum(star_bounds)/2
+    # Recenter the viewport, preserving reference, measurements and bound coordinates.
+    trajectory_panel(WORK/'star_plot.png', [('Reference',r['reference'][:,1:3],AMBER),('Run 18:52:11',r['positions'][:,:2],BLUE)],
+                     (star_center-2.4, star_center+2.4), star_bounds)
+    report={
+        'figure8': {'rms_path_deviation_cm':rms,'p95_path_deviation_cm':p95,'samples':len(measured),
+                    'method':'Nearest reference polyline segment in XY; state_x/y; rows [500:1300]; historical plot translation (-0.383558,+0.598284) m; not time-synchronized tracking error.',
+                    'sources':{name:hashlib.sha256((data/name).read_bytes()).hexdigest() for name in ['figure8_ref_trajectory.csv','figure8_fpga_trajectory.csv']}},
+        'dynamic': dynamic,
+        'benchmark': {'speedup': 15.6, 'edp_improvement': 231.5, 'source': 'paper/tex/5_exp_eval.tex'},
+        'star':[{ 'id':v['spec']['id'],'tracking':v['tracking'],'constraint':v['metrics']['xy_any']} for v in results]}
+    (WORK/'video_metrics.json').write_text(json.dumps(report,indent=2)+'\n')
+    return rms,p95,results,dynamic
+
+def demo_overlay(path, title, captions, plot=None, plot_notes=()):
+    im=Image.new('RGBA',(W,H),(0,0,0,0)); d=ImageDraw.Draw(im)
+    d.rectangle((0,0,W,115),fill=BG)
+    text(d,(60,32),title,42,WHITE,True)
+    d.rectangle((0,880,W,H),fill=BG)
+    lines(d,60,905,captions,31,step=49)
+    if plot:
+        text(d,(25,125),'SIDE CAMERA',23,MUTED,True)
+        text(d,(25,505),'TOP CAMERA',23,MUTED,True)
+        im.alpha_composite(Image.open(plot).convert('RGBA'),(1120,105))
+        d=ImageDraw.Draw(im)
+        # Notes occupy the dedicated strip under the plot, above captions.
+        for i,note in enumerate(plot_notes):
+            text(d,(1150,810+i*32),note,24,MUTED)
+    im.save(path)
+
+def render_demo(kind,out,duration):
+    """Two aspect-preserving camera panels plus one legible evidence panel."""
+    if kind=='nominal':
+        inputs=['-stream_loop','-1','-i',str(SOURCES['figure8']),'-stream_loop','-1','-i',str(SOURCES['figure8_top'])]
+        transforms=['null','null']
+    else:
+        lx,ly,lw,lh=STAR_LATERAL_CROP; tx,ty,tw,th=STAR_TOP_CROP
+        inputs=['-ss',str(STAR_LATERAL_START),'-i',str(SOURCES['star_lateral']),'-ss',str(STAR_TOP_START),'-i',str(SOURCES['star_top'])]
+        sx, sy, sw, sh = STAR_CONSTRAINT_SQUARE
+        transforms=[f'crop={lw}:{lh}:{lx}:{ly}',
+                    f'crop={tw}:{th}:{tx}:{ty},hflip,vflip,'
+                    f'drawbox=x={tw-sx-sw}:y={th-sy-sh}:w={sw}:h={sh}:color=0xf7b12c@0.65:t=5']
+    filters=[]
+    for i,transform in enumerate(transforms):
+        if kind == 'star':
+            # Stop before the descent seen near the end of the recording.
+            transform += f',trim=duration={STAR_SAFE_DURATION},setpts=PTS-STARTPTS,tpad=stop_mode=clone:stop_duration={duration}'
+        filters.append(f'[{i}:v]{transform},scale=1120:375:force_original_aspect_ratio=decrease,pad=1120:375:(ow-iw)/2:(oh-ih)/2:color=#09121f,setsar=1[v{i}]')
+    filters += ['[v0][v1]vstack=inputs=2,pad=1920:1080:0:120:color=#09121f[base]', '[base][2:v]overlay=0:0:format=auto,format=yuv420p[out]']
+    run([FFMPEG,'-y','-loglevel','error',*inputs,'-loop','1','-i',str(WORK/f'{kind}_ov.png'),'-filter_complex',';'.join(filters),'-map','[out]','-t',str(duration),'-an','-r',str(FPS),'-c:v','libx264','-preset','medium','-crf','18',str(out)])
+
+def closing(path):
+    im = Image.new('RGBA', (W, H), BG)
+    d = ImageDraw.Draw(im)
+    text(d, (160, 190), 'AccelMPC', 88, WHITE, True)
+    text(d, (165, 325), 'Thank you for watching', 44, AMBER)
+    lines(d, 165, 510, [
+        'Solver benchmarks vs TinyMPC on MCU',
+        'Up to 15.6× faster',
+        'Up to 231.5× lower energy-delay product',
+    ], 34, step=65)
+    lines(d, 165, 745, [#'FPGA power: measured; post-route estimates where needed',
+                       'Solve-only comparison'# · excludes communication and support circuitry'
+                       ], 25, MUTED, step=42)
+    # Reserve the right side for a repository QR code after deanonymization.
+    im.save(path)
+
+
+def media_duration(path):
+    return float(subprocess.check_output([
+        'ffprobe', '-v', 'error', '-show_entries', 'format=duration',
+        '-of', 'default=noprint_wrappers=1:nokey=1', str(path)
+    ], text=True).strip())
+
+
+def subtitle_phrase_start(path, phrase):
+    """Use the TTS sentence cue to align a visual cut with spoken words."""
+    import re
+    for block in re.split(r'\n\s*\n', path.read_text().strip()):
+        rows = block.splitlines()
+        if len(rows) >= 3 and ' '.join(rows[2:]).startswith(phrase):
+            stamp = rows[1].split(' --> ')[0]
+            hours, minutes, seconds = stamp.replace(',', '.').split(':')
+            return int(hours)*3600 + int(minutes)*60 + float(seconds)
+    raise ValueError(f'{phrase!r} must begin a cue in {path}; regenerate narration.')
+
+
 def main():
+    import argparse
+    import math
+    parser = argparse.ArgumentParser(description=__doc__)
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--nominal-only', action='store_true')
+    mode.add_argument('--star-only', action='store_true')
+    parser.add_argument('--top-trail', action='store_true')
+    parser.add_argument('--assets-only', action='store_true')
+    parser.add_argument('--narration-dir', type=Path, help='Directory containing chapter WAV files')
+    parser.add_argument('--output', type=Path, default=OUT)
+    args = parser.parse_args()
     load_manual_star_config()
     WORK.mkdir(exist_ok=True)
-    cover(WORK / "cover.png")
-    hardware(WORK / "hardware.png")
-    card(WORK / "nominal_card.png", "Nominal trajectory tracking", "FPGA MPC preserves the baseline closed-loop behavior")
-    card(WORK / "star_card.png", "1 kHz constrained MPC", "The reference leaves the admissible region; the drone does not.")
-    card(WORK / "dynamic_card.png", "Dynamic obstacle avoidance", "Runtime constraints updated online while MPC continues at 1 kHz")
-    card(WORK / "results.png", "AccelMPC", "1 kHz onboard constrained MPC · 35 g drone", accent=True)
-    # Add the headline metrics to the final card, keeping it intentionally sparse.
-    im = Image.open(WORK / "results.png").convert("RGBA"); d = ImageDraw.Draw(im)
-    text(d, (194, 690), "Up to 15.6× faster", 34, WHITE, True)
-    text(d, (194, 745), "Up to 195.4× lower energy-delay product", 34, WHITE, True)
-    text(d, (194, 800), "Scales beyond 20,000 optimization variables", 34, WHITE, True)
-    im.save(WORK / "results.png")
-    overlay(WORK / "nominal_ov.png", ["Nominal figure-eight tracking"], right=True)
-    overlay(WORK / "star_ov.png", ["Onboard MPC: 1 kHz", "H = 27, k = 9"], right=True)
-    overlay(WORK / "dynamic_ov.png", ["Obstacle tracking: 120 Hz", "Onboard MPC: 1 kHz"], right=False)
-
-    if "--top-trail" in sys.argv:
-        tx, ty, tw, th = STAR_TOP_CROP
-        top_vf = f"crop={tw}:{th}:{tx}:{ty},hflip,vflip"
-        motion_trail(SOURCES["star_top"], TOP_TRAIL_RAW)
-        motion_trail(SOURCES["star_top"], TOP_TRAIL_CROPPED, top_vf)
+    if args.top_trail:
+        tx,ty,tw,th=STAR_TOP_CROP
+        motion_trail(SOURCES['star_top'], TOP_TRAIL_RAW)
+        motion_trail(SOURCES['star_top'], TOP_TRAIL_CROPPED, f'crop={tw}:{th}:{tx}:{ty},hflip,vflip')
         return
-
-    # Fast iteration mode: render only the nominal chapter card and the two
-    # figure-eight GIFs.  Their native proportions are retained: the lateral
-    # view fills the upper 550 px; the top view is centered in the lower 530 px.
-    if "--nominal-only" in sys.argv:
-        card_seg = WORK / "iteration_nominal_card.mp4"
-        still_segment(WORK / "nominal_card.png", TIMINGS["nominal_card"], card_seg)
-        nominal_vf = "[0:v]scale=1920:550,setsar=1[top];[1:v]scale=1240:530:force_original_aspect_ratio=decrease,setsar=1[small];[small]pad=1240:530:(ow-iw)/2:(oh-ih)/2:color=#09121f[bottom_left];[2:v]scale=680:530:force_original_aspect_ratio=decrease,pad=680:530:(ow-iw)/2:(oh-ih)/2:color=#09121f[bottom_right];[bottom_left][bottom_right]hstack=inputs=2[bottom];[top][bottom]vstack=inputs=2,setsar=1"
-        nominal_seg = WORK / "iteration_nominal.mp4"
-        run([FFMPEG, "-y", "-stream_loop", "-1", "-i", str(SOURCES["figure8"]), "-stream_loop", "-1", "-i", str(SOURCES["figure8_top"]), "-loop", "1", "-i", str(SOURCES["figure8_plot"]), "-t", str(TIMINGS["nominal"]), "-an", "-filter_complex", nominal_vf, "-r", str(FPS), "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", str(nominal_seg)])
-        concat = WORK / "iteration_nominal_concat.txt"
-        concat.write_text(f"file '{card_seg.as_posix()}'\nfile '{nominal_seg.as_posix()}'\n")
-        run([FFMPEG, "-y", "-f", "concat", "-safe", "0", "-i", str(concat), "-an", "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(NOMINAL_OUT)])
-        print(f"Wrote {NOMINAL_OUT} ({NOMINAL_OUT.stat().st_size/1e6:.1f} MB)")
+    rms, p95, star, dynamic = evidence_assets()
+    cover(WORK/'cover.png')
+    hardware(WORK/'hardware.png')
+    system_card(WORK/'system.png')
+    closing(WORK/'closing.png')
+    tr, cv = star[0]['tracking'], star[0]['metrics']['xy_any']
+    demo_overlay(WORK/'nominal_ov.png', 'Figure-eight / onboard MPC', [
+        f'XY path deviation: {rms:.2f} cm RMS', # | P95 {p95:.2f} cm',
+        'FPGA: 20 step horizon, 28 ADMM iterations'
+    ], WORK/'nominal_plot.png')
+    demo_overlay(WORK/'star_ov.png', 'Constrained tracking / 1 kHz onboard MPC', [
+        f'3D tracking {tr["rmse_cm"]:.2f} cm RMSE over feasible section of the reference', # | Feasible reference: {tr["coverage_percent"]:.2f}% of samples; fitted phase',
+        f'Bound violation: RMS {cv["rms_violation_cm"]:.3f} cm | Maximum {cv["max_violation_cm"]:.2f} cm per axis',
+        '27 step horizon , 9 ADMM iterations | Square: allowed region.'
+    ], WORK/'star_plot.png')
+    demo_overlay(WORK/'dynamic_ov.png', 'Moving obstacles / changing position limits', [
+        'Motion capture: 120 Hz | Onboard MPC: 1 kHz',
+        f'Bound violation: RMS {dynamic["rms_violation_cm"]:.3f} cm | Maximum {dynamic["max_violation_cm"]:.2f} cm', # | Inside: {100-dynamic["outside_percent"]:.2f}%',
+        #'Full recording; position bounds are the last transmitted bounds.'
+    ])
+    if args.assets_only:
+        print(f'Wrote assets to {WORK}')
         return
+    names = ['nominal'] if args.nominal_only else ['star'] if args.star_only else list(TIMINGS)
+    durations = {}
+    audio_offsets = {name: (-1.0 if name == 'system' and 'cover' in names else 0.0) for name in names}
+    if args.narration_dir and 'nominal' in names and 'star' in names:
+        audio_offsets['star'] = -2.5
+    if args.narration_dir and 'dynamic' in names and 'closing' in names:
+        audio_offsets['closing'] = -subtitle_phrase_start(args.narration_dir/'closing.srt', 'Solver benchmarks')
+    for name in names:
+        duration = TIMINGS[name]
+        if args.narration_dir:
+            audio = args.narration_dir/f'{name}.wav'
+            if not audio.is_file():
+                raise FileNotFoundError(audio)
+            tail = 0.4 if name in ('cover', 'system', 'hardware', 'star') else 1.0
+            duration = max(duration, math.ceil((media_duration(audio)+audio_offsets[name]+tail)*FPS)/FPS)
+        durations[name] = duration
+    if len(names) > 1 and not 120 <= sum(durations.values()) <= 180:
+        raise ValueError('Full cut must be 2–3 minutes; shorten narration or adjust TIMINGS.')
+    segments = []
+    for name in names:
+        duration = durations[name]
+        out = WORK/f'narrated_{name}.mp4'
+        if name in ('cover', 'hardware', 'system', 'closing'):
+            still_segment(WORK/f'{name}.png', duration, out)
+        elif name == 'dynamic':
+            # Play the experiment once. Any extra narration holds the final frame.
+            video_segment(SOURCES['dynamic'], DYNAMIC_START, duration, out,
+                f'trim=duration=38,setpts=PTS-STARTPTS,tpad=stop_mode=clone:stop_duration={duration},'
+                'scale=1920:720:force_original_aspect_ratio=decrease,'
+                'pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=#09121f', WORK/'dynamic_ov.png')
+        else:
+            render_demo(name, out, duration)
+        segments.append(out)
+    # Build one continuous PCM soundtrack, allowing speech to lead slide cuts.
+    import wave
+    sample_rate, frame_bytes = 48000, 4  # stereo, signed 16-bit
+    total_duration = sum(durations.values())
+    soundtrack = bytearray(round(total_duration*sample_rate)*frame_bytes)
+    cursor, previous_end = 0.0, 0
+    for name in names:
+        if args.narration_dir:
+            with wave.open(str(args.narration_dir/f'{name}.wav'), 'rb') as source:
+                if (source.getframerate(), source.getnchannels(), source.getsampwidth()) != (sample_rate, 2, 2):
+                    raise ValueError('Narration must be 48 kHz stereo 16-bit WAV; run generate_narration.py.')
+                pcm = source.readframes(source.getnframes())
+            start = round((cursor+audio_offsets[name])*sample_rate)*frame_bytes
+            end = start+len(pcm)
+            if start < previous_end or end > len(soundtrack):
+                raise ValueError(f'Narration overlaps or exceeds the cut: {name}')
+            soundtrack[start:end] = pcm
+            previous_end = end
+        cursor += durations[name]
+    mix = WORK/'narration_mix.wav'
+    with wave.open(str(mix), 'wb') as target:
+        target.setparams((2, 2, sample_rate, 0, 'NONE', 'not compressed'))
+        target.writeframes(soundtrack)
+    destination = NOMINAL_OUT if args.nominal_only else STAR_OUT if args.star_only else args.output
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    concat = WORK/'revised_concat.txt'
+    concat.write_text(''.join("file '"+str(p.resolve()).replace("'", "'\\''")+"'\n" for p in segments))
+    run([FFMPEG, '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', str(concat),
+         '-i', str(mix), '-map', '0:v:0', '-map', '1:a:0',
+         '-c:v', 'copy', '-c:a', 'aac', '-t', str(total_duration), '-movflags', '+faststart', str(destination)])
+    (WORK/'audio_offsets.json').write_text(json.dumps(audio_offsets, indent=2)+'\n')
+    (WORK/'timeline.json').write_text(json.dumps(durations, indent=2)+'\n')
+    print(f'Wrote {destination} ({sum(durations.values())} seconds)')
 
-    # Fast iteration mode for the constrained-star experiment only.
-    if "--star-only" in sys.argv:
-        card_seg = WORK / "iteration_star_card.mp4"
-        still_segment(WORK / "star_card.png", TIMINGS["star_card"], card_seg)
-        star_base = WORK / "iteration_star.mp4"
-        render_star_base(star_base, STAR_DURATION)
-        star_seg = WORK / "iteration_star_overlay.mp4"
-        video_segment(star_base, 0, STAR_DURATION, star_seg, "scale=1920:1080,setsar=1", WORK / "star_ov.png")
-        concat = WORK / "iteration_star_concat.txt"
-        concat.write_text(f"file '{card_seg.as_posix()}'\nfile '{star_seg.as_posix()}'\n")
-        run([FFMPEG, "-y", "-f", "concat", "-safe", "0", "-i", str(concat), "-an",
-             "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p",
-             "-movflags", "+faststart", str(STAR_OUT)])
-        print(f"Wrote {STAR_OUT} ({STAR_OUT.stat().st_size/1e6:.1f} MB)")
-        return
 
-    segs = []
-    def add(name, duration, fn):
-        out = WORK / f"{len(segs):02d}_{name}.mp4"; fn(out); segs.append(out)
-    add("cover", TIMINGS["cover"], lambda o: still_segment(WORK / "cover.png", TIMINGS["cover"], o))
-    add("hardware", TIMINGS["hardware"], lambda o: still_segment(WORK / "hardware.png", TIMINGS["hardware"], o))
-    add("nominal_card", TIMINGS["nominal_card"], lambda o: still_segment(WORK / "nominal_card.png", TIMINGS["nominal_card"], o))
-    nominal_vf = "[0:v]scale=1920:550,setsar=1[top];[1:v]scale=1240:530:force_original_aspect_ratio=decrease,setsar=1[small];[small]pad=1240:530:(ow-iw)/2:(oh-ih)/2:color=#09121f[bottom_left];[2:v]scale=680:530:force_original_aspect_ratio=decrease,pad=680:530:(ow-iw)/2:(oh-ih)/2:color=#09121f[bottom_right];[bottom_left][bottom_right]hstack=inputs=2[bottom];[top][bottom]vstack=inputs=2,setsar=1"
-    nominal_base = WORK / f"{len(segs):02d}_nominal_base.mp4"
-    run([FFMPEG, "-y", "-stream_loop", "-1", "-i", str(SOURCES["figure8"]), "-stream_loop", "-1", "-i", str(SOURCES["figure8_top"]), "-loop", "1", "-i", str(SOURCES["figure8_plot"]), "-t", str(TIMINGS["nominal"]), "-an", "-filter_complex", nominal_vf, "-r", str(FPS), "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", str(nominal_base)])
-    nominal_out = WORK / f"{len(segs):02d}_nominal.mp4"
-    video_segment(nominal_base, 0, TIMINGS["nominal"], nominal_out, "scale=1920:1080,setsar=1")
-    segs.append(nominal_out)
-    add("star_card", TIMINGS["star_card"], lambda o: still_segment(WORK / "star_card.png", TIMINGS["star_card"], o))
-    star_base = WORK / f"{len(segs):02d}_star_base.mp4"
-    render_star_base(star_base, STAR_DURATION)
-    star_out = WORK / f"{len(segs):02d}_star.mp4"
-    video_segment(star_base, 0, STAR_DURATION, star_out, "scale=1920:1080", WORK / "star_ov.png"); segs.append(star_out)
-    add("dynamic_card", TIMINGS["dynamic_card"], lambda o: still_segment(WORK / "dynamic_card.png", TIMINGS["dynamic_card"], o))
-    add("dynamic", TIMINGS["dynamic"], lambda o: video_segment(SOURCES["dynamic"], DYNAMIC_START, TIMINGS["dynamic"], o, "scale=1920:720:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=#09121f", WORK / "dynamic_ov.png"))
-    add("results", TIMINGS["results"], lambda o: still_segment(WORK / "results.png", TIMINGS["results"], o))
-
-    concat = WORK / "concat.txt"
-    concat.write_text("\n".join(f"file '{p.as_posix()}'" for p in segs) + "\n")
-    run([FFMPEG, "-y", "-f", "concat", "-safe", "0", "-i", str(concat), "-an", "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(OUT)])
-    print(f"Wrote {OUT} ({OUT.stat().st_size/1e6:.1f} MB)")
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
