@@ -348,19 +348,31 @@ def render_demo(kind,out,duration):
     run([FFMPEG,'-y','-loglevel','error',*inputs,'-loop','1','-i',str(WORK/f'{kind}_ov.png'),'-filter_complex',';'.join(filters),'-map','[out]','-t',str(duration),'-an','-r',str(FPS),'-c:v','libx264','-preset','medium','-crf','18',str(out)])
 
 def closing(path):
-    im = Image.new('RGBA', (W, H), BG)
+    from PIL import ImageOps
+    def frame(source, seconds, name, transform=None):
+        target = WORK/name
+        args = [FFMPEG, '-y', '-loglevel', 'error', '-ss', str(seconds), '-i', str(source)]
+        if transform:
+            args += ['-vf', transform]
+        run(args + ['-frames:v', '1', str(target)])
+        return Image.open(target).convert('RGB')
+    dynamic = frame(SOURCES['dynamic'], DYNAMIC_START+18, 'closing_dynamic.png')
+    recap = Image.open(ROOT.parent/'paper/img/real_deployment_overlay.png').convert('RGB')
+    def fit(canvas, photo, box):
+        photo = ImageOps.contain(photo, (box[2]-box[0], box[3]-box[1]), Image.Resampling.LANCZOS)
+        canvas.paste(photo, (box[0]+(box[2]-box[0]-photo.width)//2,
+                             box[1]+(box[3]-box[1]-photo.height)//2))
+    im = Image.new('RGBA', (W,H), BG)
+    fit(im,recap,(900,190,1830,580))
+    fit(im,dynamic,(900,650,1830,1000))
     d = ImageDraw.Draw(im)
-    text(d, (160, 190), 'AccelMPC', 88, WHITE, True)
-    text(d, (165, 325), 'Thank you for watching', 44, AMBER)
-    lines(d, 165, 510, [
-        'Solver benchmarks vs TinyMPC on MCU',
-        'Up to 15.6× faster',
-        'Up to 231.5× lower energy-delay product',
-    ], 34, step=65)
-    lines(d, 165, 745, [#'FPGA power: measured; post-route estimates where needed',
-                       'Solve-only comparison'# · excludes communication and support circuitry'
-                       ], 25, MUTED, step=42)
-    # Reserve the right side for a repository QR code after deanonymization.
+    text(d,(100,170),'AccelMPC',82,WHITE,True)
+    text(d,(105,290),'Thank you for watching',40,AMBER)
+    lines(d,105,440,['Solver benchmarks vs TinyMPC on MCU','','Up to 15.6× faster','Up to 231.5× lower','energy-delay product'],32,step=54)
+    text(d,(105,735),'Solve-only comparison',25,MUTED)
+    text(d,(900,135),'Constrained tracking',32,AMBER,True)
+    text(d,(900,605),'Dynamic obstacle avoidance',32,AMBER,True)
+    # Bottom left remains available for a QR code after deanonymization.
     im.save(path)
 
 
