@@ -136,6 +136,46 @@ flight RMSE in the context of this demanding reference, rather than judging
 solver quality from its absolute magnitude alone.
 
 
+## Penalty-parameter sensitivity
+
+`rho_saturation_sweep.py` runs a fixed sweep comparing equality/inequality 
+penalties at ten ADMM iterations, using the same figure-eight and star inputs
+in float and native `ap_fixed<32,10,AP_RND,AP_SAT>` arithmetic. Inputs are 
+regenerated when no valid cache exists; candidate commands are not fed back into the plant.
+
+```bash
+OPENBLAS_NUM_THREADS=1 ~/venv/bin/python evaluation/rho_saturation_sweep.py \
+  --hls-include /path/to/Vitis/include --jobs 8
+```
+
+Requires NumPy, SciPy, scikit-sparse, OSQP, g++, and AMD HLS headers. The full
+native sweep is expensive; each invocation evaluates all candidates.
+`--output` selects the results directory (default `output/rho_saturation/`).
+Production files and installed headers are never modified.
+
+The workload has 64 windows per trajectory, each with up to 32 preceding
+inputs: 4,160 replay inputs total. At most four inputs may have any native
+saturation (0.1%). Factor saturation and nonfinite values reject a candidate.
+Infeasible QPs remain in saturation screening; command error uses 118 feasible
+reference QPs. OSQP uses explicit polishing and absolute/relative tolerances
+of 1e-7. The ranking metric is mean float first-command infinity-norm error;
+fixed arithmetic determines eligibility. Monitoring includes implicit native
+saturating conversions and guarded accumulators. Unrestricted rho uses an
+evaluation-only wide multiplier; power-of-two rho retains shifts.
+
+| Best tested choice | Equality rho | Inequality rho | Mean float command error |
+| --- | ---: | ---: | ---: |
+| Power of two | 128 | 32 | 0.01232 |
+| Unrestricted | 152.2185 | 38.0546 | 0.01099 |
+
+The relative mean-error increase is **12.04%**.
+Selection and reporting use the same trajectories, without held-out validation.
+
+The [candidate CSV](data/rho_saturation_candidates.csv) records the completed
+sweep and supplies only the candidate rho columns to fresh runs; all outcomes
+are recomputed. New outputs remain under ignored
+`output/` and do not replace this bundled evidence automatically.
+
 ## Recorded flights
 
 The figure-eight overlay is a trajectory visualization, not a new
