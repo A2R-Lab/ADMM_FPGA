@@ -3,7 +3,7 @@
 
 The source media are never modified.  Pillow creates reusable cards/overlays;
 FFmpeg performs all scaling, timing, compositing, encoding and concatenation.
-Edit the CONFIG block below to revise the cut.
+Edit the CONFIG block below to configure the video.
 """
 from pathlib import Path
 import json
@@ -14,7 +14,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent
 WORK = ROOT / "generated_accelmpc_assets"
-OUT = ROOT / "AccelMPC_supplementary_revised.mp4"
+OUT = ROOT / "AccelMPC_supplementary_demo.mp4"
 NOMINAL_OUT = ROOT / "AccelMPC_nominal_figure8_iteration.mp4"
 STAR_OUT = ROOT / "AccelMPC_constrained_star_iteration.mp4"
 TOP_TRAIL_RAW = ROOT / "topview_motion_trail_raw.png"
@@ -92,12 +92,28 @@ def cover(path):
     im = src.crop((left, top, left + W, top + H)).convert("RGBA")
     shade = Image.new("RGBA", (W, H), (4, 10, 18, 110))
     im.alpha_composite(shade)
+    im.save(WORK/'cover_background.png')
+    im = Image.new('RGBA', (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
     d.rectangle((110, 120, 122, 590), fill=AMBER)
     text(d, (175, 270), "AccelMPC", 92, WHITE, True)
     text(d, (180, 400), "High-Rate, Low-Power FPGA-Accelerated MPC", 36, WHITE)
     text(d, (180, 452), "for Tiny Drones", 36, WHITE)
     im.save(path)
+
+def render_cover(out, duration):
+    frames = round(duration * FPS)
+    # Enlarge the photograph by 8% over the slide, keeping the title fixed.
+    # Supersampling avoids visible pixel stepping during the slow zoom.
+    vf = (f"[0:v]scale={W*2}:{H*2},"
+          f"zoompan=z='1+0.08*min(on/{max(frames-1, 1)},1)':d={frames}:"
+          f"x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={W}x{H}:fps={FPS},"
+          "format=rgba[photo];[photo][1:v]overlay=0:0:format=auto,format=yuv420p[out]")
+    run([FFMPEG, '-y', '-loglevel', 'error', '-loop', '1', '-i', str(WORK/'cover_background.png'),
+         '-loop', '1', '-i', str(WORK/'cover.png'), '-filter_complex', vf,
+         '-map', '[out]', '-t', str(duration), '-an', '-c:v', 'libx264', '-preset', 'medium',
+         '-crf', '18', '-pix_fmt', 'yuv420p', str(out)])
+
 
 def hardware(path):
     left = Image.open(SOURCES["drone"]).convert("RGB")
@@ -171,7 +187,7 @@ def motion_trail(source, out, vf=None):
     print(f"Wrote {out} ({out.stat().st_size / 1e6:.1f} MB)")
 
 
-# The revised cut uses fixed, readable panels. Plots summarize recorded runs;
+# The video uses fixed, readable panels. Plots summarize recorded runs;
 # they are deliberately not animated against footage with unverified log sync.
 BLUE = (83, 197, 244, 255)
 GREEN = (112, 211, 159, 255)
@@ -188,24 +204,41 @@ def explanation(path, title, values):
     im.save(path)
 
 def system_card(path):
-    im = Image.new("RGBA", (W, H), BG); d = ImageDraw.Draw(im)
-    text(d, (90, 80), "How the flight experiment works", 58, WHITE, True)
-    text(d, (90, 190), "External sensing", 34, AMBER, True)
-    text(d, (800, 190), "Onboard the drone", 34, BLUE, True)
-    d.rounded_rectangle((750, 250, 1830, 780), 24, outline=BLUE, width=3)
-    boxes = [(90, 330, 630, 600), (800, 330, 1240, 600), (1350, 330, 1780, 600)]
-    labels = [["Motion capture", "Drone / obstacle poses"],
-              ["Microcontroller", "State feedback"], ["FPGA accelerator", "MPC optimization"]]
-    for box, label in zip(boxes, labels):
-        d.rounded_rectangle(box, 18, fill=(25, 42, 60), outline=MUTED, width=2)
-        for i, value in enumerate(label):
-            text(d, ((box[0]+box[2])/2, 400+i*55), value, 29, anchor='mt')
-    for x1, x2 in [(640, 790), (1250, 1340)]:
-        d.line((x1, 465, x2, 465), fill=AMBER, width=5)
-        d.polygon([(x2,465),(x2-16,455),(x2-16,475)], fill=AMBER)
-    text(d, (880, 665), "Motor commands → drone motion → feedback", 30, WHITE)
-    lines(d, 95, 850, ["Model predictive control (MPC) predicts motion and optimizes motor commands.",
-                       "Position limits constrain the optimization; obstacle motion updates those limits."], 33, step=60)
+    from PIL import ImageOps
+    im = Image.new('RGBA', (W,H), BG); d = ImageDraw.Draw(im)
+    text(d,(90,55),'How the flight experiment works',58,WHITE,True)
+    text(d,(90,155),'External sensing',32,AMBER,True)
+    text(d,(710,155),'Onboard the drone',32,BLUE,True)
+    d.rounded_rectangle((680,205,1830,855),24,outline=BLUE,width=3)
+    arena=WORK/'system_arena.jpg'
+    run([FFMPEG,'-y','-loglevel','error','-ss','3','-i',str(SOURCES['star_lateral']),'-frames:v','1',str(arena)])
+    for source,box in [(arena,(110,225,480,415)),(SOURCES['drone'],(735,225,1115,415)),(SOURCES['board_front'],(1460,225,1740,415))]:
+        photo=ImageOps.contain(Image.open(source).convert('RGB'),(box[2]-box[0],box[3]-box[1]))
+        im.paste(photo,(box[0]+(box[2]-box[0]-photo.width)//2,box[1]+(box[3]-box[1]-photo.height)//2))
+    boxes=[(90,435,500,610),(710,435,1140,610),(1450,435,1790,610),(710,720,1140,815)]
+    labels=[('Motion capture','Drone / obstacle poses'),('Microcontroller','State estimation + actuation'),('FPGA accelerator','MPC optimization'),('Drone','Motors → motion')]
+    for box,label in zip(boxes,labels):
+        d.rounded_rectangle(box,18,fill=(25,42,60),outline=MUTED,width=2)
+        cx=(box[0]+box[2])/2; cy=(box[1]+box[3])/2
+        text(d,(cx,cy-34),label[0],29,WHITE,True,anchor='mt')
+        text(d,(cx,cy+10),label[1],25,anchor='mt')
+    def arrow(points,color=AMBER):
+        import math
+        d.line(points,fill=color,width=5,joint='curve')
+        x,y=points[-1]; px,py=points[-2]; a=math.atan2(y-py,x-px)
+        d.polygon([(x,y),(x-17*math.cos(a)+9*math.sin(a),y-17*math.sin(a)-9*math.cos(a)),(x-17*math.cos(a)-9*math.sin(a),y-17*math.sin(a)+9*math.cos(a))],fill=color)
+    arrow([(510,515),(700,515)])
+    text(d,(605,470),'Poses',25,AMBER,anchor='mt')
+    arrow([(1150,480),(1440,480)])
+    text(d,(1295,425),'State / constraints',24,AMBER,anchor='mt')
+    arrow([(1440,570),(1150,570)],GREEN)
+    text(d,(1295,590),'Optimized trajectory',23,GREEN,anchor='mt')
+    text(d,(1295,620),'/ control plan',23,GREEN,anchor='mt')
+    arrow([(925,620),(925,710)])
+    text(d,(950,662),'Motor commands',26,AMBER,anchor='lm')
+    arrow([(700,770),(295,770),(295,620)],GREEN)
+    text(d,(490,790),'Drone motion',27,GREEN,anchor='mt')
+    lines(d,95,900,['MPC predicts motion and optimizes motor commands.','Obstacle motion updates the position limits used by the optimizer.'],32,step=55)
     im.save(path)
 
 def trajectory_panel(path, curves, limits, bounds=None):
@@ -359,7 +392,8 @@ def main():
     mode.add_argument('--star-only', action='store_true')
     parser.add_argument('--top-trail', action='store_true')
     parser.add_argument('--assets-only', action='store_true')
-    parser.add_argument('--narration-dir', type=Path, help='Directory containing chapter WAV files')
+    parser.add_argument('--narration-dir', type=Path, default=ROOT/'narration',
+                        help='Directory containing chapter WAV files (default: video/narration)')
     parser.add_argument('--output', type=Path, default=OUT)
     args = parser.parse_args()
     load_manual_star_config()
@@ -414,7 +448,9 @@ def main():
     for name in names:
         duration = durations[name]
         out = WORK/f'narrated_{name}.mp4'
-        if name in ('cover', 'hardware', 'system', 'closing'):
+        if name == 'cover':
+            render_cover(out, duration)
+        elif name in ('hardware', 'system', 'closing'):
             still_segment(WORK/f'{name}.png', duration, out)
         elif name == 'dynamic':
             # Play the experiment once. Any extra narration holds the final frame.
@@ -450,7 +486,7 @@ def main():
         target.writeframes(soundtrack)
     destination = NOMINAL_OUT if args.nominal_only else STAR_OUT if args.star_only else args.output
     destination.parent.mkdir(parents=True, exist_ok=True)
-    concat = WORK/'revised_concat.txt'
+    concat = WORK/'concat.txt'
     concat.write_text(''.join("file '"+str(p.resolve()).replace("'", "'\\''")+"'\n" for p in segments))
     run([FFMPEG, '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', str(concat),
          '-i', str(mix), '-map', '0:v:0', '-map', '1:a:0',
