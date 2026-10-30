@@ -1,0 +1,1 @@
+Together, these experiments demonstrate onboard tracking and responses to changing constraints. Solver benchmarks report up to fifteen point six times faster computation than Tiny MPC on a microcontroller, and up to two hundred and thirty-one point five times lower energy-delay product. Thank you for watching.
