@@ -45,7 +45,7 @@ RADAR_METRIC_UNITS = {
     "Energy/solve": "mJ",
     "EDP": "uJ*ms",
     "BRAM": "%",
-    "Compute": "%",
+    "Logic": "%",
     "Scalability": "max H cost",
 }
 
@@ -400,7 +400,7 @@ def format_radar_value(metric: str, value: float, max_horizon: int) -> str:
         return f"{value:.0f} uJ*ms"
     if metric == "Power":
         return f"{value:.3f} W"
-    if metric in {"BRAM", "Compute"}:
+    if metric in {"BRAM", "Logic"}:
         return f"{value:.1f}%"
     return f"{value:.3g}"
 
@@ -842,17 +842,18 @@ def plot_solver_radar(
 
     raw_by_arch = {}
     for arch, row in selected.items():
-        # The architecture radar retains the synthesis/post-route benchmark data.
-        latency_ms = f(row, "solve_us_cfg_clk") / 1000.0
-        energy = f(row, "energy_per_solve_cfg_uj") / 1000.0
-        if not math.isfinite(energy) or energy <= 0:
-            energy = f(row, "route_power_total_w") * latency_ms
+        # Match the EDP comparison: measured latency and core/BRAM energy,
+        # plus the auxiliary/I/O estimates joined by attach_measured_power().
+        latency_ms = comparison_latency_us(row) / 1000.0
+        energy = energy_mj(row, tinympc_power_w)
+        if not all(math.isfinite(value) and value > 0 for value in (latency_ms, energy)):
+            raise ValueError(f"Missing measured radar latency/energy for {arch}, H={horizon}")
         raw_by_arch[arch] = {
             "Latency": latency_ms,
             "Energy/solve": energy,
             "EDP": energy * 1000.0 * latency_ms,
             "BRAM": f(row, "route_bram_tile_util_pct"),
-            "Compute": f(row, "route_slice_luts_util_pct") + f(row, "route_slice_registers_util_pct"),
+            "Logic": f(row, "route_slice_luts_util_pct"),
             "Scalability": best_horizon / max_horizons[arch],
         }
 
@@ -900,8 +901,8 @@ def plot_solver_radar(
                 ("EDP", "full_sparse"): (-0.07, 0.53),
                 ("BRAM", "staged_a"): (-0.0, 0.53),
                 ("BRAM", "full_sparse"): (0.00, 1.06),
-                ("Compute", "staged_a"): (-0.020, 0.82),
-                ("Compute", "full_sparse"): (0.17, 0.47),
+                ("Logic", "staged_a"): (-0.020, 0.82),
+                ("Logic", "full_sparse"): (0.17, 0.47),
                 ("Scalability", "staged_a"): (0.030, 0.18),
                 ("Scalability", "full_sparse"): (0.030, 0.84),
             }
@@ -931,7 +932,7 @@ def plot_solver_radar(
         "Energy/solve": 1.48,
         "EDP": 1.3,
         "BRAM": 1.28,
-        "Compute": 1.4,
+        "Logic": 1.4,
         "Scalability": 1.4,
     }
     for angle, metric in zip(angles[:-1], metrics):

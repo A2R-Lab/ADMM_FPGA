@@ -30,8 +30,11 @@ post-route estimates where instrumented measurement builds failed; unmeasured
 configurations remain absent from the EDP comparison. The resource table and maximum-horizon results also use implementation reports;
 they do not imply 1 kHz operation at the largest horizons. See [benchmark methodology](../docs/benchmarking.md#energy-and-timing-definitions)
 for measurement boundaries and the separate 100 µs feasibility reserve.
-The architecture radar retains synthesis-derived timing and post-route power
-estimates from the benchmark CSV.
+The architecture radar uses measured latency and core/BRAM energy plus estimated
+auxiliary/I/O energy, matching the EDP comparison. Its BRAM/LUT utilization and
+maximum horizons come from implementation reports. The “Logic” axis is LUT
+utilization as a percentage of the device's LUT capacity (34.9% staged versus
+14.6% full_sparse at H40); register utilization is reported separately in the table.
 
 The [device power comparison CSV](data/device_power_comparison.csv) compares
 routed Artix-7 50T designs with matching 100T estimates using the same
@@ -114,7 +117,6 @@ at 1 kHz. The plant model is regenerated at 1 ms while the MPC prediction timest
 remains 20 ms. The reference is checked against the star reference CSV. Tracking
 RMSE covers the feasible-reference portions of one 25 s cycle: 12,040 of 25,000
 samples (48.16%).
-
 
 | Controller | 3D RMSE (cm) | Max XY violation over full rollout (cm) |
 | --- | --- | --- |
@@ -214,7 +216,6 @@ STAR tracking error compares the selected flight with the recorded trajectory fr
 It scores position error only where the aligned reference is inside the static XY
 bounds and reports both 3D and XY RMSE. See the
 [flight-analysis method](../docs/flight-analysis.md).
-
 
 <!-- BEGIN GENERATED TRACKING -->
 

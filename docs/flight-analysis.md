@@ -5,6 +5,9 @@ and reproduction commands.
 
 ## Recordings and provenance
 
+The reported horizons, iteration budgets, mappings, and control rates are listed
+in [flight configurations](flight-configurations.md).
+
 `evaluation/data/flight_metrics/` contains `constrained_star_flight.csv`
 and `star_reference.csv`. Evaluation uses start_traj through reset_traj.
 

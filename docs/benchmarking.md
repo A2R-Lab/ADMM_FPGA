@@ -123,6 +123,10 @@ voltage times total current. Failed configurations keep these fields empty.
 The existing plotter adds these contributions when calculating energy and EDP;
 no separate preprocessing step or combined CSV is needed.
 
-The architecture radar retains the synthesis-derived latency, post-route power
-estimates and resource/scalability data from `benchmark_summary.csv`. It does not
-use the Arty measurements.
+The architecture radar uses measured solve latency and measured core/BRAM energy
+plus estimated auxiliary/I/O energy, on the same basis as the EDP comparison.
+BRAM and LUT utilization and maximum demonstrated horizons come from the
+implementation results in `benchmark_summary.csv`. The “Logic” axis is LUT utilization
+as a percentage of the device's LUT capacity. At H40 this is 34.9% for staged and
+14.6% for full_sparse. Missing measured latency or energy causes radar generation
+to fail rather than silently use power estimates.
