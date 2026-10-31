@@ -1,0 +1,3 @@
+[submodule "evaluation/mobydic/upstream"]
+	path = evaluation/mobydic/upstream
+	url = https://github.com/COMPsys-UNIGE/MOBY-DIC.git
