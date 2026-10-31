@@ -323,3 +323,5 @@ The committed [Arty power measurements](../docs/power.md) report core/BRAM rail 
 The [Arty power measurements CSV](data/arty_power_measurements.csv) contains the
 campaign summary for 42 planned configurations: 24 measured with three valid
 repetitions each and 18 marked failed.
+
+MOBY-DIC baseline: see [comparison and reproduction](mobydic/README.md).

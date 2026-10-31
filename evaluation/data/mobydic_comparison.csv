@@ -1,0 +1,3 @@
+arch,horizon,admm_iters,timing_clean,status,hls_latency_cycles,solve_us_cfg_clk,route_power_total_w,energy_per_solve_cfg_uj,clock_mhz,hls_clock_mhz,provenance,route_slice_luts_used,route_slice_registers_used,route_bram_tile_used,route_dsps_used
+mobydic_small,5,10,1,pass,922784,15379.7333333333,0.492,7566.8288,60,100,Verified fresh checkout 4859ab1; Vitis/Vivado 2025.2; HLS and implementation 100 MHz; routed checkpoint evaluated at 60 MHz; estimated power/energy,46068,68971,69.5,22
+mobydic_small,10,10,0,does_not_fit,,,,,,,Verified fresh checkout 4859ab1; Vivado capacity DRC failed before placement,,,,
