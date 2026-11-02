@@ -82,8 +82,8 @@ are unchanged. Preserving hierarchy can affect area, routing and power, so the
 corrected physical builds must be measured. Campaign-v5
 (`d5eb1b1cc0c06dd168f02b7938d719b0cacbbc2a7a8356cce87651b68b1ad005`)
 contains this workaround and the ROM fix. H10 and H40 close routed timing at
-100 MHz. H10 has passed its Arty pilot and all three power repetitions; H40
-has passed its eight-solve Arty pilot; power repetitions are in progress. Do not use v2/v3 results as valid performance
+100 MHz. Both H10 and H40 have passed their eight-solve Arty pilots and all three
+power repetitions. Do not use v2/v3 results as valid performance
 measurements.
 
 The eight-transaction publication test checks HLS RTL, not the synthesized
@@ -101,3 +101,7 @@ finish; remove it and rerun `build` to resume.
 The full v5 sweep was restarted after both corrected AccelMPC board pilots
 passed and the first H40 power repetition was valid. It uses three workers,
 four tool threads per worker, and preserves already-published ready bundles.
+
+Validated H10/H40 measurements and build provenance are archived in
+`evaluation/arty_validation_20261102/`. Both solvers have three valid repetitions
+at each horizon. The summary retains the distinct campaign IDs and bit hashes.

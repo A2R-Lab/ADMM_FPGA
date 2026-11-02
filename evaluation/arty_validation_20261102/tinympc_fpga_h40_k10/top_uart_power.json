@@ -1,0 +1,23 @@
+{
+  "kind": "synthetic",
+  "source": "/home/agrillo/moailImpl/arty-comparison-20261102/campaign-v4/work/tinympc_fpga_h40_k10/baseline-1d29244f/repo/scripts/power_synthetic_states.csv",
+  "csv_sha256": "7031e811dce3bac483d73abe4f13b26e6c982694439a2acb0b26f2f53b2edb79",
+  "workload_sha256": "06d83611521ce26793efb70138781029e8550dd1cf361b30bf6c67ce18ee28cb",
+  "record_count": 256,
+  "use_float": true,
+  "runtime_config": "#define ADMM_USE_FLOAT 1\n#define ADMM_ENABLE_TRAJECTORY 0\n#define ADMM_ITERATIONS 10\n#define ADMM_SOLVER_ARCH_NAME \"tinympc_fpga\"\n",
+  "input_bits": 418,
+  "bitstream_sha256": "1058c2f22472197854be49aae423a97d6322bbb32dc898600cee0bdcbbf43604",
+  "trajectory_compiled": false,
+  "solver_file_sha256": {
+    "ADMM.cpp": "62733e2dbab61215b35e8d4dcd6bcbc2bca7cc35d30ba49f5527659445d678be",
+    "data_types.h": "05e6b041ee065fb50d203dc1d541aafb8f50b69192e27569eb57690ea0fbcd24",
+    "admm_runtime_config.h": "41d4d9f99488bc29d8699e6cc37884b9ce683059faceb0491888cb56efcfa268",
+    "data.h": "611afea32290d13a7d53b127a1870e60d6519ae74fbd8f35249be0a021bfebc6",
+    "tinympc_solver.cpp": "cb34dea0b237de065e3aecd509b3a717280a00240c8f0dfd847bfe4f492061ca",
+    "tinympc_solver.h": "4edce795089035708a6892d1e913d267c9c94efd8981e69c7b9bbf15b651f92e"
+  },
+  "solver_constants": {
+    "HORIZON_LENGTH": "40"
+  }
+}

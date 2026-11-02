@@ -1,0 +1,21 @@
+{
+  "checksum": 0,
+  "comparison": "float_tolerance",
+  "last_output_words": [
+    3206451641,
+    3206451641,
+    3206451641,
+    3206451641
+  ],
+  "outputs_hex": [
+    "bf1e91b9bf1e91b9bf1e91b9bf1e91b9",
+    "bf1e91b9bf1e91b9bf1e91b9bf1e91b9",
+    "bf1e91b9bf1e91b9bf1e91b9bf1e91b9",
+    "bf1e91b9bf1e91b9bf1e91b9bf1e91b9",
+    "bf1e91b9bf1e91b9bf1e91b9bf1e91b9",
+    "bf1e91b9bf1e91b9bf1e91b9bf1e91b9",
+    "bf1e91b9bf1e91b9bf1e91b9bf1e91b9",
+    "bf1e91b9bf1e91b9bf1e91b9bf1e91b9"
+  ],
+  "solves": 8
+}

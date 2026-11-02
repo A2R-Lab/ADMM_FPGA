@@ -1,0 +1,131 @@
+{
+  "board": "Arty A7-100T Rev E",
+  "power_source": "USB",
+  "bitstream": "/home/andrea/aa/maoilImpl/arty-local-20261102/measurements/cache/02d4a7cd581d4f176b9bf4a9b00519830ac4f3dc08c27cb65d4be329219f1871/tinympc_fpga_h10_k10/top_uart_power.bit",
+  "bitstream_sha256": "f9546b3fc870172ca3fab67dabafeb25040722d5a1252ee1dee3628487ab649d",
+  "workload": {
+    "kind": "synthetic",
+    "source": "/home/agrillo/moailImpl/arty-comparison-20261102/campaign-v4/work/tinympc_fpga_h10_k10/baseline-f1668922/repo/scripts/power_synthetic_states.csv",
+    "csv_sha256": "7031e811dce3bac483d73abe4f13b26e6c982694439a2acb0b26f2f53b2edb79",
+    "workload_sha256": "06d83611521ce26793efb70138781029e8550dd1cf361b30bf6c67ce18ee28cb",
+    "record_count": 256,
+    "use_float": true,
+    "runtime_config": "#define ADMM_USE_FLOAT 1\n#define ADMM_ENABLE_TRAJECTORY 0\n#define ADMM_ITERATIONS 10\n#define ADMM_SOLVER_ARCH_NAME \"tinympc_fpga\"\n",
+    "input_bits": 418,
+    "bitstream_sha256": "f9546b3fc870172ca3fab67dabafeb25040722d5a1252ee1dee3628487ab649d",
+    "trajectory_compiled": false,
+    "solver_file_sha256": {
+      "ADMM.cpp": "62733e2dbab61215b35e8d4dcd6bcbc2bca7cc35d30ba49f5527659445d678be",
+      "data_types.h": "05e6b041ee065fb50d203dc1d541aafb8f50b69192e27569eb57690ea0fbcd24",
+      "admm_runtime_config.h": "41d4d9f99488bc29d8699e6cc37884b9ce683059faceb0491888cb56efcfa268",
+      "data.h": "de6ee7b627dd53a6801c6ce1a09496b7266c73864b85df8230f37b764359a4d6",
+      "tinympc_solver.cpp": "61cfef6a0720443ad1a131d61f898440e970e30a0b17de098cdc4669c838e9ae",
+      "tinympc_solver.h": "6ffa1fb05a2976b0b3a29fc8c5e14ca6a37cff62394a5ae00634110e197dfda2"
+    },
+    "solver_constants": {
+      "HORIZON_LENGTH": "10"
+    }
+  },
+  "config_cycles": [
+    9984,
+    0,
+    500000000,
+    300000000,
+    300000000,
+    1000000000
+  ],
+  "calibration": "nominal board scaling; no external calibration",
+  "clock_hz": 100000000,
+  "status": {
+    "state": 7,
+    "flags": 0,
+    "completed": 9984,
+    "overruns": 0,
+    "counts": [
+      376,
+      1020,
+      376
+    ],
+    "checksum": 0,
+    "busy_cycles": 203793408,
+    "latency_total": 203793408,
+    "active_cycles": 203803392,
+    "latency_min": 20412,
+    "latency_max": 20412,
+    "last_output_words": [
+      3206451641,
+      3206451641,
+      3206451641,
+      3206451641
+    ],
+    "elapsed_cycles": 1303803398,
+    "latest_adc": [
+      1359,
+      497,
+      3389,
+      227
+    ]
+  },
+  "summary": {
+    "valid": true,
+    "completed_solves": 9984,
+    "deadline_overruns": 0,
+    "rails": {
+      "core": {
+        "idle_before": {
+          "duration_s": 3.0000000000000027,
+          "covered_s": 3.0000000000000027,
+          "energy_j": 0.7170077988060022,
+          "power_w": 0.23900259960200052,
+          "midpoint_s": 6.500000009999993
+        },
+        "active": {
+          "duration_s": 2.038033919999997,
+          "covered_s": 2.038033919999997,
+          "energy_j": 0.6154922654674087,
+          "power_w": 0.3020029546257059,
+          "midpoint_s": 9.019016970000012
+        },
+        "idle_after": {
+          "duration_s": 3.0000000000000027,
+          "covered_s": 3.0000000000000027,
+          "energy_j": 0.7170609285383109,
+          "power_w": 0.2390203095127701,
+          "midpoint_s": 11.53803392999999
+        },
+        "idle_drift_w": 1.770991076957551e-05,
+        "energy_per_solve_j": 6.164786312774526e-05,
+        "incremental_energy_j": 0.12837881381091948,
+        "incremental_energy_per_solve_j": 1.2858454908946261e-05
+      },
+      "five": {
+        "idle_before": {
+          "duration_s": 3.0000000000000027,
+          "covered_s": 3.0000000000000027,
+          "energy_j": 3.2149134766762786,
+          "power_w": 1.0716378255587586,
+          "midpoint_s": 6.500000009999993
+        },
+        "active": {
+          "duration_s": 2.038033919999997,
+          "covered_s": 2.038033919999997,
+          "energy_j": 2.318747538514622,
+          "power_w": 1.1377374614621847,
+          "midpoint_s": 9.019016970000012
+        },
+        "idle_after": {
+          "duration_s": 3.0000000000000027,
+          "covered_s": 3.0000000000000027,
+          "energy_j": 3.2122479332454503,
+          "power_w": 1.0707493110818158,
+          "midpoint_s": 11.53803392999999
+        },
+        "idle_drift_w": -0.0008885144769428255,
+        "energy_per_solve_j": 0.00023224634800827543,
+        "incremental_energy_j": 0.13561871139204262,
+        "incremental_energy_per_solve_j": 1.3583604907055551e-05
+      }
+    },
+    "temperature_change_c": 0.1836009521968549
+  }
+}
