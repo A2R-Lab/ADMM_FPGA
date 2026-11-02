@@ -12,6 +12,7 @@ def check(work, env, log, reference, run):
     tb=tb.replace('reg [127:0] golden[0:4];integer seen=0;','integer seen=0;')
     tb=tb.replace('    initial $readmemh("../golden.mem",golden);','')
     tb=tb.replace('../test_workload/power_workload.mem',str(work/'build/power/power_workload.mem'))
+    tb=tb.replace('five warm-started solves match C++ bit-for-bit','eight scheduler transactions completed')
     tb=tb.replace("32'd5","32'd8").replace('n!=5 || seen!=5','n!=8 || seen!=8')
     tb=re.sub(r'        if\(result!==golden\[seen\]\).*?;',r'        $display("RESULT %h",result);',tb)
     (sim/'solver_tb.sv').write_text(tb)

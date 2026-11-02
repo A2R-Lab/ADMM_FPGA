@@ -60,3 +60,13 @@ This repository is released under the [MIT license](LICENSE).
   year={2026}
 }
 ```
+
+The selectable solver architectures are `full_sparse`, `staged_a` (default),
+and `staged_fused` (optimized Q10.22 staged implementation). For example:
+
+```sh
+ADMM_SOLVER_ARCH=staged_fused make BOARD=arty-power
+```
+
+See [the Arty comparison campaign](docs/arty_comparison.md) for the TinyMPC
+measurement adapter, build/measurement workflow, and current validation scope.
