@@ -67,17 +67,16 @@ if {$top_module eq "top_uart_power"} {
 #------------------------------------------------------------------------------
 # Read HLS IP
 #------------------------------------------------------------------------------
-if {[file exists "$hls_export_dir/hdl/verilog"]} {
-    puts "Reading HLS IP from: $hls_export_dir"
-    
-    foreach f [glob -nocomplain $hls_export_dir/hdl/verilog/*.v] {
-        read_verilog $f
-    }
-} else {
-    puts "ERROR: HLS IP not found at $hls_export_dir"
-    puts "Run 'make hls' first."
-    exit 1
-}
+set hls_syn "$proj_root/vitis_projects/ADMM/ADMM/hls/syn/verilog"
+if {[file exists "$rtl_dir/power_tiny_adapter.sv"]} {
+    # Use generated operator creation scripts, including floating-point IP.
+    set old_pwd [pwd]
+    cd $hls_syn
+    foreach f [glob *.v] { read_verilog $f }
+    foreach f [glob -nocomplain *.tcl] { source $f }
+} elseif {[file exists "$hls_export_dir/hdl/verilog"]} {
+    foreach f [glob "$hls_export_dir/hdl/verilog/*.v"] { read_verilog $f }
+} else { error "HLS RTL missing" }
 
 #------------------------------------------------------------------------------
 # Read Constraints

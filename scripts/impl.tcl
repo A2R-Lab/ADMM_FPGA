@@ -118,6 +118,14 @@ route_design {*}$route_args
 #------------------------------------------------------------------------------
 # Reports
 #------------------------------------------------------------------------------
+# Repair marginal setup paths in the complete instrumented core before reporting.
+if {[info exists ::env(ADMM_SOLVER_ARCH)] && $::env(ADMM_SOLVER_ARCH) in {staged_fused tinympc_fpga}} {
+    set worst [get_timing_paths -delay_type max -max_paths 1]
+    if {[llength $worst] && [get_property SLACK $worst] < 0} {
+        phys_opt_design -directive AggressiveExplore
+        route_design -directive Explore
+    }
+}
 report_utilization -file "$reports_dir/post_route_utilization.rpt"
 report_utilization -hierarchical -file "$reports_dir/post_route_hierarchical_utilization.rpt"
 report_timing_summary -file "$reports_dir/post_route_timing.rpt"
