@@ -87,6 +87,33 @@ struct AccType<T, false> {
 
 typedef typename AccType<fp_t>::type acc_t;
 
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+static fp_t row_feedback(fp_t b, fp_t q, acc_t sum, fp_t diagonal) {
+#pragma HLS INLINE
+    static_assert(fp_t::width == 32 && fp_t::iwidth == 10, "fixed format");
+    static_assert(acc_t::width == 40 && acc_t::iwidth == 18, "accumulator format");
+    const ap_int<32> br = b.range(31, 0);
+    const ap_int<32> qr = q.range(31, 0);
+    const ap_int<40> sr = sum.range(39, 0);
+    const ap_int<32> dr = diagonal.range(31, 0);
+    const ap_int<33> rhs = (ap_int<33>)br - (ap_int<33>)qr;
+    const ap_int<65> rhs_product = rhs * dr;
+    const ap_int<74> rhs_rounded = (ap_int<74>)rhs_product + (ap_int<74>(1) << 21);
+    const ap_int<72> feedback_product = sr * dr;
+    const ap_int<74> rounded = rhs_rounded - (ap_int<74>)feedback_product;
+    const ap_int<52> scaled = rounded >> 22;
+    ap_int<32> bits;
+    if (scaled > ap_int<52>(2147483647LL)) bits = 2147483647;
+    else if (scaled < ap_int<52>(-2147483648LL)) bits = ap_int<32>(-2147483648LL);
+    else bits = scaled;
+    fp_t result;
+    result.range(31, 0) = bits.range(31, 0);
+    return result;
+}
+
+
+#else
+#endif
 template <typename T, bool IsFloat = std::is_floating_point<T>::value>
 struct RhoType {
     typedef T type;
@@ -149,6 +176,12 @@ static inline fp_t rho_div_ineq(fp_t v) {
 }
 
 static inline fp_t rho_mul(fp_t v, bool use_ineq_rho) {
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+#pragma HLS INLINE off
+#pragma HLS PIPELINE II=1
+#pragma HLS LATENCY min=2 max=2
+#else
+#endif
     
     return use_ineq_rho ? rho_mul_ineq(v) : rho_mul_eq(v);
 }
@@ -231,11 +264,29 @@ static void forward_substitution_impl(
 
         FORW_SUBST_DOT_PRODUCT_LOOP:
         for (int j = 0; j < L_BANDED_COLS - 1; j++) {
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+            if (j < L_BANDED_COLS - 2) {
+                auto far_product = (acc_t)L_banded[i][j] * (acc_t)window[j];
+#pragma HLS BIND_OP variable=far_product op=mul impl=dsp latency=3
+                acc_t mul_term = far_product;
+                sum_val += mul_term;
+            } else {
+                acc_t mul_term = (acc_t)L_banded[i][j] * (acc_t)window[j];
+#else
             acc_t mul_term = (acc_t)L_banded[i][j] * (acc_t)window[j];
+#endif
             sum_val += mul_term;
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+            }
+#else
+#endif
         }
 
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+        fp_t new_x = row_feedback(b[i], q_i, sum_val, L_banded[i][L_BANDED_COLS - 1]);
+#else
         acc_t new_x = ((acc_t)b[i] - (acc_t)q_i - sum_val) * (acc_t)L_banded[i][L_BANDED_COLS - 1];
+#endif
         x[i] = (fp_t)new_x;
 
         FORW_SUBST_SHIFT_REGISTER_LOOP:
@@ -283,10 +334,24 @@ void backward_substitution(
 
         DOT_PRODUCT:
         for (int j = LT_BANDED_COLS - 2; j >= 0; j--) {
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+            if (j > 0) {
+                auto far_product = (acc_t)LT_banded[i][j + 1] * (acc_t)window[j];
+#pragma HLS BIND_OP variable=far_product op=mul impl=dsp latency=3
+                sum_val += far_product;
+            } else {
+                sum_val += (acc_t)LT_banded[i][j + 1] * (acc_t)window[j];
+            }
+#else
             sum_val += (acc_t)LT_banded[i][j + 1] * (acc_t)window[j];
+#endif
         }
 
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+        fp_t new_x = row_feedback(b[i], (fp_t)0, sum_val, LT_banded[i][0]);
+#else
         acc_t new_x = ((acc_t)b[i] - sum_val) * (acc_t)LT_banded[i][0];
+#endif
         x[i] = (fp_t)new_x;
 
         SHIFT_WINDOW:
@@ -333,7 +398,13 @@ void AT_mul(
             for (int nz = 0; nz < A_STAGE_T_NNZ_MAX; nz++) {
                 if (nz < A_stage_col_counts[i]) {
                     const int r = A_stage_col_rows[i][nz];
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+                    auto stage_product = (acc_t)A_stage_col_vals[i][nz] * (acc_t)row_vals[r];
+#pragma HLS BIND_OP variable=stage_product op=mul impl=dsp latency=3
+                    acc_xk -= stage_product;
+#else
                     acc_xk -= (acc_t)A_stage_col_vals[i][nz] * (acc_t)row_vals[r];
+#endif
                 }
             }
             ATx[xk_col + i] = (fp_t)acc_xk;
@@ -345,7 +416,13 @@ void AT_mul(
             acc_t acc_uk = 0;
             AT_MUL_DYN_B_COL_LOOP:
             for (int r = 0; r < STATE_SIZE; r++) {
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+                auto stage_product = (acc_t)B_stage[r][i] * (acc_t)row_vals[r];
+#pragma HLS BIND_OP variable=stage_product op=mul impl=dsp latency=3
+                acc_uk -= stage_product;
+#else
                 acc_uk -= (acc_t)B_stage[r][i] * (acc_t)row_vals[r];
+#endif
             }
             ATx[uk_col + i] = (fp_t)acc_uk;
         }
@@ -405,7 +482,12 @@ void ADMM_iteration(
 #pragma HLS ARRAY_PARTITION variable=A_stage_row_vals complete dim=2
 #pragma HLS ARRAY_PARTITION variable=B_stage complete dim=2
     fp_t tmp[N_VAR];
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+#pragma HLS ARRAY_PARTITION variable=tmp cyclic factor=2 dim=1
+    fp_t b_tmp[STATE_SIZE];
+#else
     fp_t b_tmp[N_CONSTR];
+#endif
 
     forward_substitution_impl(b, use_traj_q, traj_idx, q_vec, use_q_vec, tmp);
     backward_substitution(tmp, x);
@@ -420,13 +502,28 @@ void ADMM_iteration(
         b_tmp[i] = rho_mul(zi - yi, false);
     }
 
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+    fp_t prev_row_vals[STATE_SIZE] = {0};
+#pragma HLS ARRAY_PARTITION variable=prev_row_vals complete dim=1
+#else
+#endif
     ADMM_IT_DYN_STAGE_LOOP:
     for (int k = 0; k < HORIZON_LENGTH; k++) {
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+#pragma HLS PIPELINE
+#else
+#endif
 #pragma HLS LOOP_FLATTEN off
         const int row_base = STATE_SIZE + k * STATE_SIZE;
         const int xk_col = k * STAGE_SIZE;
         const int uk_col = xk_col + STATE_SIZE;
         const int xkp1_col = xk_col + STAGE_SIZE;
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+        fp_t row_vals[STATE_SIZE];
+#pragma HLS ARRAY_PARTITION variable=row_vals complete dim=1
+        const bool is_first_stage = (k == 0);
+#else
+#endif
         fp_t xk[STATE_SIZE];
         fp_t uk[INPUT_SIZE];
         fp_t xkp1[STATE_SIZE];
@@ -454,23 +551,115 @@ void ADMM_iteration(
             for (int nz = 0; nz < A_STAGE_NNZ_MAX; nz++) {
                 if (nz < A_stage_row_counts[r]) {
                     const int c = A_stage_row_cols[r][nz];
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+                    auto stage_product = (acc_t)A_stage_row_vals[r][nz] * (acc_t)xk[c];
+#pragma HLS BIND_OP variable=stage_product op=mul impl=dsp latency=3
+                    Axi_acc -= stage_product;
+#else
                     Axi_acc -= (acc_t)A_stage_row_vals[r][nz] * (acc_t)xk[c];
+#endif
                 }
             }
 
             ADMM_IT_DYN_B_LOOP:
             for (int c = 0; c < INPUT_SIZE; c++) {
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+                auto stage_product = (acc_t)B_stage[r][c] * (acc_t)uk[c];
+#pragma HLS BIND_OP variable=stage_product op=mul impl=dsp latency=3
+                Axi_acc -= stage_product;
+#else
                 Axi_acc -= (acc_t)B_stage[r][c] * (acc_t)uk[c];
+#endif
             }
 
             const int i = row_base + r;
             const fp_t Axi = (fp_t)Axi_acc;
             const fp_t yi = y[i] + Axi;
             y[i] = yi;
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+            row_vals[r] = rho_mul(-yi, false);
+        }
+        AT_MUL_DYN_WRITE_XK:
+        for (int i = 0; i < STATE_SIZE; i++) {
+            acc_t acc_xk = is_first_stage ? (acc_t)b_tmp[i] : (acc_t)prev_row_vals[i];
+            AT_MUL_DYN_A_COL_LOOP:
+            for (int nz = 0; nz < A_STAGE_T_NNZ_MAX; nz++) {
+                if (nz < A_stage_col_counts[i]) {
+                    const int r = A_stage_col_rows[i][nz];
+                    auto stage_product = (acc_t)A_stage_col_vals[i][nz] * (acc_t)row_vals[r];
+#pragma HLS BIND_OP variable=stage_product op=mul impl=dsp latency=3
+                    acc_xk -= stage_product;
+                }
+            }
+            b[xk_col + i] = (fp_t)acc_xk;
+            prev_row_vals[i] = row_vals[i];
+        }
+
+        AT_MUL_DYN_WRITE_U:
+        for (int i = 0; i < INPUT_SIZE; i++) {
+            acc_t acc_uk = 0;
+            AT_MUL_DYN_B_COL_LOOP:
+            for (int r = 0; r < STATE_SIZE; r++) {
+                auto stage_product = (acc_t)B_stage[r][i] * (acc_t)row_vals[r];
+#pragma HLS BIND_OP variable=stage_product op=mul impl=dsp latency=3
+                acc_uk -= stage_product;
+            }
+            b[uk_col + i] = (fp_t)acc_uk;
+        }
+        FUSED_U_LOOP: for (int u = 0; u < INPUT_SIZE; ++u) {
+            const int i = START_U_INEQ + k * INPUT_SIZE + u;
+            const fp_t Axi = uk[u];
+            fp_t zi = Axi + y[i];
+            if (zi < (fp_t)U_MIN) zi = (fp_t)U_MIN;
+            else if (zi > (fp_t)U_MAX) zi = (fp_t)U_MAX;
+            const fp_t yi = y[i] + (Axi - zi);
+            y[i] = yi;
+            const fp_t contribution = rho_mul(zi - yi, true);
+            b[uk_col + u] += contribution;
+        }
+        if (k > 0) {
+            const int stage = k;
+
+        FUSED_XY_LOOP: for (int axis = 0; axis < 2; ++axis) {
+            const int i = START_XY_INEQ + (stage - 1) * 2 + axis;
+            const fp_t Axi = x[stage * STAGE_SIZE + axis];
+            fp_t zi = Axi + y[i];
+            const bool dynamic = use_dynamic_constraint_stage(stage, axis);
+            const fp_t lo = dynamic ? dynamic_min : (fp_t)XY_MIN;
+            const fp_t hi = dynamic ? dynamic_max : (fp_t)XY_MAX;
+            if (zi < lo) zi = lo;
+            else if (zi > hi) zi = hi;
+            const fp_t yi = y[i] + (Axi - zi);
+            y[i] = yi;
+            const fp_t contribution = rho_mul(zi - yi, true);
+            b[stage * STAGE_SIZE + axis] += contribution;
+        }
+        }
+    }
+    for (int i = 0; i < STATE_SIZE; ++i) b[HORIZON_LENGTH * STAGE_SIZE + i] = prev_row_vals[i];
+    { const int stage = HORIZON_LENGTH;
+
+        FUSED_FINAL_XY_LOOP: for (int axis = 0; axis < 2; ++axis) {
+            const int i = START_XY_INEQ + (stage - 1) * 2 + axis;
+            const fp_t Axi = x[stage * STAGE_SIZE + axis];
+            fp_t zi = Axi + y[i];
+            const bool dynamic = use_dynamic_constraint_stage(stage, axis);
+            const fp_t lo = dynamic ? dynamic_min : (fp_t)XY_MIN;
+            const fp_t hi = dynamic ? dynamic_max : (fp_t)XY_MAX;
+            if (zi < lo) zi = lo;
+            else if (zi > hi) zi = hi;
+            const fp_t yi = y[i] + (Axi - zi);
+            y[i] = yi;
+            const fp_t contribution = rho_mul(zi - yi, true);
+            b[stage * STAGE_SIZE + axis] += contribution;
+#else
             b_tmp[i] = rho_mul(-yi, false);
+#endif
         }
     }
 
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+#else
     ADMM_IT_U_INEQ_STAGE_LOOP:
     for (int k = 0; k < HORIZON_LENGTH; k++) {
         const int row_base = START_U_INEQ + k * INPUT_SIZE;
@@ -512,9 +701,18 @@ void ADMM_iteration(
         }
     }
     AT_mul(b_tmp, b);
+#endif
 #else
     fp_t tmp[N_VAR];
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+#pragma HLS ARRAY_PARTITION variable=tmp cyclic factor=2 dim=1
+#else
+#endif
     fp_t b_tmp[N_CONSTR];
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+#pragma HLS ARRAY_PARTITION variable=b_tmp cyclic factor=2 dim=1
+#else
+#endif
 
     forward_substitution_impl(b, use_traj_q, traj_idx, q_vec, use_q_vec, tmp);
     backward_substitution(tmp, x);
@@ -604,8 +802,20 @@ static void ADMM_solver_core(
 #pragma HLS INLINE
 
     static fp_t x[N_VAR] = {0};
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+#pragma HLS ARRAY_PARTITION variable=x cyclic factor=2 dim=1
+#else
+#endif
     static fp_t b[N_VAR] = {0};
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+#pragma HLS ARRAY_PARTITION variable=b cyclic factor=2 dim=1
+#else
+#endif
     static fp_t y[N_CONSTR] = {0};
+#if ADMM_SOLVER_ARCH_STAGED_FUSED
+#pragma HLS ARRAY_PARTITION variable=y cyclic factor=2 dim=1
+#else
+#endif
 #if ADMM_ENABLE_TRAJECTORY
     static bool traj_started = false;
     static int traj_idx = 0;

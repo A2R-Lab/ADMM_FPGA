@@ -115,7 +115,7 @@ R_DIAG = [R_SCALE * v for v in _BASE_R_DIAG]
 ADMM_USE_FLOAT = _env_bool("ADMM_USE_FLOAT", False)  # False: ap_fixed, True: float
 ADMM_ITERATIONS = _env_int("ADMM_ITERATIONS", 9)
 ADMM_ENABLE_TRAJECTORY = _env_bool("ADMM_ENABLE_TRAJECTORY", True)
-ADMM_SOLVER_ARCH = _env_choice("ADMM_SOLVER_ARCH", "staged_a", {"staged_a", "full_sparse"})
+ADMM_SOLVER_ARCH = _env_choice("ADMM_SOLVER_ARCH", "staged_a", {"staged_a", "staged_fused", "full_sparse"})
 ADMM_SOLVER_INPUT_WIDTH = 418
 
 # Linear drag terms used to bias the MPC linear model (header_generator.py).
@@ -161,3 +161,7 @@ XY_MAX = _env_float("ADMM_XY_MAX", 1.0)
 
 # Linearization/model frequency used by header generation.
 MODEL_FREQ = _env_float("ADMM_MODEL_FREQ", 50.0)
+
+# The exact split-feedback mapping has only been validated in Q10.22.
+if ADMM_SOLVER_ARCH == "staged_fused" and ADMM_USE_FLOAT:
+    raise ValueError("staged_fused requires ADMM_USE_FLOAT=0")

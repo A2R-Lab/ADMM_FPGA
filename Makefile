@@ -191,8 +191,8 @@ $(HLS_IP_MARKER): $(HLS_SOURCES) $(DATA_HEADER)
 	@echo "========================================="
 	@echo "Building HLS IP..."
 	@echo "========================================="
-	cd $(HLS_DIR) && $(MAKE) build
-	cd $(HLS_DIR) && $(MAKE) export
+	cd $(HLS_DIR) && $(MAKE) build $(if $(filter staged_fused,$(ADMM_SOLVER_ARCH)),CONFIG=hls_fused_config.cfg,)
+	cd $(HLS_DIR) && $(MAKE) export $(if $(filter staged_fused,$(ADMM_SOLVER_ARCH)),CONFIG=hls_fused_config.cfg,)
 	@mkdir -p $(dir $(HLS_IP_MARKER))
 	@touch $(HLS_IP_MARKER)
 
