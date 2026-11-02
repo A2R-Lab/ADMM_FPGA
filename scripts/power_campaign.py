@@ -314,6 +314,9 @@ def classify(stage, log):
 
 def build_point(campaign, m, point, threads, retry_failed):
     pid = point['id']
+    if (campaign/'STOP_NEW_BUILDS').exists():
+        print(f'{pid}: deferred by STOP_NEW_BUILDS',flush=True)
+        return False
     ready = campaign / 'ready' / pid
     state = campaign / 'state' / (pid+'.json')
     with locked(campaign / 'locks' / (pid+'.lock')):

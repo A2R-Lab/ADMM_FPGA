@@ -51,10 +51,10 @@ puts "Constraints: $xdc_file"
 #------------------------------------------------------------------------------
 puts "Reading RTL sources..."
 set_property include_dirs [list $rtl_dir "$build_dir/power"] [current_fileset]
-read_verilog "$rtl_dir/top_uart.v"
+if {$top_module ne "top_uart_power"} { read_verilog "$rtl_dir/top_uart.v" }
 read_verilog "$rtl_dir/uart_rx.v"
 read_verilog "$rtl_dir/uart_tx.v"
-read_verilog "$rtl_dir/top_spi.v"
+if {$top_module ne "top_uart_power"} { read_verilog "$rtl_dir/top_spi.v" }
 read_verilog "$rtl_dir/spi_slave.v"
 read_verilog "$rtl_dir/spi_slave_word.v"
 

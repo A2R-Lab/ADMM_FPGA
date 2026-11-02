@@ -2,8 +2,10 @@
 
 This is an implementation checkpoint. The integrated staged_fused kernel passes
 an eight-solve H10 bit-exact host comparison against staged_a. Power host tests
-pass. Instrumented synthesis, routed timing, RTL adapter validation, and physical
-measurements are pending; no new board-performance claim is made here.
+pass. The instrumented staged_fused H40 bitstream passes routed setup/hold timing
+(+0.079/+0.015 ns) and all eight real-RTL transactions. TinyMPC instrumented
+validation and physical measurements are pending; no new board-performance
+claim is made here.
 
 Select `ADMM_SOLVER_ARCH=staged_fused` for the Q10.22 implementation. Existing
 `staged_a` and `full_sparse` paths and the default are preserved. The fused path
@@ -63,3 +65,11 @@ python scripts/plot_arty_comparison.py --summary /path/to/summary.csv --output /
 ```
 
 Missing or failed points remain in provenance and are never replaced with estimates.
+
+The corrected full sweep runs in `campaign-v3` (manifest
+`6aed5c4a13e72f666c5d1a6aa59ddd58cd6564f32f5a0356494a67ed78f380db`).
+It excludes unrelated UART/SPI tops from power synthesis, fixing a TinyMPC
+macro-parsing failure. The earlier H40 bitstream remains independently usable
+in `campaign-v2/ready/staged_fused_h40_k10/`. Do not mix campaign manifests.
+Create `STOP_NEW_BUILDS` in a campaign to defer unstarted jobs while active builds
+finish; remove it and rerun `build` to resume.
