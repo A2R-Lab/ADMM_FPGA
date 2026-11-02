@@ -1,0 +1,23 @@
+{
+  "solver": "tiny",
+  "status": "complete",
+  "reason": "",
+  "steps": 25600,
+  "duration_s": 25.6,
+  "horizon": 27,
+  "iterations": 9,
+  "control_hz": 1000,
+  "bounds": [
+    -1.3535533905932737,
+    0.6464466094067263
+  ],
+  "metrics": {
+    "raw_xyz_rmse": 0.23062772759640843,
+    "feasible_xyz_rmse": 0.27432567644137684,
+    "max_xy_violation": 0.5804748638265138,
+    "xy_violation_fraction_1mm": 0.512578125,
+    "xy_near_boundary_fraction_5cm": 0.0798046875,
+    "reference_outside_fraction": 0.50625
+  },
+  "elapsed_s": 0.9812720059417188
+}

@@ -19,7 +19,7 @@ from quadrotor import problem, cases, declaration, cfg
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('--upstream', type=Path, default=ROOT.parent / 'tinympc_ip_gen')
+    ap.add_argument('--upstream', type=Path, default=HERE / 'upstream')
     ap.add_argument('--output', type=Path, required=True)
     ap.add_argument('--horizon', type=int, default=5)
     ap.add_argument('--iterations', type=int, default=10)

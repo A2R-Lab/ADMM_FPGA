@@ -1,7 +1,7 @@
 # TinyMPC FPGA baseline
 
-Adapts the model-specific fused HLS generator in the sibling `tinympc_ip_gen`
-checkout (upstream commit `bd1a6bd2348d2659652d0ae315f9eea8fea40c95`) to the
+Adapts the model-specific fused HLS generator in the `upstream`
+submodule (upstream commit `bd1a6bd2348d2659652d0ae315f9eea8fea40c95`) to the
 same quadrotor dynamics, input units, state/input bounds and dimensions used
 by the MOBY-DIC comparison. H5/H10 use 6/11 state points, respectively.
 
@@ -20,7 +20,7 @@ python evaluation/tinympc_fpga/prepare.py --horizon 5 --output /tmp/tiny-input/h
 python evaluation/tinympc_fpga/prepare.py --horizon 10 --output /tmp/tiny-input/h10
 ```
 
-Use `--upstream PATH` if the generator is not in the sibling directory.
+Use `--upstream PATH` to override the pinned submodule.
 Each preparation compiles generated C++ with g++, checks all four test cases
 against independently initialized Python reference solvers, and records
 `numerical.json`. OSQP results use the AccelMPC objective and are diagnostic,
@@ -252,13 +252,11 @@ and EDP plots; there are no missing TinyMPC FPGA EDP bars on that grid.
 
 ## Fresh checkout setup
 
-The FPGA generator is a separate, pinned checkout next to ADMM_FPGA:
+The FPGA generator is a pinned submodule, like MOBY-DIC:
 
 ```sh
-# From the directory containing ADMM_FPGA:
-git clone https://github.com/KevinLikesDrinkingCoffee/tinympc_ip_gen.git
-git -C tinympc_ip_gen checkout bd1a6bd2348d2659652d0ae315f9eea8fea40c95
-cd ADMM_FPGA
+# From the ADMM_FPGA root:
+git submodule update --init --recursive evaluation/tinympc_fpga/upstream
 python -m pip install -r evaluation/tinympc_fpga/requirements.txt
 ```
 
@@ -293,3 +291,22 @@ maximum XY violation, violation duration fraction, and proximity to the XY
 bounds. Reference infeasibility is checked independently of plant behavior.
 These are ideal fixed-rate host simulations; they do not model solve overruns
 or communication and are not physical-flight measurements.
+
+### Completed nonlinear-star result
+
+Both solvers completed all 25,600 steps. The reference lies outside the XY box
+for 50.625% of control updates; the constraints are active.
+
+| Metric | AccelMPC | TinyMPC FPGA |
+| --- | ---: | ---: |
+| Maximum actual XY violation | 0.01998 m | 0.58047 m |
+| Time with XY violation >1 mm | 20.20% | 51.26% |
+| XYZ RMSE against box-clipped reference | 0.15381 m | 0.27433 m |
+| XYZ RMSE against original infeasible reference | 0.38031 m | 0.23063 m |
+
+AccelMPC has better constraint handling in this experiment and 43.9% lower
+clipped-reference RMSE. TinyMPC tracks the infeasible reference more closely,
+which is not evidence of better constrained performance. Clipping the reference
+is a diagnostic, not an optimal feasible trajectory. The retained algorithm,
+objective and warm-state differences prevent a general superiority claim.
+Results and trajectories are archived in `comparison/nonlinear_star/`.
