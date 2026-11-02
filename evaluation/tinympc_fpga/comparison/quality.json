@@ -1,0 +1,111 @@
+{
+  "basis": "Four cold-start cases; unchanged fixed-point staged ADMM_benchmark_solve; OSQP uses AccelMPC objective. TinyMPC retains different terminal and rho/reference weighting. Not evidence of equal-quality latency or closed-loop superiority.",
+  "results": [
+    {
+      "horizon": 5,
+      "case": "hover",
+      "iterations": 10,
+      "accel_command_error": 0.0,
+      "tiny_command_error": 0.0,
+      "accel_dynamics_residual": 0.0,
+      "tiny_projected_dynamics_residual": 0.0,
+      "tiny_primal_dynamics_residual": 0.0,
+      "accel_bound_violation": 0.0,
+      "tiny_projected_bound_violation": 0.0
+    },
+    {
+      "horizon": 5,
+      "case": "offset",
+      "iterations": 10,
+      "accel_command_error": 0.33208847523983615,
+      "tiny_command_error": 0.26603013712081053,
+      "accel_dynamics_residual": 0.03657920912774951,
+      "tiny_projected_dynamics_residual": 0.46211103750991356,
+      "tiny_primal_dynamics_residual": 3.5542676468658385e-07,
+      "accel_bound_violation": 0.0,
+      "tiny_projected_bound_violation": 0.0
+    },
+    {
+      "horizon": 5,
+      "case": "tracking",
+      "iterations": 10,
+      "accel_command_error": 0.33789604592391603,
+      "tiny_command_error": 3.098758527553258e-09,
+      "accel_dynamics_residual": 0.07357787597234994,
+      "tiny_projected_dynamics_residual": 1.6317107677459717,
+      "tiny_primal_dynamics_residual": 4.7332843511327383e-07,
+      "accel_bound_violation": 0.0,
+      "tiny_projected_bound_violation": 3.098758472042107e-09
+    },
+    {
+      "horizon": 5,
+      "case": "input_active",
+      "iterations": 10,
+      "accel_command_error": 0.09438866067000978,
+      "tiny_command_error": 3.098758527553258e-09,
+      "accel_dynamics_residual": 0.35841731922151876,
+      "tiny_projected_dynamics_residual": 1.5844219119365512,
+      "tiny_primal_dynamics_residual": 2.66624586998991e-06,
+      "accel_bound_violation": 0.0,
+      "tiny_projected_bound_violation": 3.098758472042107e-09
+    },
+    {
+      "horizon": 10,
+      "case": "hover",
+      "iterations": 10,
+      "accel_command_error": 0.0,
+      "tiny_command_error": 0.0,
+      "accel_dynamics_residual": 0.0,
+      "tiny_projected_dynamics_residual": 0.0,
+      "tiny_primal_dynamics_residual": 0.0,
+      "accel_bound_violation": 0.0,
+      "tiny_projected_bound_violation": 0.0
+    },
+    {
+      "horizon": 10,
+      "case": "offset",
+      "iterations": 10,
+      "accel_command_error": 0.5970314176075779,
+      "tiny_command_error": 0.040369085002191385,
+      "accel_dynamics_residual": 0.037515766765347125,
+      "tiny_projected_dynamics_residual": 0.43708767597866505,
+      "tiny_primal_dynamics_residual": 4.4297737711307406e-07,
+      "accel_bound_violation": 0.0,
+      "tiny_projected_bound_violation": 0.0
+    },
+    {
+      "horizon": 10,
+      "case": "tracking",
+      "iterations": 10,
+      "accel_command_error": 0.334698614359585,
+      "tiny_command_error": 0.009588587641640112,
+      "accel_dynamics_residual": 0.07552374707327635,
+      "tiny_projected_dynamics_residual": 1.5613055229187012,
+      "tiny_primal_dynamics_residual": 4.658286225645014e-07,
+      "accel_bound_violation": 0.0,
+      "tiny_projected_bound_violation": 3.098758472042107e-09
+    },
+    {
+      "horizon": 10,
+      "case": "input_active",
+      "iterations": 10,
+      "accel_command_error": 0.08389514374801271,
+      "tiny_command_error": 3.098758527553258e-09,
+      "accel_dynamics_residual": 0.3807024927505389,
+      "tiny_projected_dynamics_residual": 2.0137696654613317,
+      "tiny_primal_dynamics_residual": 3.055800023402108e-06,
+      "accel_bound_violation": 0.0,
+      "tiny_projected_bound_violation": 3.098758472042107e-09
+    }
+  ],
+  "sources": {
+    "ADMM.cpp": "f6dc48138230a47f5339bd365fa80966779bf939de7dad5e69573cacc21a2a73",
+    "ADMM.h": "44ae30d34983609786a953d71b09aaa4d98ba0d5ea0b24adcd93912820c3e5ef",
+    "data_types.h": "05e6b041ee065fb50d203dc1d541aafb8f50b69192e27569eb57690ea0fbcd24"
+  },
+  "host_compiler_flags": [
+    "-O2",
+    "-ftrivial-auto-var-init=zero"
+  ],
+  "initialization_note": "Host automatic storage forced to zero for deterministic cold-start emulation; without this flag the ap_fixed host test failed the zero-input sanity check. Solver source is unchanged. These are host diagnostics, not RTL quality validation."
+}

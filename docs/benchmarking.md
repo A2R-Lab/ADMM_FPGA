@@ -75,7 +75,10 @@ core/BRAM rail power plus the auxiliary and I/O supply estimates
 from each configuration's matching post-route report. At the report's printed
 precision these contributions are 32.4 mW VCCAUX and 13.2 mW VCCO33 for all 24
 measured configurations. VCCADC is excluded as it is tied to ground in the custom 
-PCB. The EDP comparison requires measured core/BRAM power. The latency/energy plot
+PCB. AccelMPC EDP bars require measured core/BRAM power. The added TinyMPC FPGA
+baseline uses total post-route estimated power and synthesized latency at 100 MHz;
+its bars are explicitly asterisked and hatched. Missing baseline horizons are
+shown as n/a. The latency/energy plot
 uses post-route estimates for configurations without measurements, marked by an
 asterisk. Each such bubble uses the matching synthesis-derived latency.
 

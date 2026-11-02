@@ -1,0 +1,18 @@
+[
+  {
+    "horizon": 1023,
+    "iterations": 10,
+    "hls_clock_mhz": 100,
+    "clock_mhz": 100,
+    "status": "timing_closed"
+  },
+  {
+    "horizon": 1024,
+    "iterations": 10,
+    "hls_clock_mhz": 100,
+    "clock_mhz": 100,
+    "status": "failed",
+    "failed_stage": "vivado",
+    "returncode": 1
+  }
+]

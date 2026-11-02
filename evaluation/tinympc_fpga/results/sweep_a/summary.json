@@ -1,0 +1,32 @@
+[
+  {
+    "horizon": 20,
+    "iterations": 10,
+    "hls_clock_mhz": 100,
+    "clock_mhz": 100,
+    "status": "timing_closed"
+  },
+  {
+    "horizon": 80,
+    "iterations": 10,
+    "hls_clock_mhz": 100,
+    "clock_mhz": 100,
+    "status": "timing_closed"
+  },
+  {
+    "horizon": 320,
+    "iterations": 10,
+    "hls_clock_mhz": 100,
+    "clock_mhz": 100,
+    "status": "timing_closed"
+  },
+  {
+    "horizon": 1280,
+    "iterations": 10,
+    "hls_clock_mhz": 100,
+    "clock_mhz": 100,
+    "status": "failed",
+    "failed_stage": "vivado",
+    "returncode": 1
+  }
+]

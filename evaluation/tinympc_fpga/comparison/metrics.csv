@@ -1,0 +1,37 @@
+solver,horizon,iterations,clock_mhz,status,latency_us,estimated_power_w,estimated_energy_uj,edp_uj_us,lut_latency_lut_us,lut,ff,bram_tiles,dsp,source
+full_sparse,5,10,100,pass,217.67,0.275,59.85925,13029.562947499999,1638619.76,7528,11519,27,77,2026-07-feasibility-full-sparse-h5
+mobydic_small,5,10,60,pass,15379.7333333333,0.492,7566.828799999984,116375809.12298617,708513555.1999985,46068,68971,69.5,22,Verified fresh checkout 4859ab1; Vitis/Vivado 2025.2; HLS and implementation 100 MHz; routed checkpoint evaluated at 60 MHz; estimated power/energy
+staged_a,5,10,100,pass,204.57,0.637,130.31109,26657.739681299998,4223552.22,20646,26067,20.5,75,2026-07-feasibility-staged-a
+tinympc_fpga_float,5,10,100,pass,111.11,0.523,58.110530000000004,6456.6609883,2885637.81,25971.0,32394.0,0.0,136.0,initial/h5; Vitis/Vivado 2025.2; float32 rho=1; steady-state Riccati; local memory; estimated power/energy
+full_sparse,10,10,100,pass,398.67,0.267,106.44489000000002,42436.384296300006,3229625.67,8101,11600,30.5,77,2026-07-solver-scalability
+mobydic_small,10,10,,does_not_fit,,,,,,,,,,Verified fresh checkout 4859ab1; Vivado capacity DRC failed before placement
+staged_a,10,10,100,pass,366.77,0.668,245.00236,89859.51557719999,7682731.1899999995,20947,26214,20.5,80,2026-07-solver-scalability-staged-a
+tinympc_fpga_float,10,10,100,pass,205.21,0.546,112.04466000000001,22992.684678600006,5363984.19,26139.0,32440.0,0.0,136.0,initial/h10; Vitis/Vivado 2025.2; float32 rho=1; steady-state Riccati; local memory; estimated power/energy
+full_sparse,20,10,100,pass,760.67,0.309,235.04702999999998,178793.2243101,6773005.68,8904,11648,42,77,2026-07-solver-scalability
+staged_a,20,10,100,pass,698.77,0.671,468.87467000000004,327635.5531559,15298870.379999999,21894,26173,26.5,80,2026-07-solver-scalability-staged-a
+tinympc_fpga_float,20,10,100,pass,393.49,0.631,248.29219,97700.4938431,9126213.57,23193.0,26992.0,56.0,136.0,sweep_a/h20; Vitis/Vivado 2025.2; float32 rho=1; steady-state Riccati; local memory; estimated power/energy
+full_sparse,30,10,100,pass,1122.67,0.287,322.20628999999997,361731.3355943,9644857.97,8591,11915,52,77,2026-07-solver-scalability
+staged_a,30,10,100,pass,1029.77,0.69,710.5413,731694.1145009999,22112251.21,21473,26491,27.5,80,2026-07-solver-scalability-staged-a
+tinympc_fpga_float,30,10,100,pass,581.79,0.572,332.78387999999995,193610.33354519994,13351498.709999999,22949.0,26995.0,56.0,136.0,fill_a/h30; Vitis/Vivado 2025.2; float32 rho=1; steady-state Riccati; local memory; estimated power/energy
+full_sparse,40,10,100,pass,1484.67,0.333,494.39511000000005,734013.5879637002,13777737.600000001,9280,12051,78.5,77,2026-07-common-h40-radar
+staged_a,40,10,100,pass,1365.07,0.683,932.34281,1272713.1996467,30204903.889999997,22127,26540,36,80,2026-07-common-h40-radar
+tinympc_fpga_float,40,10,100,pass,770.09,0.588,452.81292,348706.70156280004,17796779.900000002,23110.0,27029.0,56.0,136.0,sweep_b/h40; Vitis/Vivado 2025.2; float32 rho=1; steady-state Riccati; local memory; estimated power/energy
+full_sparse,50,10,100,pass,1846.67,0.335,618.63445,1142413.6797815003,16830550.38,9114,11936,81,77,2026-07-solver-scalability
+staged_a,50,10,100,pass,1697.07,0.689,1169.2812299999998,1984352.0969960997,37332145.86,21998,26166,36,80,2026-07-solver-scalability-staged-a
+tinympc_fpga_float,50,10,100,pass,958.39,0.603,577.90917,553862.3694362999,22148392.9,23110.0,27047.0,56.0,136.0,fill_b/h50; Vitis/Vivado 2025.2; float32 rho=1; steady-state Riccati; local memory; estimated power/energy
+full_sparse,60,10,100,pass,2208.67,0.383,845.92061,1868359.4736887,21636131.32,9796,11765,95.5,77,2026-07-solver-scalability
+staged_a,60,10,100,pass,2029.07,0.699,1418.3199299999999,2877870.4203651,43807621.3,21590,26089,39,80,2026-07-solver-scalability-staged-a
+tinympc_fpga_float,60,10,100,pass,1146.69,0.603,691.45407,792883.4675283,26534406.6,23140.0,27022.0,56.0,136.0,fill_a/h60; Vitis/Vivado 2025.2; float32 rho=1; steady-state Riccati; local memory; estimated power/energy
+full_sparse,70,10,100,pass,2570.67,0.363,933.15321,2398828.9623507,31220787.150000002,12145,12330,96,77,2026-07-solver-scalability
+staged_a,70,10,100,pass,2361.57,0.73,1723.9461000000001,4071219.391377,47151106.620000005,19966,25383,83.5,80,2026-07-solver-scalability-staged-a
+tinympc_fpga_float,70,10,100,pass,1334.99,0.544,726.2345600000001,969515.8752544001,30798219.3,23070.0,27101.0,56.0,136.0,fill_b/h70; Vitis/Vivado 2025.2; float32 rho=1; steady-state Riccati; local memory; estimated power/energy
+full_sparse,80,10,100,pass,2932.67,0.63,1847.5821,5418348.5972070005,112177560.17,38251,13770,70,77,2026-07-full-sparse-max-variants-rerun
+staged_a,80,10,100,pass,2693.57,0.724,1950.14468,5252851.2057076,53769044.34,19962,25410,83.5,80,2026-07-solver-scalability-staged-a
+tinympc_fpga_float,80,10,100,pass,1523.29,0.602,917.02058,1396888.2793081999,35704394.31,23439.0,27093.0,56.0,136.0,sweep_a/h80; Vitis/Vivado 2025.2; float32 rho=1; steady-state Riccati; local memory; estimated power/energy
+tinympc_fpga_float,160,10,100,pass,3029.69,0.629,1905.6750100000002,5773604.521046901,70800825.61,23369.0,27109.0,56.0,136.0,sweep_b/h160; Vitis/Vivado 2025.2; float32 rho=1; steady-state Riccati; local memory; estimated power/energy
+staged_a,320,10,100,pass,10662.37,0.806,8593.87022,91631024.01762141,294633270.21000004,27633,26853,129,80,2026-07-max-horizon-direct
+tinympc_fpga_float,320,10,100,pass,6042.49,0.654,3951.78846,23878642.251665402,141055886.56,23344.0,27197.0,56.0,136.0,sweep_a/h320; Vitis/Vivado 2025.2; float32 rho=1; steady-state Riccati; local memory; estimated power/energy
+tinympc_fpga_float,640,10,100,pass,12068.09,0.664,8013.21176,96704160.70873842,283636319.27,23503.0,27238.0,96.0,136.0,sweep_b/h640; Vitis/Vivado 2025.2; float32 rho=1; steady-state Riccati; local memory; estimated power/energy
+tinympc_fpga_float,1023,10,100,pass,19279.98,0.658,12686.226840000001,244590199.7506632,466517676.06,24197.0,27213.0,98.5,136.0,boundary/h1023; Vitis/Vivado 2025.2; float32 rho=1; steady-state Riccati; local memory; estimated power/energy
+tinympc_fpga_float,1024,10,100,does_not_fit,,,,,,,,,,boundary/h1024; Vitis/Vivado 2025.2; float32 rho=1; steady-state Riccati; local memory; estimated power/energy
+tinympc_fpga_float,1280,10,100,does_not_fit,,,,,,,,,,sweep_a/h1280; Vitis/Vivado 2025.2; float32 rho=1; steady-state Riccati; local memory; estimated power/energy

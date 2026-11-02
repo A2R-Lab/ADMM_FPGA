@@ -66,6 +66,15 @@ in watts. The percentage change is `100 * (50T / 100T - 1)`. The CSV also record
 
 ![Energy-delay product comparison](figures/benchmark_edp_bars.png)
 
+Purple TinyMPC FPGA points/bars use the timing-closed 100 MHz results from
+[data/tinympc_fpga_comparison.csv](data/tinympc_fpga_comparison.csv). Their energy
+and EDP use total post-route estimated power and synthesized solve latency,
+marked with an asterisk (and hatching in the EDP plot). AccelMPC retains its
+existing measurement-based energy/EDP values; TinyMPC MCU retains its nominal
+power estimate. Missing TinyMPC FPGA horizons are shown as n/a, not interpolated.
+See the [FPGA baseline methodology](tinympc_fpga/README.md) for formulation and
+precision differences. The summary tables above retain their original scope.
+
 ## Numerical accuracy
 
 The current H27/k9 analysis uses the actual C++ solver and persistent warm starts.
@@ -326,3 +335,5 @@ campaign summary for 42 planned configurations: 24 measured with three valid
 repetitions each and 18 marked failed.
 
 MOBY-DIC baseline: see [comparison and reproduction](mobydic/README.md).
+
+TinyMPC FPGA baseline: see [comparison and reproduction](tinympc_fpga/README.md).

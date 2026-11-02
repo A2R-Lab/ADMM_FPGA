@@ -1,0 +1,677 @@
+
+****** v++ v2025.2 (64-bit)
+  **** SW Build 6295257 on 2025-11-13-01:29:13
+  **** Start of session at: Mon Nov  2 03:17:07 2026
+    ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+    ** Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+
+  **** HLS Build v2025.2 6295257
+INFO: [HLS 200-2005] Using work_dir /home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls 
+INFO: [HLS 200-2176] Writing Vitis IDE component file /home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/vitis-comp.json
+INFO: [HLS 200-10] Creating and opening component '/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls'.
+INFO: [HLS 200-1505] Using default flow_target 'vivado'
+Resolution: For help on HLS 200-1505 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-1505.html
+INFO: [HLS 200-2174] Applying component config ini file hls_config.cfg
+INFO: [HLS 200-1465] Applying config ini 'syn.file=tinympc_solver.cpp' from hls_config.cfg(6)
+INFO: [HLS 200-10] Adding design file '/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/tinympc_solver.cpp' to the project
+INFO: [HLS 200-1465] Applying config ini 'tb.file=testbench.cpp' from hls_config.cfg(7)
+INFO: [HLS 200-10] Adding test bench file '/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/testbench.cpp' to the project
+INFO: [HLS 200-1465] Applying config ini 'syn.top=tinympc_solver' from hls_config.cfg(4)
+INFO: [HLS 200-1465] Applying config ini 'flow_target=vivado' from hls_config.cfg(3)
+INFO: [HLS 200-1505] Using flow_target 'vivado'
+Resolution: For help on HLS 200-1505 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-1505.html
+INFO: [HLS 200-1465] Applying config ini 'part=xc7a100t-csg324-1' from hls_config.cfg(1)
+INFO: [HLS 200-1611] Setting target device to 'xc7a100t-csg324-1'
+INFO: [HLS 200-1465] Applying config ini 'clock=10ns' from hls_config.cfg(5)
+INFO: [SYN 201-201] Setting up clock 'default' with a period of 10ns.
+INFO: [HLS 200-1465] Applying config ini 'package.output.format=ip_catalog' from hls_config.cfg(8)
+INFO: [HLS 200-2176] Writing Vitis IDE component file /home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/vitis-comp.json
+INFO: [HLS 200-111] Finished File checks and directory preparation: CPU user time: 0.6 seconds. CPU system time: 0.19 seconds. Elapsed time: 0.7 seconds; current allocated memory: 253.574 MB.
+INFO: [HLS 200-2191] C-Synthesis will use clang-16 as the compiler
+INFO: [HLS 200-10] Analyzing design file 'tinympc_solver.cpp' ... 
+INFO: [HLS 200-111] Finished Source Code Analysis and Preprocessing: CPU user time: 1 seconds. CPU system time: 0.27 seconds. Elapsed time: 1.27 seconds; current allocated memory: 255.355 MB.
+INFO: [HLS 200-777] Using interface defaults for 'Vivado' flow target.
+INFO: [HLS 200-1995] There were 4,453 instructions in the design after the 'Compile/Link' phase of compilation. See the Design Size Report for more details (/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 4,065 instructions in the design after the 'Unroll/Inline (step 1)' phase of compilation. See the Design Size Report for more details (/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 1,983 instructions in the design after the 'Unroll/Inline (step 2)' phase of compilation. See the Design Size Report for more details (/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 1,956 instructions in the design after the 'Unroll/Inline (step 3)' phase of compilation. See the Design Size Report for more details (/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 1,926 instructions in the design after the 'Unroll/Inline (step 4)' phase of compilation. See the Design Size Report for more details (/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 5,872 instructions in the design after the 'Array/Struct (step 1)' phase of compilation. See the Design Size Report for more details (/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 2,326 instructions in the design after the 'Array/Struct (step 2)' phase of compilation. See the Design Size Report for more details (/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 2,326 instructions in the design after the 'Array/Struct (step 3)' phase of compilation. See the Design Size Report for more details (/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 2,326 instructions in the design after the 'Array/Struct (step 4)' phase of compilation. See the Design Size Report for more details (/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 2,349 instructions in the design after the 'Array/Struct (step 5)' phase of compilation. See the Design Size Report for more details (/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 2,342 instructions in the design after the 'Performance (step 1)' phase of compilation. See the Design Size Report for more details (/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 2,342 instructions in the design after the 'Performance (step 2)' phase of compilation. See the Design Size Report for more details (/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 2,638 instructions in the design after the 'Performance (step 3)' phase of compilation. See the Design Size Report for more details (/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 2,350 instructions in the design after the 'Performance (step 4)' phase of compilation. See the Design Size Report for more details (/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 2,357 instructions in the design after the 'HW Transforms (step 1)' phase of compilation. See the Design Size Report for more details (/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 2,457 instructions in the design after the 'HW Transforms (step 2)' phase of compilation. See the Design Size Report for more details (/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 214-291] Loop 'VITIS_LOOP_4181_4' is marked as complete unroll implied by the pipeline pragma (tinympc_solver.cpp:4181:28)
+INFO: [HLS 214-291] Loop 'VITIS_LOOP_4169_3' is marked as complete unroll implied by the pipeline pragma (tinympc_solver.cpp:4169:28)
+INFO: [HLS 214-291] Loop 'VITIS_LOOP_4361_2' is marked as complete unroll implied by the pipeline pragma (tinympc_solver.cpp:4361:28)
+INFO: [HLS 214-291] Loop 'VITIS_LOOP_4352_1' is marked as complete unroll implied by the pipeline pragma (tinympc_solver.cpp:4352:28)
+INFO: [HLS 214-291] Loop 'VITIS_LOOP_4331_2' is marked as complete unroll implied by the pipeline pragma (tinympc_solver.cpp:4331:28)
+INFO: [HLS 214-291] Loop 'VITIS_LOOP_4320_1' is marked as complete unroll implied by the pipeline pragma (tinympc_solver.cpp:4320:28)
+INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_4181_4' (tinympc_solver.cpp:4181:28) in function 'tinympc_solver' completely with a factor of 12 (tinympc_solver.cpp:4114:0)
+INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_4169_3' (tinympc_solver.cpp:4169:28) in function 'tinympc_solver' completely with a factor of 4 (tinympc_solver.cpp:4114:0)
+INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_4361_2' (tinympc_solver.cpp:4361:28) in function 'update_dual' completely with a factor of 12 (tinympc_solver.cpp:4348:0)
+INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_4352_1' (tinympc_solver.cpp:4352:28) in function 'update_dual' completely with a factor of 4 (tinympc_solver.cpp:4348:0)
+INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_4331_2' (tinympc_solver.cpp:4331:28) in function 'update_slack' completely with a factor of 12 (tinympc_solver.cpp:4316:0)
+INFO: [HLS 214-186] Unrolling loop 'VITIS_LOOP_4320_1' (tinympc_solver.cpp:4320:28) in function 'update_slack' completely with a factor of 4 (tinympc_solver.cpp:4316:0)
+INFO: [HLS 214-248] Applying array_partition to 'x': Complete partitioning on dimension 2. (tinympc_solver.cpp:4117:12)
+INFO: [HLS 214-248] Applying array_partition to 'u': Complete partitioning on dimension 2. (tinympc_solver.cpp:4119:12)
+INFO: [HLS 214-248] Applying array_partition to 'd': Complete partitioning on dimension 2. (tinympc_solver.cpp:4121:12)
+INFO: [HLS 214-248] Applying array_partition to 'vnew': Complete partitioning on dimension 2. (tinympc_solver.cpp:4123:12)
+INFO: [HLS 214-248] Applying array_partition to 'znew': Complete partitioning on dimension 2. (tinympc_solver.cpp:4125:12)
+INFO: [HLS 214-248] Applying array_partition to 'y': Complete partitioning on dimension 2. (tinympc_solver.cpp:4131:12)
+INFO: [HLS 214-248] Applying array_partition to 'g': Complete partitioning on dimension 2. (tinympc_solver.cpp:4133:12)
+INFO: [HLS 214-248] Applying array_partition to 'p': Complete partitioning on dimension 2. (tinympc_solver.cpp:4135:12)
+INFO: [HLS 214-248] Applying array_partition to 'q': Complete partitioning on dimension 2. (tinympc_solver.cpp:4137:12)
+INFO: [HLS 214-248] Applying array_partition to 'r': Complete partitioning on dimension 2. (tinympc_solver.cpp:4139:12)
+INFO: [HLS 214-248] Applying array_partition to 'Xref': Complete partitioning on dimension 2. (tinympc_solver.cpp:4141:12)
+INFO: [HLS 214-248] Applying array_partition to 'Uref': Complete partitioning on dimension 2. (tinympc_solver.cpp:4143:12)
+INFO: [HLS 214-376] Pipelining loop< VITIS_LOOP_4229_7> at tinympc_solver.cpp:4229:28 due to pipeline_loops threshold
+INFO: [HLS 214-376] Pipelining loop< VITIS_LOOP_4235_8> at tinympc_solver.cpp:4235:28 due to pipeline_loops threshold
+INFO: [HLS 214-449] Partitioning array 'U_MIN' dimension 2 due to constant index. (tinympc_solver.cpp:6:0)
+INFO: [HLS 214-449] Partitioning array 'U_MAX' dimension 2 due to constant index. (tinympc_solver.cpp:1032:0)
+INFO: [HLS 214-449] Partitioning array 'X_MIN' dimension 2 due to constant index. (tinympc_solver.cpp:2058:0)
+INFO: [HLS 214-449] Partitioning array 'X_MAX' dimension 2 due to constant index. (tinympc_solver.cpp:3085:0)
+INFO: [HLS 214-248] Applying array_partition to '_ZL5X_MIN': Complete partitioning on dimension 2. (tinympc_solver.cpp:2058:0)
+INFO: [HLS 214-248] Applying array_partition to '_ZL5X_MAX': Complete partitioning on dimension 2. (tinympc_solver.cpp:3085:0)
+INFO: [HLS 214-248] Applying array_partition to '_ZL5U_MIN': Complete partitioning on dimension 2. (tinympc_solver.cpp:6:0)
+INFO: [HLS 214-248] Applying array_partition to '_ZL5U_MAX': Complete partitioning on dimension 2. (tinympc_solver.cpp:1032:0)
+INFO: [HLS 200-111] Finished Compiling Optimization and Transform: CPU user time: 1.7 seconds. CPU system time: 0.29 seconds. Elapsed time: 6.47 seconds; current allocated memory: 257.656 MB.
+INFO: [HLS 200-111] Finished Checking Pragmas: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0 seconds; current allocated memory: 257.656 MB.
+INFO: [HLS 200-10] Starting code transformations ...
+INFO: [HLS 200-111] Finished Standard Transforms: CPU user time: 0.03 seconds. CPU system time: 0 seconds. Elapsed time: 0.04 seconds; current allocated memory: 259.613 MB.
+INFO: [HLS 200-10] Checking synthesizability ...
+INFO: [HLS 200-111] Finished Checking Synthesizability: CPU user time: 0.04 seconds. CPU system time: 0 seconds. Elapsed time: 0.04 seconds; current allocated memory: 261.777 MB.
+INFO: [XFORM 203-401] Performing if-conversion on hyperblock from (tinympc_solver.cpp:4319:1) to (tinympc_solver.cpp:4318:21) in function 'update_slack'... converting 13 basic blocks.
+INFO: [XFORM 203-401] Performing if-conversion on hyperblock from (tinympc_solver.cpp:4330:1) to (tinympc_solver.cpp:4329:21) in function 'update_slack'... converting 37 basic blocks.
+INFO: [HLS 200-111] Finished Loop, function and other optimizations: CPU user time: 0.14 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.15 seconds; current allocated memory: 285.543 MB.
+INFO: [HLS 200-2061] Successfully converted nested loops 'load_xref'(tinympc_solver.cpp:4152:16) and 'VITIS_LOOP_4153_1'(tinympc_solver.cpp:4153:28) in function 'tinympc_solver' into perfectly nested loops.
+INFO: [HLS 200-2061] Successfully converted nested loops 'load_uref'(tinympc_solver.cpp:4159:16) and 'VITIS_LOOP_4160_2'(tinympc_solver.cpp:4160:28) in function 'tinympc_solver' into perfectly nested loops.
+INFO: [HLS 200-2061] Successfully converted nested loops 'store_x_out'(tinympc_solver.cpp:4228:18) and 'VITIS_LOOP_4229_7'(tinympc_solver.cpp:4229:28) in function 'tinympc_solver' into perfectly nested loops.
+INFO: [HLS 200-2061] Successfully converted nested loops 'store_u_out'(tinympc_solver.cpp:4234:18) and 'VITIS_LOOP_4235_8'(tinympc_solver.cpp:4235:28) in function 'tinympc_solver' into perfectly nested loops.
+INFO: [XFORM 203-541] Flattening a loop nest 'load_xref' (tinympc_solver.cpp:4152:16) in function 'tinympc_solver'.
+INFO: [XFORM 203-541] Flattening a loop nest 'load_uref' (tinympc_solver.cpp:4159:16) in function 'tinympc_solver'.
+INFO: [XFORM 203-541] Flattening a loop nest 'store_x_out' (tinympc_solver.cpp:4228:18) in function 'tinympc_solver'.
+INFO: [XFORM 203-541] Flattening a loop nest 'store_u_out' (tinympc_solver.cpp:4234:18) in function 'tinympc_solver'.
+INFO: [HLS 200-111] Finished Architecture Synthesis: CPU user time: 0.17 seconds. CPU system time: 0.06 seconds. Elapsed time: 0.23 seconds; current allocated memory: 477.266 MB.
+INFO: [HLS 200-10] Starting hardware synthesis ...
+INFO: [HLS 200-10] Synthesizing 'tinympc_solver' ...
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'tinympc_solver_Pipeline_load_inputs' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'load_inputs'.
+INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 2, loop 'load_inputs'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.03 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.05 seconds; current allocated memory: 479.559 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0 seconds; current allocated memory: 479.559 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'tinympc_solver_Pipeline_load_xref_VITIS_LOOP_4153_1' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'load_xref_VITIS_LOOP_4153_1'.
+INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 4, loop 'load_xref_VITIS_LOOP_4153_1'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.02 seconds. CPU system time: 0 seconds. Elapsed time: 0.02 seconds; current allocated memory: 480.355 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0.01 seconds; current allocated memory: 480.355 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'tinympc_solver_Pipeline_load_uref_VITIS_LOOP_4160_2' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'load_uref_VITIS_LOOP_4160_2'.
+INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 3, loop 'load_uref_VITIS_LOOP_4160_2'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.02 seconds. CPU system time: 0 seconds. Elapsed time: 0.02 seconds; current allocated memory: 480.652 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.01 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.01 seconds; current allocated memory: 480.652 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'tinympc_solver_Pipeline_init_workspace' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'init_workspace'.
+INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 1, loop 'init_workspace'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0.01 seconds; current allocated memory: 480.844 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0 seconds; current allocated memory: 480.844 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'tinympc_solver_Pipeline_init_state_workspace' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'init_state_workspace'.
+INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 1, Depth = 1, loop 'init_state_workspace'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.02 seconds. CPU system time: 0 seconds. Elapsed time: 0.03 seconds; current allocated memory: 482.312 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0.01 seconds; current allocated memory: 482.312 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'forward_pass_Pipeline_forward_loop' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'forward_loop'.
+WARNING: [HLS 200-880] The II Violation in module 'forward_pass_Pipeline_forward_loop' (loop 'forward_loop'): Unable to enforce a carried dependence constraint (II = 1, distance = 1, offset = 1) between 'store' operation ('store_forwarded_write_ln4268', tinympc_solver.cpp:4268) of variable 'add138', tinympc_solver.cpp:4268 32 bit on local variable 'store_forwarded' and 'fmul' operation 32 bit ('mul54', tinympc_solver.cpp:4251).
+Resolution: For help on HLS 200-880 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-880.html
+WARNING: [HLS 200-880] The II Violation in module 'forward_pass_Pipeline_forward_loop' (loop 'forward_loop'): Unable to enforce a carried dependence constraint (II = 2, distance = 1, offset = 1) between 'store' operation ('store_forwarded_write_ln4268', tinympc_solver.cpp:4268) of variable 'add138', tinympc_solver.cpp:4268 32 bit on local variable 'store_forwarded' and 'fmul' operation 32 bit ('mul54', tinympc_solver.cpp:4251).
+Resolution: For help on HLS 200-880 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-880.html
+WARNING: [HLS 200-880] The II Violation in module 'forward_pass_Pipeline_forward_loop' (loop 'forward_loop'): Unable to enforce a carried dependence constraint (II = 3, distance = 1, offset = 1) between 'store' operation ('store_forwarded_write_ln4268', tinympc_solver.cpp:4268) of variable 'add138', tinympc_solver.cpp:4268 32 bit on local variable 'store_forwarded' and 'fmul' operation 32 bit ('mul54', tinympc_solver.cpp:4251).
+Resolution: For help on HLS 200-880 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-880.html
+WARNING: [HLS 200-880] The II Violation in module 'forward_pass_Pipeline_forward_loop' (loop 'forward_loop'): Unable to enforce a carried dependence constraint (II = 4, distance = 1, offset = 1) between 'store' operation ('store_forwarded_write_ln4268', tinympc_solver.cpp:4268) of variable 'add138', tinympc_solver.cpp:4268 32 bit on local variable 'store_forwarded' and 'fmul' operation 32 bit ('mul54', tinympc_solver.cpp:4251).
+Resolution: For help on HLS 200-880 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-880.html
+WARNING: [HLS 200-880] The II Violation in module 'forward_pass_Pipeline_forward_loop' (loop 'forward_loop'): Unable to enforce a carried dependence constraint (II = 67, distance = 1, offset = 1) between 'store' operation ('store_forwarded10_write_ln4265', tinympc_solver.cpp:4265) of variable 'add126', tinympc_solver.cpp:4265 32 bit on local variable 'store_forwarded10' and 'fmul' operation 32 bit ('mul39', tinympc_solver.cpp:4251).
+Resolution: For help on HLS 200-880 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-880.html
+WARNING: [HLS 200-880] The II Violation in module 'forward_pass_Pipeline_forward_loop' (loop 'forward_loop'): Unable to enforce a carried dependence constraint (II = 98, distance = 1, offset = 1) between 'store' operation ('store_forwarded22_write_ln4261', tinympc_solver.cpp:4261) of variable 'add105', tinympc_solver.cpp:4261 32 bit on local variable 'store_forwarded22' and 'fmul' operation 32 bit ('mul19', tinympc_solver.cpp:4251).
+Resolution: For help on HLS 200-880 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-880.html
+WARNING: [HLS 200-880] The II Violation in module 'forward_pass_Pipeline_forward_loop' (loop 'forward_loop'): Unable to enforce a carried dependence constraint (II = 114, distance = 1, offset = 1) between 'store' operation ('store_forwarded31_write_ln4258', tinympc_solver.cpp:4258) of variable 'add90', tinympc_solver.cpp:4258 32 bit on local variable 'store_forwarded31' and 'fmul' operation 32 bit ('mul5', tinympc_solver.cpp:4251).
+Resolution: For help on HLS 200-880 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-880.html
+WARNING: [HLS 200-880] The II Violation in module 'forward_pass_Pipeline_forward_loop' (loop 'forward_loop'): Unable to enforce a carried dependence constraint (II = 118, distance = 1, offset = 1) between 'store' operation ('store_forwarded31_write_ln4258', tinympc_solver.cpp:4258) of variable 'add90', tinympc_solver.cpp:4258 32 bit on local variable 'store_forwarded31' and 'fmul' operation 32 bit ('mul5', tinympc_solver.cpp:4251).
+Resolution: For help on HLS 200-880 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-880.html
+WARNING: [HLS 200-880] The II Violation in module 'forward_pass_Pipeline_forward_loop' (loop 'forward_loop'): Unable to enforce a carried dependence constraint (II = 120, distance = 1, offset = 1) between 'store' operation ('store_forwarded31_write_ln4258', tinympc_solver.cpp:4258) of variable 'add90', tinympc_solver.cpp:4258 32 bit on local variable 'store_forwarded31' and 'fmul' operation 32 bit ('mul5', tinympc_solver.cpp:4251).
+Resolution: For help on HLS 200-880 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-880.html
+INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 121, Depth = 127, loop 'forward_loop'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.1 seconds. CPU system time: 0 seconds. Elapsed time: 0.11 seconds; current allocated memory: 486.145 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.04 seconds. CPU system time: 0 seconds. Elapsed time: 0.03 seconds; current allocated memory: 486.359 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'forward_pass' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.02 seconds. CPU system time: 0 seconds. Elapsed time: 0.03 seconds; current allocated memory: 486.684 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0 seconds; current allocated memory: 486.734 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'update_slack_Pipeline_update_u_slack' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'update_u_slack'.
+INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 12, loop 'update_u_slack'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.02 seconds. CPU system time: 0 seconds. Elapsed time: 0.02 seconds; current allocated memory: 489.543 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0.01 seconds; current allocated memory: 489.543 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'update_slack_Pipeline_update_x_slack' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'update_x_slack'.
+INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 12, loop 'update_x_slack'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.05 seconds. CPU system time: 0 seconds. Elapsed time: 0.05 seconds; current allocated memory: 494.027 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.02 seconds. CPU system time: 0 seconds. Elapsed time: 0.02 seconds; current allocated memory: 494.027 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'update_slack' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.02 seconds. CPU system time: 0 seconds. Elapsed time: 0.02 seconds; current allocated memory: 494.027 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0 seconds; current allocated memory: 494.027 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'update_dual_Pipeline_update_y_dual' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'update_y_dual'.
+INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 17, loop 'update_y_dual'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0.01 seconds; current allocated memory: 495.254 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0.01 seconds; current allocated memory: 495.254 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'update_dual_Pipeline_update_g_dual' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'update_g_dual'.
+INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 17, loop 'update_g_dual'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.02 seconds. CPU system time: 0 seconds. Elapsed time: 0.02 seconds; current allocated memory: 496.594 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0.01 seconds; current allocated memory: 496.594 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'update_dual' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.01 seconds; current allocated memory: 496.594 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0 seconds; current allocated memory: 496.594 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'update_linear_cost_Pipeline_update_r_cost' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'update_r_cost'.
+INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 17, loop 'update_r_cost'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0.01 seconds; current allocated memory: 497.930 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0.01 seconds; current allocated memory: 497.930 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'update_linear_cost_Pipeline_update_q_cost' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'update_q_cost'.
+INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 17, loop 'update_q_cost'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.02 seconds. CPU system time: 0 seconds. Elapsed time: 0.03 seconds; current allocated memory: 499.539 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0.01 seconds; current allocated memory: 499.539 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'update_linear_cost' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.04 seconds. CPU system time: 0 seconds. Elapsed time: 0.04 seconds; current allocated memory: 503.180 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.02 seconds. CPU system time: 0 seconds. Elapsed time: 0.02 seconds; current allocated memory: 503.246 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'backward_pass_Pipeline_backward_loop' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'backward_loop'.
+WARNING: [HLS 200-880] The II Violation in module 'backward_pass_Pipeline_backward_loop' (loop 'backward_loop'): Unable to enforce a carried dependence constraint (II = 1, distance = 1, offset = 1) between 'store' operation ('store_forwarded_write_ln4300', tinympc_solver.cpp:4300) of variable 'sub80', tinympc_solver.cpp:4300 32 bit on local variable 'store_forwarded' and 'fmul' operation 32 bit ('mul214', tinympc_solver.cpp:4300).
+Resolution: For help on HLS 200-880 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-880.html
+WARNING: [HLS 200-880] The II Violation in module 'backward_pass_Pipeline_backward_loop' (loop 'backward_loop'): Unable to enforce a carried dependence constraint (II = 2, distance = 1, offset = 1) between 'store' operation ('store_forwarded_write_ln4300', tinympc_solver.cpp:4300) of variable 'sub80', tinympc_solver.cpp:4300 32 bit on local variable 'store_forwarded' and 'fmul' operation 32 bit ('mul214', tinympc_solver.cpp:4300).
+Resolution: For help on HLS 200-880 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-880.html
+WARNING: [HLS 200-880] The II Violation in module 'backward_pass_Pipeline_backward_loop' (loop 'backward_loop'): Unable to enforce a carried dependence constraint (II = 3, distance = 1, offset = 1) between 'store' operation ('store_forwarded_write_ln4300', tinympc_solver.cpp:4300) of variable 'sub80', tinympc_solver.cpp:4300 32 bit on local variable 'store_forwarded' and 'fmul' operation 32 bit ('mul214', tinympc_solver.cpp:4300).
+Resolution: For help on HLS 200-880 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-880.html
+WARNING: [HLS 200-880] The II Violation in module 'backward_pass_Pipeline_backward_loop' (loop 'backward_loop'): Unable to enforce a carried dependence constraint (II = 4, distance = 1, offset = 1) between 'store' operation ('store_forwarded_write_ln4300', tinympc_solver.cpp:4300) of variable 'sub80', tinympc_solver.cpp:4300 32 bit on local variable 'store_forwarded' and 'fmul' operation 32 bit ('mul214', tinympc_solver.cpp:4300).
+Resolution: For help on HLS 200-880 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-880.html
+WARNING: [HLS 200-880] The II Violation in module 'backward_pass_Pipeline_backward_loop' (loop 'backward_loop'): Unable to enforce a carried dependence constraint (II = 35, distance = 1, offset = 1) between 'store' operation ('store_forwarded_write_ln4300', tinympc_solver.cpp:4300) of variable 'sub80', tinympc_solver.cpp:4300 32 bit on local variable 'store_forwarded' and 'fmul' operation 32 bit ('mul214', tinympc_solver.cpp:4300).
+Resolution: For help on HLS 200-880 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-880.html
+WARNING: [HLS 200-880] The II Violation in module 'backward_pass_Pipeline_backward_loop' (loop 'backward_loop'): Unable to enforce a carried dependence constraint (II = 51, distance = 1, offset = 1) between 'store' operation ('store_forwarded21_write_ln4293', tinympc_solver.cpp:4293) of variable 'sub52', tinympc_solver.cpp:4293 32 bit on local variable 'store_forwarded21' and 'fmul' operation 32 bit ('mul168', tinympc_solver.cpp:4293).
+Resolution: For help on HLS 200-880 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-880.html
+WARNING: [HLS 200-880] The II Violation in module 'backward_pass_Pipeline_backward_loop' (loop 'backward_loop'): Unable to enforce a carried dependence constraint (II = 59, distance = 1, offset = 1) between 'store' operation ('store_forwarded30_write_ln4290', tinympc_solver.cpp:4290) of variable 'sub40', tinympc_solver.cpp:4290 32 bit on local variable 'store_forwarded30' and 'fmul' operation 32 bit ('mul147', tinympc_solver.cpp:4290).
+Resolution: For help on HLS 200-880 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-880.html
+WARNING: [HLS 200-880] The II Violation in module 'backward_pass_Pipeline_backward_loop' (loop 'backward_loop'): Unable to enforce a carried dependence constraint (II = 60, distance = 1, offset = 1) between 'store' operation ('store_forwarded30_write_ln4290', tinympc_solver.cpp:4290) of variable 'sub40', tinympc_solver.cpp:4290 32 bit on local variable 'store_forwarded30' and 'fmul' operation 32 bit ('mul147', tinympc_solver.cpp:4290).
+Resolution: For help on HLS 200-880 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-880.html
+INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 61, Depth = 115, loop 'backward_loop'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.16 seconds. CPU system time: 0 seconds. Elapsed time: 0.17 seconds; current allocated memory: 509.703 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.05 seconds. CPU system time: 0 seconds. Elapsed time: 0.04 seconds; current allocated memory: 510.023 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'backward_pass' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.02 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.03 seconds; current allocated memory: 510.375 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0 seconds; current allocated memory: 510.445 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'tinympc_solver_Pipeline_store_x_out_VITIS_LOOP_4229_7' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'store_x_out_VITIS_LOOP_4229_7'.
+INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 3, loop 'store_x_out_VITIS_LOOP_4229_7'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0.02 seconds; current allocated memory: 512.117 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0.01 seconds; current allocated memory: 512.117 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'tinympc_solver_Pipeline_store_u_out_VITIS_LOOP_4235_8' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-61] Pipelining loop 'store_u_out_VITIS_LOOP_4235_8'.
+INFO: [HLS 200-1470] Pipelining result : Target II = NA, Final II = 1, Depth = 3, loop 'store_u_out_VITIS_LOOP_4235_8'
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0.01 seconds; current allocated memory: 512.574 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0 seconds; current allocated memory: 512.574 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'tinympc_solver' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.02 seconds. CPU system time: 0 seconds. Elapsed time: 0.02 seconds; current allocated memory: 513.984 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.04 seconds. CPU system time: 0 seconds. Elapsed time: 0.05 seconds; current allocated memory: 513.984 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'tinympc_solver_Pipeline_load_inputs' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'tinympc_solver_Pipeline_load_inputs' pipeline 'load_inputs' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Finished creating RTL model for 'tinympc_solver_Pipeline_load_inputs'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.04 seconds. CPU system time: 0 seconds. Elapsed time: 0.03 seconds; current allocated memory: 513.984 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'tinympc_solver_Pipeline_load_xref_VITIS_LOOP_4153_1' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'tinympc_solver_Pipeline_load_xref_VITIS_LOOP_4153_1' pipeline 'load_xref_VITIS_LOOP_4153_1' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Finished creating RTL model for 'tinympc_solver_Pipeline_load_xref_VITIS_LOOP_4153_1'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.01 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.02 seconds; current allocated memory: 515.746 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'tinympc_solver_Pipeline_load_uref_VITIS_LOOP_4160_2' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'tinympc_solver_Pipeline_load_uref_VITIS_LOOP_4160_2' pipeline 'load_uref_VITIS_LOOP_4160_2' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Finished creating RTL model for 'tinympc_solver_Pipeline_load_uref_VITIS_LOOP_4160_2'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.03 seconds. CPU system time: 0 seconds. Elapsed time: 0.03 seconds; current allocated memory: 518.016 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'tinympc_solver_Pipeline_init_workspace' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Finished creating RTL model for 'tinympc_solver_Pipeline_init_workspace'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0.01 seconds; current allocated memory: 519.203 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'tinympc_solver_Pipeline_init_state_workspace' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Finished creating RTL model for 'tinympc_solver_Pipeline_init_state_workspace'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.03 seconds. CPU system time: 0 seconds. Elapsed time: 0.03 seconds; current allocated memory: 522.027 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'forward_pass_Pipeline_forward_loop' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'forward_pass_Pipeline_forward_loop' pipeline 'forward_loop' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Generating core module 'faddfsub_32ns_32ns_32_7_full_dsp_1': 2 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fmul_32ns_32ns_32_4_max_dsp_1': 2 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'forward_pass_Pipeline_forward_loop'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.06 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.07 seconds; current allocated memory: 529.496 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'forward_pass' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Generating core module 'faddfsub_32ns_32ns_32_7_full_dsp_1': 2 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fmul_32ns_32ns_32_4_max_dsp_1': 2 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'forward_pass'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.06 seconds. CPU system time: 0 seconds. Elapsed time: 0.07 seconds; current allocated memory: 538.633 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'update_slack_Pipeline_update_u_slack' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'update_slack_Pipeline_update_u_slack' pipeline 'update_u_slack' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Generating core module 'faddfsub_32ns_32ns_32_7_full_dsp_1': 4 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fcmp_32ns_32ns_1_2_no_dsp_1': 8 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'sparsemux_7_2_32_1_1': 4 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'update_slack_Pipeline_update_u_slack'.
+INFO: [RTMG 210-279] Implementing memory 'tinympc_solver_update_slack_Pipeline_update_u_slack_p_ZL5U_MAX_0_ROM_AUTO_1R' using auto ROMs.
+INFO: [RTMG 210-279] Implementing memory 'tinympc_solver_update_slack_Pipeline_update_u_slack_p_ZL5U_MIN_0_ROM_AUTO_1R' using auto ROMs.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.03 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.03 seconds; current allocated memory: 539.195 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'update_slack_Pipeline_update_x_slack' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'update_slack_Pipeline_update_x_slack' pipeline 'update_x_slack' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Generating core module 'faddfsub_32ns_32ns_32_7_full_dsp_1': 12 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fcmp_32ns_32ns_1_2_no_dsp_1': 24 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'sparsemux_7_2_32_1_1': 12 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'update_slack_Pipeline_update_x_slack'.
+INFO: [RTMG 210-279] Implementing memory 'tinympc_solver_update_slack_Pipeline_update_x_slack_p_ZL5X_MAX_0_ROM_AUTO_1R' using auto ROMs.
+INFO: [RTMG 210-279] Implementing memory 'tinympc_solver_update_slack_Pipeline_update_x_slack_p_ZL5X_MIN_0_ROM_AUTO_1R' using auto ROMs.
+INFO: [RTMG 210-279] Implementing memory 'tinympc_solver_update_slack_Pipeline_update_x_slack_p_ZL5X_MAX_2_ROM_AUTO_1R' using auto ROMs.
+INFO: [RTMG 210-279] Implementing memory 'tinympc_solver_update_slack_Pipeline_update_x_slack_p_ZL5X_MIN_2_ROM_AUTO_1R' using auto ROMs.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.08 seconds. CPU system time: 0 seconds. Elapsed time: 0.08 seconds; current allocated memory: 548.316 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'update_slack' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Generating core module 'faddfsub_32ns_32ns_32_7_full_dsp_1': 16 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'update_slack'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.09 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.1 seconds; current allocated memory: 559.594 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'update_dual_Pipeline_update_y_dual' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'update_dual_Pipeline_update_y_dual' pipeline 'update_y_dual' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Generating core module 'faddfsub_32ns_32ns_32_7_full_dsp_1': 4 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fsub_32ns_32ns_32_7_full_dsp_1': 4 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'update_dual_Pipeline_update_y_dual'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.03 seconds. CPU system time: 0 seconds. Elapsed time: 0.03 seconds; current allocated memory: 561.332 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'update_dual_Pipeline_update_g_dual' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'update_dual_Pipeline_update_g_dual' pipeline 'update_g_dual' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Generating core module 'faddfsub_32ns_32ns_32_7_full_dsp_1': 16 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fsub_32ns_32ns_32_7_full_dsp_1': 8 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'update_dual_Pipeline_update_g_dual'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.04 seconds. CPU system time: 0 seconds. Elapsed time: 0.04 seconds; current allocated memory: 564.375 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'update_dual' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_dual/grp_fu_1453_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_dual/grp_fu_1457_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_dual/grp_fu_1461_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_dual/grp_fu_1465_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_dual/grp_fu_1469_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_dual/grp_fu_1473_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_dual/grp_fu_1477_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_dual/grp_fu_1481_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_dual/grp_fu_1485_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_dual/grp_fu_1489_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_dual/grp_fu_1493_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_dual/grp_fu_1497_p_opcode' to 0.
+INFO: [RTGEN 206-100] Generating core module 'faddfsub_32ns_32ns_32_7_full_dsp_1': 20 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fsub_32ns_32ns_32_7_full_dsp_1': 12 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'update_dual'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.05 seconds. CPU system time: 0 seconds. Elapsed time: 0.06 seconds; current allocated memory: 569.906 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'update_linear_cost_Pipeline_update_r_cost' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'update_linear_cost_Pipeline_update_r_cost' pipeline 'update_r_cost' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Generating core module 'faddfsub_32ns_32ns_32_7_full_dsp_1': 4 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fmul_32ns_32ns_32_4_max_dsp_1': 4 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fsub_32ns_32ns_32_7_full_dsp_1': 4 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'update_linear_cost_Pipeline_update_r_cost'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.03 seconds. CPU system time: 0 seconds. Elapsed time: 0.03 seconds; current allocated memory: 573.059 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'update_linear_cost_Pipeline_update_q_cost' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'update_linear_cost_Pipeline_update_q_cost' pipeline 'update_q_cost' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Generating core module 'faddfsub_32ns_32ns_32_7_full_dsp_1': 16 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fmul_32ns_32ns_32_4_max_dsp_1': 12 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fsub_32ns_32ns_32_7_full_dsp_1': 8 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'update_linear_cost_Pipeline_update_q_cost'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.04 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.04 seconds; current allocated memory: 576.402 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'update_linear_cost' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_linear_cost/grp_fu_1453_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_linear_cost/grp_fu_1457_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_linear_cost/grp_fu_1461_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_linear_cost/grp_fu_1465_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_linear_cost/grp_fu_1469_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_linear_cost/grp_fu_1473_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_linear_cost/grp_fu_1477_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_linear_cost/grp_fu_1481_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_linear_cost/grp_fu_1485_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_linear_cost/grp_fu_1489_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_linear_cost/grp_fu_1493_p_opcode' to 0.
+WARNING: [RTGEN 206-101] Setting dangling out port 'update_linear_cost/grp_fu_1497_p_opcode' to 0.
+INFO: [RTGEN 206-100] Generating core module 'faddfsub_32ns_32ns_32_7_full_dsp_1': 20 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fmul_32ns_32ns_32_4_max_dsp_1': 24 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fsub_32ns_32ns_32_7_full_dsp_1': 12 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'update_linear_cost'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.07 seconds. CPU system time: 0 seconds. Elapsed time: 0.08 seconds; current allocated memory: 585.613 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'backward_pass_Pipeline_backward_loop' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'backward_pass_Pipeline_backward_loop' pipeline 'backward_loop' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Generating core module 'faddfsub_32ns_32ns_32_7_full_dsp_1': 10 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fmul_32ns_32ns_32_4_max_dsp_1': 18 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'backward_pass_Pipeline_backward_loop'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.11 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.11 seconds; current allocated memory: 596.715 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'backward_pass' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Generating core module 'faddfsub_32ns_32ns_32_7_full_dsp_1': 10 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fmul_32ns_32ns_32_4_max_dsp_1': 18 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'backward_pass'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.09 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.1 seconds; current allocated memory: 608.008 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'tinympc_solver_Pipeline_store_x_out_VITIS_LOOP_4229_7' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'tinympc_solver_Pipeline_store_x_out_VITIS_LOOP_4229_7' pipeline 'store_x_out_VITIS_LOOP_4229_7' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Generating core module 'sparsemux_25_4_32_1_1': 1 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'tinympc_solver_Pipeline_store_x_out_VITIS_LOOP_4229_7'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.03 seconds. CPU system time: 0 seconds. Elapsed time: 0.03 seconds; current allocated memory: 608.848 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'tinympc_solver_Pipeline_store_u_out_VITIS_LOOP_4235_8' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-1030] Apply Unified Pipeline Control on module 'tinympc_solver_Pipeline_store_u_out_VITIS_LOOP_4235_8' pipeline 'store_u_out_VITIS_LOOP_4235_8' pipeline type 'loop pipeline'
+INFO: [RTGEN 206-100] Generating core module 'sparsemux_9_2_32_1_1': 1 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'tinympc_solver_Pipeline_store_u_out_VITIS_LOOP_4235_8'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.02 seconds. CPU system time: 0 seconds. Elapsed time: 0.02 seconds; current allocated memory: 612.289 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'tinympc_solver' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-500] Setting interface mode on port 'tinympc_solver/main_memory' to 'ap_memory'.
+INFO: [RTGEN 206-500] Setting interface mode on function 'tinympc_solver' to 'ap_ctrl_hs'.
+INFO: [RTGEN 206-104] Estimated max fanout for 'tinympc_solver' is 5050 from HDL expression: (1'b1 == ap_CS_fsm_state15)
+INFO: [RTGEN 206-100] Generating core module 'faddfsub_32ns_32ns_32_7_full_dsp_1': 20 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fmul_32ns_32ns_32_4_max_dsp_1': 18 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'fsub_32ns_32ns_32_7_full_dsp_1': 12 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'tinympc_solver'.
+INFO: [RTMG 210-278] Implementing memory 'tinympc_solver_x_RAM_AUTO_1R1W' using auto RAMs.
+INFO: [RTMG 210-278] Implementing memory 'tinympc_solver_u_RAM_AUTO_1R1W' using auto RAMs.
+INFO: [RTMG 210-278] Implementing memory 'tinympc_solver_y_RAM_AUTO_1R1W' using auto RAMs.
+INFO: [RTMG 210-278] Implementing memory 'tinympc_solver_g_RAM_AUTO_1R1W' using auto RAMs.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.07 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.08 seconds; current allocated memory: 623.090 MB.
+INFO: [HLS 200-111] Finished Generating all RTL models: CPU user time: 0.2 seconds. CPU system time: 0.02 seconds. Elapsed time: 0.22 seconds; current allocated memory: 634.457 MB.
+INFO: [HLS 200-2225] Wrote inferred directives to file /home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/syn/inferred_directives.ini
+INFO: [HLS 200-111] Finished Updating report files: CPU user time: 0.23 seconds. CPU system time: 0.02 seconds. Elapsed time: 0.24 seconds; current allocated memory: 648.016 MB.
+INFO: [VHDL 208-304] Generating VHDL RTL for tinympc_solver.
+INFO: [VLOG 209-307] Generating Verilog RTL for tinympc_solver.
+INFO: [HLS 200-790] **** Loop Constraint Status: All loop constraints were satisfied.
+INFO: [HLS 200-789] **** Estimated Fmax: 111.46 MHz
+INFO: [IMPL 213-8] Exporting RTL as a Vivado IP.
+
+****** Vivado v2025.2 (64-bit)
+  **** SW Build 6299465 on Fri Nov 14 12:34:56 MST 2025
+  **** IP Build 6300035 on Fri Nov 14 10:48:45 MST 2025
+  **** SharedData Build 6298862 on Thu Nov 13 04:50:51 MST 2025
+  **** Start of session at: Mon Nov  2 03:17:22 2026
+    ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+    ** Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+
+source run_ippack.tcl -notrace
+INFO: calling package_hls_ip ip_types=vitis sysgen json_file=/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/hls_data.json outdir=/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/impl/ip srcdir=/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls ippack_options_dict= ippack_options_dict=
+INFO: Copied 1 ipmisc file(s) to /home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/impl/ip/misc
+INFO: Copied 45 verilog file(s) to /home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/impl/ip/hdl/verilog
+INFO: Copied 39 vhdl file(s) to /home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/impl/ip/hdl/vhdl
+Generating 4 subcores in /home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/impl/ip/subcore_prj:
+impl/misc/tinympc_solver_faddfsub_32ns_32ns_32_7_full_dsp_1_ip.tcl
+impl/misc/tinympc_solver_fcmp_32ns_32ns_1_2_no_dsp_1_ip.tcl
+impl/misc/tinympc_solver_fmul_32ns_32ns_32_4_max_dsp_1_ip.tcl
+impl/misc/tinympc_solver_fsub_32ns_32ns_32_7_full_dsp_1_ip.tcl
+INFO: Using COE_DIR=/home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/impl/ip/hdl/verilog
+INFO: Generating tinympc_solver_faddfsub_32ns_32ns_32_7_full_dsp_1_ip via file impl/misc/tinympc_solver_faddfsub_32ns_32ns_32_7_full_dsp_1_ip.tcl
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/home/agrillo/amdfpga/2025.2/data/ip'.
+INFO: [IP_Flow 19-1686] Generating 'Synthesis' target for IP 'tinympc_solver_faddfsub_32ns_32ns_32_7_full_dsp_1_ip'...
+INFO: [IP_Flow 19-1686] Generating 'Simulation' target for IP 'tinympc_solver_faddfsub_32ns_32ns_32_7_full_dsp_1_ip'...
+INFO: Done generating tinympc_solver_faddfsub_32ns_32ns_32_7_full_dsp_1_ip via file impl/misc/tinympc_solver_faddfsub_32ns_32ns_32_7_full_dsp_1_ip.tcl
+INFO: Generating tinympc_solver_fcmp_32ns_32ns_1_2_no_dsp_1_ip via file impl/misc/tinympc_solver_fcmp_32ns_32ns_1_2_no_dsp_1_ip.tcl
+INFO: [IP_Flow 19-1686] Generating 'Synthesis' target for IP 'tinympc_solver_fcmp_32ns_32ns_1_2_no_dsp_1_ip'...
+INFO: [IP_Flow 19-1686] Generating 'Simulation' target for IP 'tinympc_solver_fcmp_32ns_32ns_1_2_no_dsp_1_ip'...
+INFO: Done generating tinympc_solver_fcmp_32ns_32ns_1_2_no_dsp_1_ip via file impl/misc/tinympc_solver_fcmp_32ns_32ns_1_2_no_dsp_1_ip.tcl
+INFO: Generating tinympc_solver_fmul_32ns_32ns_32_4_max_dsp_1_ip via file impl/misc/tinympc_solver_fmul_32ns_32ns_32_4_max_dsp_1_ip.tcl
+INFO: [IP_Flow 19-1686] Generating 'Synthesis' target for IP 'tinympc_solver_fmul_32ns_32ns_32_4_max_dsp_1_ip'...
+INFO: [IP_Flow 19-1686] Generating 'Simulation' target for IP 'tinympc_solver_fmul_32ns_32ns_32_4_max_dsp_1_ip'...
+INFO: Done generating tinympc_solver_fmul_32ns_32ns_32_4_max_dsp_1_ip via file impl/misc/tinympc_solver_fmul_32ns_32ns_32_4_max_dsp_1_ip.tcl
+INFO: Generating tinympc_solver_fsub_32ns_32ns_32_7_full_dsp_1_ip via file impl/misc/tinympc_solver_fsub_32ns_32ns_32_7_full_dsp_1_ip.tcl
+INFO: [IP_Flow 19-1686] Generating 'Synthesis' target for IP 'tinympc_solver_fsub_32ns_32ns_32_7_full_dsp_1_ip'...
+INFO: [IP_Flow 19-1686] Generating 'Simulation' target for IP 'tinympc_solver_fsub_32ns_32ns_32_7_full_dsp_1_ip'...
+INFO: Done generating tinympc_solver_fsub_32ns_32ns_32_7_full_dsp_1_ip via file impl/misc/tinympc_solver_fsub_32ns_32ns_32_7_full_dsp_1_ip.tcl
+INFO: Found 1 unique subcore IP: xilinx.com:ip:floating_point:7.1
+INFO: Copied 4 subcore files: /home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/impl/ip/hdl/ip/tinympc_solver_fmul_32ns_32ns_32_4_max_dsp_1_ip/tinympc_solver_fmul_32ns_32ns_32_4_max_dsp_1_ip.xci /home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/impl/ip/hdl/ip/tinympc_solver_faddfsub_32ns_32ns_32_7_full_dsp_1_ip/tinympc_solver_faddfsub_32ns_32ns_32_7_full_dsp_1_ip.xci /home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/impl/ip/hdl/ip/tinympc_solver_fsub_32ns_32ns_32_7_full_dsp_1_ip/tinympc_solver_fsub_32ns_32ns_32_7_full_dsp_1_ip.xci /home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/impl/ip/hdl/ip/tinympc_solver_fcmp_32ns_32ns_1_2_no_dsp_1_ip/tinympc_solver_fcmp_32ns_32ns_1_2_no_dsp_1_ip.xci
+INFO: Import ports from HDL: /home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/impl/ip/hdl/vhdl/tinympc_solver.vhd (tinympc_solver)
+INFO: Add clock interface ap_clk
+INFO: Add reset interface ap_rst
+INFO: Add ap_ctrl interface ap_ctrl
+INFO: Add data interface main_memory_address0
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/home/agrillo/amdfpga/2025.2/data/ip'.
+INFO: Add data interface main_memory_d0
+INFO: Add data interface main_memory_q0
+INFO: Calling post_process_vitis to specialize IP
+INFO: Calling post_process_sysgen to specialize IP
+Generating sysgen info xml from json file
+INFO: Created IP /home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/impl/ip/component.xml
+INFO: Created IP archive /home/agrillo/maolinComp/tiny-frontier/boundary/h1023/hls/hls/impl/ip/xilinx_com_hls_tinympc_solver_1_0.zip
+INFO: [Common 17-206] Exiting Vivado at Mon Nov  2 03:17:27 2026...
+INFO: [HLS 200-802] Generated output file hls/tinympc_solver.zip
+INFO: [HLS 200-112] Total CPU user time: 14.58 seconds. Total CPU system time: 1.56 seconds. Total elapsed time: 17.14 seconds; peak allocated memory: 654.715 MB.
+INFO: [v++ 60-791] Total elapsed time: 0h 0m 20s

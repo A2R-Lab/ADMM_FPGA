@@ -84,3 +84,6 @@ video/constrainedStarTopView.MP4
 /video/narration/*.mp3
 /video/narration/*.wav
 /video/narration/*.srt
+
+# Retained TinyMPC FPGA benchmark dataset
+!evaluation/data/tinympc_fpga_comparison.csv

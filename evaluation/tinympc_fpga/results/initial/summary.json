@@ -1,0 +1,16 @@
+[
+  {
+    "horizon": 5,
+    "iterations": 10,
+    "hls_clock_mhz": 100,
+    "clock_mhz": 60,
+    "status": "timing_closed"
+  },
+  {
+    "horizon": 10,
+    "iterations": 10,
+    "hls_clock_mhz": 100,
+    "clock_mhz": 60,
+    "status": "timing_closed"
+  }
+]

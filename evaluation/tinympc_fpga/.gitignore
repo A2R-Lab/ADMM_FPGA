@@ -1,0 +1,5 @@
+output/
+__pycache__/
+
+# Preserve the logs referenced by archived evidence manifests.
+!results/**/*.log

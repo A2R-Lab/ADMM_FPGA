@@ -21,17 +21,19 @@ import numpy as np
 LABELS = {
     "full_sparse": "Full-sparse FPGA",
     "staged_a": "Staged FPGA",
-    "tinympc_e": "TinyMPC",
+    "tinympc_e": "TinyMPC (MCU)",
+    "tinympc_fpga_float": "TinyMPC FPGA*",
 }
 
 # Dartmouth's official primary/tertiary palette.
 COLORS = {
     "full_sparse": "#267ABA",  # River Blue
     "staged_a": "#00693E",  # Dartmouth Green
+    "tinympc_fpga_float": "#8067A8",
     "tinympc_e": "#D94415",  # Tuck Orange
 }
 
-ARCH_ORDER = ["staged_a", "full_sparse", "tinympc_e"]
+ARCH_ORDER = ["staged_a", "full_sparse", "tinympc_e", "tinympc_fpga_float"]
 
 # Use a consistent selection of synthesis-derived timing and resource results.
 # These readability exclusions do not remove any measured-power configuration.
@@ -309,7 +311,7 @@ def best_rows(rows: list[dict[str, str]], compare_iters: int) -> list[dict[str, 
             continue
         if (arch, horizon) in EXCLUDED_POINTS:
             continue
-        if arch == "tinympc_e" and int(f(row, "admm_iters", -1)) != compare_iters:
+        if arch in ("tinympc_e", "tinympc_fpga_float") and int(f(row, "admm_iters", -1)) != compare_iters:
             continue
 
         key = (arch, horizon)
@@ -354,7 +356,7 @@ def attach_measured_power(rows, path=DATA_DIR / "arty_power_measurements.csv"):
 
 
 def comparison_latency_us(row):
-    if row["arch"] == "tinympc_e":
+    if row["arch"] in ("tinympc_e", "tinympc_fpga_float"):
         return f(row, "solve_us_cfg_clk")
     return f(row, "measured_latency_us")
 
@@ -364,9 +366,11 @@ def power_w(row: dict[str, str], tinympc_power_w: float) -> float:
 
 
 def energy_mj(row: dict[str, str], tinympc_power_w: float) -> float:
-    """Measured core/BRAM plus estimated auxiliary/I/O; no total-power-estimate fallback."""
+    """Measured AccelMPC energy; explicit post-route estimates for TinyMPC FPGA only."""
     if row["arch"] == "tinympc_e":
         return tinympc_power_w * comparison_latency_us(row) / 1000
+    if row["arch"] == "tinympc_fpga_float":
+        return f(row, "energy_per_solve_cfg_uj") / 1000
     return f(row, "measured_energy_uj") / 1000
 
 
@@ -417,7 +421,7 @@ def _plot_points(ax, rows: list[dict[str, str]], tinympc_power_w: float) -> None
         millijoules = bubble_energy(row)
         if not math.isfinite(millijoules) or millijoules <= 0:
             continue
-        estimated = not math.isfinite(energy_mj(row, tinympc_power_w))
+        estimated = row["arch"] == "tinympc_fpga_float" or not math.isfinite(energy_mj(row, tinympc_power_w))
         latency = f(row, "solve_us_cfg_clk") / 1000
         ax.scatter(
             f(row, "horizon"),
@@ -459,7 +463,7 @@ def plot_headline(
         raise ValueError("No timing-clean benchmark rows matched the requested iteration count")
 
     left_rows = [row for row in rows if f(row, "horizon") <= 100]
-    right_rows = [row for row in rows if f(row, "horizon") >= 300]
+    right_rows = [row for row in rows if f(row, "horizon") >= 140]
 
     fig, (left_ax, right_ax) = plt.subplots(
         1,
@@ -472,7 +476,7 @@ def plot_headline(
 
     for ax in (left_ax, right_ax):
         ax.set_yscale("log")
-        ax.set_ylim(0.28, 65)
+        ax.set_ylim(0.08, 65)
         ax.grid(True, axis="y", which="major", color="#D9D9D9", linewidth=0.9)
         ax.grid(True, axis="y", which="minor", color="#EEEEEE", linewidth=0.55)
         ax.grid(True, axis="x", which="major", color="#EEEEEE", linewidth=0.7)
@@ -481,12 +485,12 @@ def plot_headline(
         ax.spines["bottom"].set_color("#333333")
         ax.spines["bottom"].set_linewidth(1.1)
 
-    left_ax.set_xlim(5, 102)
-    right_ax.set_xlim(285, 1400)
+    left_ax.set_xlim(2, 102)
+    right_ax.set_xlim(140, 1400)
     left_ax.set_xticks(list(range(10, 101, 10)))
-    right_ax.set_xticks([320, 500, 700, 900, 1100, 1350])
+    right_ax.set_xticks([160, 320, 500, 700, 900, 1100, 1350])
 
-    y_ticks = [0.5, 1, 2, 5, 10, 20, 50]
+    y_ticks = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50]
     left_ax.yaxis.set_major_locator(FixedLocator(y_ticks))
     left_ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _pos: f"{value:g}"))
     left_ax.yaxis.set_minor_formatter(NullFormatter())
@@ -517,14 +521,14 @@ def plot_headline(
                 and math.isfinite(energy_mj(r, tinympc_power_w))]
     speedups = [f(baseline[int(f(r, "horizon"))], "solve_us_cfg_clk") /
                 f(r, "solve_us_cfg_clk") for r in rows
-                if r["arch"] != "tinympc_e" and int(f(r, "horizon")) in baseline]
+                if r["arch"] in RADAR_ARCHES and int(f(r, "horizon")) in baseline]
     staged = [r for r in compared if r["arch"] == "staged_a"]
     savings = [energy_mj(baseline[int(f(r, "horizon"))], tinympc_power_w) /
                energy_mj(r, tinympc_power_w) for r in staged]
     staged_horizons = [int(f(r, "horizon")) for r in staged]
 
     left_ax.annotate(
-        f"TinyMPC\n{min(speedups):.1f}–{max(speedups):.1f}× slower",
+        f"TinyMPC (MCU)\n{min(speedups):.1f}–{max(speedups):.1f}× slower",
         xy=(80, 42.012),
         xytext=(50, 9),
         color=COLORS["tinympc_e"],
@@ -549,9 +553,9 @@ def plot_headline(
     )
     left_ax.text(
         25,
-        0.33,
+        0.085,
         f"Staged FPGA uses {min(savings):.1f}–{max(savings):.1f}× less energy\n"
-        f"than TinyMPC over H={min(staged_horizons)}–{max(staged_horizons)}",
+        f"than TinyMPC (MCU) over H={min(staged_horizons)}–{max(staged_horizons)}",
         color=COLORS["staged_a"],
         fontsize=11,
         fontweight="semibold",
@@ -571,6 +575,20 @@ def plot_headline(
         arrowprops={"arrowstyle": "-", "color": COLORS["staged_a"], "lw": 1.3},
         zorder=5,
     )
+
+    tiny_fpga = [r for r in rows if r["arch"] == "tinympc_fpga_float"]
+    if tiny_fpga:
+        largest = max(tiny_fpga, key=lambda r: f(r, "horizon"))
+        right_ax.annotate(
+            f"TinyMPC FPGA*\nverified through H={int(f(largest, 'horizon'))}",
+            xy=(f(largest, "horizon"), f(largest, "solve_us_cfg_clk") / 1000),
+            xytext=(650, 3.0), color=COLORS["tinympc_fpga_float"],
+            fontsize=11, fontweight="semibold",
+            arrowprops={"arrowstyle": "-", "color": COLORS["tinympc_fpga_float"], "lw": 1.2},
+        )
+        left_ax.annotate("TinyMPC FPGA*", xy=(20, 0.39349), xytext=(6, 0.19),
+                         color=COLORS["tinympc_fpga_float"], fontsize=10,
+                         arrowprops={"arrowstyle": "-", "color": COLORS["tinympc_fpga_float"]})
 
     legend_energies = [0.25, 2.5, 25.0]
     legend_handles = [
@@ -661,7 +679,7 @@ def plot_edp_bars(
                math.isfinite(edp_uj_us(rows_by_key[(arch, horizon)], tinympc_power_w))
                for arch in RADAR_ARCHES)
     ]
-    bar_order = ["tinympc_e", "staged_a", "full_sparse"]
+    bar_order = ["tinympc_e", "staged_a", "full_sparse", "tinympc_fpga_float"]
     if not horizons:
         raise ValueError("No horizons have measured FPGA EDP and a TinyMPC baseline")
 
@@ -670,12 +688,8 @@ def plot_edp_bars(
     non_axis_fontsize = 10
     improvement_label_fontsize = 13
 
-    bar_width = 0.24
-    offsets = {
-        "tinympc_e": -bar_width,
-        "staged_a": 0.0,
-        "full_sparse": bar_width,
-    }
+    bar_width = 0.20
+    offsets = {arch: (i - 1.5) * bar_width for i, arch in enumerate(bar_order)}
     x_positions = list(range(len(horizons)))
     edp_by_arch = {
         arch: [edp_uj_us(rows_by_key[(arch, horizon)], tinympc_power_w)
@@ -691,6 +705,7 @@ def plot_edp_bars(
             color=COLORS[arch],
             alpha=0.78,
             label=LABELS[arch],
+            hatch="//" if arch == "tinympc_fpga_float" else None,
             edgecolor="white",
             linewidth=0.8,
             zorder=3,
@@ -715,70 +730,13 @@ def plot_edp_bars(
     ax.set_xlabel("Prediction horizon H", fontsize=15)
     ax.set_ylabel(f"EDP at k={compare_iters} [uJ*us] (log scale)", fontsize=15)
 
-    arrow_specs = [
-        ("staged_a", COLORS["staged_a"], 9.5),
-        ("full_sparse", COLORS["full_sparse"], -9.5),
-    ]
-    for idx, _horizon in enumerate(horizons):
-        tiny_edp = edp_by_arch["tinympc_e"][idx]
-        lala = 0.95
-        arrow_top = tiny_edp * lala
-        shared_arrow_bottom = max(
-            edp_by_arch[arch][idx] * 1.08
-            for arch, _arrow_color, _label_offset_points in arrow_specs
-            if math.isfinite(edp_by_arch[arch][idx])
-        )
-        shared_label_y = shared_arrow_bottom * (arrow_top / shared_arrow_bottom) ** 0.50
-        for arch, arrow_color, label_offset_points in arrow_specs:
-            target_edp = edp_by_arch[arch][idx]
-            if not math.isfinite(target_edp):
+    for idx, horizon in enumerate(horizons):
+        for arch in bar_order:
+            if not math.isfinite(edp_by_arch[arch][idx]):
                 ax.text(idx + offsets[arch], min(all_edp) * .65, "n/a",
-                        ha="center", color=arrow_color, fontsize=10)
-                continue
-            target_x = idx + offsets[arch]
-            tiny_x = idx + offsets["tinympc_e"] + bar_width / 2.0
-            improvement = tiny_edp / target_edp
-            arrow_bottom = target_edp * 1.08
-            ax.plot(
-                [tiny_x, target_x],
-                [arrow_top, arrow_top],
-                color=arrow_color,
-                linewidth=1.25,
-                linestyle="--",
-                zorder=5,
-            )
-            ax.annotate(
-                "",
-                xy=(target_x, arrow_bottom),
-                xytext=(target_x, arrow_top),
-                arrowprops={
-                    "arrowstyle": "-|>",
-                    "color": arrow_color,
-                    "lw": 1.25,
-                    "linestyle": "--",
-                    "mutation_scale": 11,
-                },
-                zorder=5,
-            )
-            ax.annotate(
-                f"{improvement:.0f}x",
-                xy=(target_x, shared_label_y),
-                xytext=(0, label_offset_points),
-                textcoords="offset points",
-                color=arrow_color,
-                fontsize=improvement_label_fontsize,
-                fontweight="semibold",
-                ha="center",
-                va="center_baseline",
-                bbox={
-                    "boxstyle": "round,pad=0.14",
-                    "fc": "white",
-                    "ec": arrow_color,
-                    "alpha": 0.86,
-                    "linewidth": 0.55,
-                },
-                zorder=6,
-            )
+                        ha="center", color=COLORS[arch], fontsize=8, rotation=90)
+    fig.text(0.5, 0.025, "* TinyMPC FPGA: post-route estimated energy and synthesized latency. n/a: no result.",
+             ha="center", fontsize=9)
 
     legend = ax.legend(
         loc="upper left",
@@ -1111,8 +1069,10 @@ def main() -> int:
 
     rows = load_rows(args.input)
     selected = attach_measured_power(best_rows(rows, args.compare_iters))
+    tiny_fpga_rows = load_rows(DATA_DIR / "tinympc_fpga_comparison.csv")
+    plot_selected = selected + best_rows(tiny_fpga_rows, args.compare_iters)
     plot_headline(
-        selected,
+        plot_selected,
         args.svg_output,
         args.png_output,
         args.pdf_output,
@@ -1120,7 +1080,7 @@ def main() -> int:
         args.tinympc_power_w,
     )
     plot_edp_bars(
-        selected,
+        plot_selected,
         args.edp_svg_output,
         args.edp_png_output,
         args.edp_pdf_output,
