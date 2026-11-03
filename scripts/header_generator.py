@@ -396,7 +396,7 @@ try:
     from scipy import sparse
 except ImportError as exc:
     raise RuntimeError(
-        "scipy is required for sparse header generation. Activate ~/venv or install scipy."
+        "scipy is required for sparse header generation. Install scipy in the active Python environment."
     ) from exc
 
 P_sparse = sparse.block_diag(blocks, format="csc", dtype=np.float64)
@@ -446,7 +446,7 @@ try:
 except ImportError as exc:
     raise RuntimeError(
         "CHOLMOD sparse Cholesky requires scikit-sparse in the active Python environment. "
-        "Run `source ~/venv/bin/activate` and install scikit-sparse/SuiteSparse before "
+        "Install scikit-sparse/SuiteSparse in the active Python environment before "
         "large-horizon benchmark generation."
     ) from exc
 

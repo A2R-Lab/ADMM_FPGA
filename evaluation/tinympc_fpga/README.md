@@ -21,11 +21,11 @@ The single publication dataset is [benchmarks.csv](../data/benchmarks.csv).
 TinyMPC FPGA points in it use Arty measurements; standalone post-route power
 estimates must not be substituted for these measurements.
 
-For an independent generation and host diagnostic (on the build server):
+For an independent generation and host diagnostic:
 
 ```sh
-~/venv/bin/python evaluation/tinympc_fpga/prepare.py --horizon 5 --iterations 10 --output /path/to/run/h5
-~/venv/bin/python evaluation/tinympc_fpga/prepare.py --horizon 10 --iterations 10 --output /path/to/run/h10
+python evaluation/tinympc_fpga/prepare.py --horizon 5 --iterations 10 --output /path/to/run/h5
+python evaluation/tinympc_fpga/prepare.py --horizon 10 --iterations 10 --output /path/to/run/h10
 ```
 
 Preparation requires NumPy, SciPy, OSQP and autograd. For generation without

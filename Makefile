@@ -341,7 +341,7 @@ $(FLASH_BIN): $(BITSTREAM)
 	@echo "Flash binary already generated: $(FLASH_BIN)"
 
 # =============================================================================
-# Sync from remote (build on server, program locally)
+# Optional transfer of build artifacts from another machine
 # =============================================================================
 
 sync:

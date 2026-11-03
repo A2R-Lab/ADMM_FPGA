@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build prevalidated TinyMPC H5/H10 kernels; run on the FPGA build server."""
+"""Build prevalidated TinyMPC kernels with Vivado/Vitis."""
 import argparse
 import json
 from pathlib import Path

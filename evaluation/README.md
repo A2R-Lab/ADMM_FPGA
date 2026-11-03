@@ -50,15 +50,17 @@ uninstrumented compilation point, not a proven exact capacity limit.
 Regenerate the publication artifacts with:
 
 ```sh
-~/venv/bin/python evaluation/plot_benchmarks.py --skip-trajectory
+python evaluation/plot_benchmarks.py --skip-trajectory
 ```
 
-Import all completed compact measurements incrementally, then regenerate:
+Import completed compact measurements incrementally, then regenerate. The importer
+expects measurement directories named `compact*-meas` beneath `--campaign-root`,
+containing the runner’s summaries and cached artifact bundles:
 
 ```sh
-~/venv/bin/python evaluation/import_compact_measurements.py --campaign-root ../campaign_new_full_sparse
-~/venv/bin/python evaluation/plot_benchmarks.py --skip-trajectory
-~/venv/bin/python evaluation/summarize_results.py --benchmarks-only
+python evaluation/import_compact_measurements.py --campaign-root /path/to/campaigns
+python evaluation/plot_benchmarks.py --skip-trajectory
+python evaluation/summarize_results.py --benchmarks-only
 ```
 
 The importer checks three valid repetitions, completion flags, routed timing and
@@ -175,7 +177,7 @@ in float and native `ap_fixed<32,10,AP_RND,AP_SAT>` arithmetic. Inputs are
 regenerated when no valid cache exists; candidate commands are not fed back into the plant.
 
 ```bash
-OPENBLAS_NUM_THREADS=1 ~/venv/bin/python evaluation/rho_saturation_sweep.py \
+OPENBLAS_NUM_THREADS=1 python evaluation/rho_saturation_sweep.py \
   --hls-include /path/to/Vitis/include --jobs 8
 ```
 

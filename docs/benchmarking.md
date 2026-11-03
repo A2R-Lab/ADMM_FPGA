@@ -95,8 +95,8 @@ within a 1 ms period. Large demonstrated horizons do not imply 1 kHz operation.
 Regenerate without FPGA tools:
 
 ```bash
-~/venv/bin/python evaluation/plot_benchmarks.py --skip-trajectory
-~/venv/bin/python evaluation/summarize_results.py --benchmarks-only
+python evaluation/plot_benchmarks.py --skip-trajectory
+python evaluation/summarize_results.py --benchmarks-only
 ```
 
 The H40 radar reports measured latency and energy for staged and compact full_sparse.

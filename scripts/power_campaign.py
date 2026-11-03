@@ -104,7 +104,7 @@ def clean_environment():
 
 def matrix(path):
     # Same latency/power/stable-order ranking as paper best_rows, without its
-    # presentation exclusions. No dependency on plotting packages on the server.
+    # presentation exclusions. No dependency on plotting packages during acquisition.
     best = {}
     with Path(path).open(newline='') as f:
         for row in csv.DictReader(f):
@@ -515,7 +515,7 @@ def measure(args):
         'server_sha256': sha(args.campaign/'source/scripts/power_campaign.py'),
         'local_sha256': sha(Path(__file__)),
         'note': 'Frozen campaign sources and acquisition tools verified before measurement.'})
-    # Use the frozen host tools locally; future edits in the working repository
+    # Use the frozen acquisition tools; future edits in the working repository
     # must not silently change the acquisition protocol or interpretation.
     host = args.local/'host'/m['campaign_id']
     for name in ('scripts/power_benchmark.py', 'scripts/program_file.tcl'):

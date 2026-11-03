@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run on build server from the generated experiment directory.
+# Run from the generated experiment directory with a C++ compiler and Vitis headers.
 set -euo pipefail
 : "${HLS_INCLUDE:?Set HLS_INCLUDE to the Vitis include directory}"
 for h in 10 40; do
