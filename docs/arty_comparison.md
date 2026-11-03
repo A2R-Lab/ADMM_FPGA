@@ -87,7 +87,7 @@ python evaluation/summarize_results.py --benchmarks-only
 The improved staged measurements retain the dataset identifier `staged_fused`;
 the current build option is `staged_a`. Historical `staged_a` CSV rows describe
 the previous implementation. The plotting scripts distinguish these rows.
-See the [evaluation guide](../evaluation/README.md) for importing compact measurements.
+See the [evaluation guide](../evaluation/README.md) for dataset details.
 
 ## Required implementation settings
 

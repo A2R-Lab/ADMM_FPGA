@@ -35,6 +35,5 @@ new measurements.
 Source equality checks alone do not replace physical-board validation.
 
 Raw build reports, bitstreams, traces and intermediate experiment outputs stay
-outside Git. Import completed compact measurements with
-`evaluation/import_compact_measurements.py`; regenerate publication plots with
+outside Git. Regenerate publication plots from the consolidated CSV with
 `evaluation/plot_benchmarks.py --skip-trajectory`.

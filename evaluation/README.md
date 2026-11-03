@@ -51,25 +51,11 @@ Regenerate the publication artifacts with:
 
 ```sh
 python evaluation/plot_benchmarks.py --skip-trajectory
-```
-
-Import completed compact measurements incrementally, then regenerate. The importer
-expects measurement directories named `compact*-meas` beneath `--campaign-root`,
-containing the runner’s summaries and cached artifact bundles:
-
-```sh
-python evaluation/import_compact_measurements.py --campaign-root /path/to/campaigns
-python evaluation/plot_benchmarks.py --skip-trajectory
 python evaluation/summarize_results.py --benchmarks-only
 ```
 
-The importer checks three valid repetitions, completion flags, routed timing and
-bitstream hashes, and adds matching auxiliary/I/O energy. Failed or unfinished
-points are skipped. Repeating the import is idempotent; historical full_sparse
-measurements stay under `full_sparse_original`. Current compact rows use
-`max_horizon_status=demonstrated`: the largest completed horizon is shown,
-without claiming an exact capacity limit. Generated figures are prepared
-in `evaluation/output/`; manuscript integration remains a separate review step.
+Generated figures are written to `evaluation/output/`. For collecting new
+measurements, use the [Arty campaign workflow](../docs/arty_comparison.md).
 
 <!-- BEGIN GENERATED BENCHMARKS -->
 
