@@ -406,7 +406,7 @@ def _plot_points(ax, rows: list[dict[str, str]], tinympc_power_w: float) -> None
         millijoules = bubble_energy(row)
         if not math.isfinite(millijoules) or millijoules <= 0:
             continue
-        estimated = row.get("energy_source") in ("post_route_estimate", "nominal_mcu")
+        estimated = row.get("energy_source") == "post_route_estimate"
         latency = comparison_latency_us(row) / 1000
         ax.scatter(
             f(row, "horizon"),
@@ -448,7 +448,21 @@ def plot_headline(
         raise ValueError("No timing-clean benchmark rows matched the requested iteration count")
 
     left_rows = [row for row in rows if f(row, "horizon") <= 100]
-    right_rows = [row for row in rows if f(row, "horizon") >= 140]
+    # Thin only the display; keep every valid row for comparisons and statistics.
+    right_rows = []
+    for arch in ARCH_ORDER:
+        candidates = sorted((r for r in rows if r["arch"] == arch and f(r,"horizon") >= 140),
+                            key=lambda r: f(r,"horizon"))
+        picked = []
+        for row in candidates:
+            if not picked or f(row,"horizon") - f(picked[-1],"horizon") >= 180:
+                picked.append(row)
+        if candidates and picked[-1] is not candidates[-1]:
+            if len(picked) > 1 and f(candidates[-1],"horizon") - f(picked[-1],"horizon") < 140:
+                picked[-1] = candidates[-1]
+            else:
+                picked.append(candidates[-1])
+        right_rows.extend(picked)
 
     fig, (left_ax, right_ax) = plt.subplots(
         1,
@@ -512,7 +526,7 @@ def plot_headline(
     right_ax.legend(
         legend_handles,
         [f"{millijoules:g} mJ" for millijoules in legend_energies],
-        title="Bubble area = energy/solve\n* Estimated energy",
+        title="Bubble area = energy/solve\n* FPGA energy estimate",
         loc="lower right",
         bbox_to_anchor=(0.985, 0.075),
         frameon=False,
@@ -586,12 +600,12 @@ def plot_edp_bars(
     }
     horizons = [
         horizon
-        for horizon in [5, 10, 20, 40, 80, 250, 800, 1000, 1023]
+        for horizon in range(10, 81, 10)
         if any((arch, horizon) in rows_by_key and
                math.isfinite(edp_uj_us(rows_by_key[(arch, horizon)], tinympc_power_w))
                for arch in RADAR_ARCHES)
     ]
-    bar_order = ARCH_ORDER
+    bar_order = ["tinympc_e", "full_sparse", "staged_a", "tinympc_fpga_float", "staged_fused"]
     if not horizons:
         raise ValueError("No horizons have measured FPGA EDP and a TinyMPC baseline")
 
@@ -600,7 +614,7 @@ def plot_edp_bars(
     non_axis_fontsize = 10
     improvement_label_fontsize = 13
 
-    bar_width = 0.13
+    bar_width = 0.16
     offsets = {arch: (i - (len(bar_order)-1)/2) * bar_width for i, arch in enumerate(bar_order)}
     x_positions = list(range(len(horizons)))
     edp_by_arch = {
@@ -626,7 +640,7 @@ def plot_edp_bars(
     for arch in bar_order:
         for idx,h in enumerate(horizons):
             row=rows_by_key.get((arch,h))
-            if row and row.get("energy_source") in ("post_route_estimate", "nominal_mcu"):
+            if row and row.get("energy_source") == "post_route_estimate":
                 ax.text(idx+offsets[arch], edp_by_arch[arch][idx]*1.1,"*",ha="center",fontsize=9)
     ax.set_yscale("log")
     all_edp = [value for values in edp_by_arch.values() for value in values if math.isfinite(value)]
@@ -652,15 +666,36 @@ def plot_edp_bars(
             if not math.isfinite(edp_by_arch[arch][idx]):
                 ax.text(idx + offsets[arch], min(all_edp) * .65, "n/a",
                         ha="center", color=COLORS[arch], fontsize=8, rotation=90)
-    fig.text(0.5, 0.025, "* Estimated energy. FPGA measurements include estimated auxiliary/I/O rails. n/a: no result.",
-             ha="center", fontsize=9)
+    # Restore dashed comparison arrows and boxed improvement labels.
+    for idx, horizon in enumerate(horizons):
+        target = edp_by_arch["staged_fused"][idx]
+        target_x = idx + offsets["staged_fused"]
+        for baseline, color, label_scale in [("tinympc_e", COLORS["staged_fused"], 0.5),
+                                              ("tinympc_fpga_float", COLORS["tinympc_fpga_float"], 0.5)]:
+            base = edp_by_arch[baseline][idx]
+            top, bottom = base * .95, target * 1.08
+            x = target_x if baseline == "tinympc_e" else target_x - bar_width*.45
+            ax.plot([idx+offsets[baseline]+bar_width/2, x], [top,top],
+                    color=color, linewidth=1.25, linestyle="--", zorder=5)
+            ax.annotate("",xy=(x,bottom),xytext=(x,top),
+                        arrowprops={"arrowstyle":"-|>","color":color,"lw":1.25,
+                                    "linestyle":"--","mutation_scale":11},zorder=5)
+            ratio = base/target
+            label = f"{ratio:.0f}×" if baseline == "tinympc_e" else f"{ratio:.2f}×"
+            ax.annotate(label, xy=(x, bottom*(top/bottom)**label_scale),
+                        xytext=(0,0),textcoords="offset points",color=color,
+                        fontsize=11,fontweight="semibold",ha="center",va="center",
+                        bbox={"boxstyle":"round,pad=0.14","fc":"white","ec":color,
+                              "alpha":.9,"linewidth":.55},zorder=6)
+    fig.text(0.5, 0.025, "Arrows: EDP reduction to fused FPGA. MCU energy uses nominal active power.",
+             ha="center", fontsize=10)
 
     legend = ax.legend(
         loc="upper center", bbox_to_anchor=(0.5, 1.24),
         frameon=False,
         fancybox=False,
         edgecolor="#D0D0D0",
-        fontsize=9, ncol=3,
+        fontsize=11, ncol=3,
     )
     legend.get_frame().set_linewidth(0.8)
     legend.get_frame().set_facecolor("white")
@@ -763,12 +798,27 @@ def plot_solver_radar(
             zorder=3,
         )
         ax.fill(angles, values, color=COLORS[arch], alpha=0.13, zorder=2)
+    label_positions = {
+        "Latency": [(0.04,.38),(-.12,.86),(.08,1.06)],
+        "Energy/solve": [(-.04,.42),(-.11,.90),(.08,1.06)],
+        "EDP": [(0,.20),(-.10,.89),(.08,1.07)],
+        "BRAM": [(0,.73),(.03,.42),(0,1.06)],
+        "Logic": [(0,1.06),(.04,.82),(-.04,.35)],
+        "Scalability": [(-.18,.16),(.08,.34),(0,.92)],
+    }
+    for i, metric in enumerate(metrics):
+        for j, arch in enumerate(RADAR_ARCHES):
+            theta, radius = label_positions[metric][j]
+            ax.text(angles[i]+theta, radius,
+                    format_radar_value(metric,raw_by_arch[arch][metric],max_horizons[arch]),
+                    color=COLORS[arch],fontsize=10,fontweight="semibold",ha="center",va="center",
+                    bbox={"boxstyle":"round,pad=0.12","fc":"white","ec":"none","alpha":.85},zorder=6)
     ax.set_xticks(angles[:-1])
     ax.set_xticklabels([])
     label_distances = {
         "Latency": 1.25,
         "Energy/solve": 1.48,
-        "EDP": 1.3,
+        "EDP": 1.55,
         "BRAM": 1.28,
         "Logic": 1.4,
         "Scalability": 1.4,

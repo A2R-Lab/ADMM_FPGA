@@ -26,7 +26,7 @@ in microjoules, latency in microseconds, and EDP in microjoule-microseconds.
 `measured_energy_uj` is populated only for board measurements. Its reported
 standard deviation covers measured core energy, not uncertainty in auxiliary/I/O
 estimates. Communication, host processing, and board support circuitry are excluded.
-Asterisks mark estimates in both plots; no values are interpolated.
+Asterisks mark FPGA estimates; MCU points have no asterisk and retain the stated nominal-power calculation. No values are interpolated.
 
 The new fused and Wu measurements average three valid repetitions with a target
 batch duration of two seconds and at least 1024 solves. Existing full_sparse and
