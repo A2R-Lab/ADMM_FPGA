@@ -57,6 +57,31 @@ per architecture/horizon/iteration/clock; do not add failed attempts or build ar
 The paper's numerical macros regenerate from common-horizon comparisons, restricted
 to measured fused points (and measured FPGA baselines, except MOBY-DIC2).
 
+<!-- BEGIN GENERATED BENCHMARKS -->
+
+| H40 / 10 iterations | Solve (ms) | Energy (mJ) | EDP (mJ·ms) |
+| --- | --- | --- | --- |
+| Fused FPGA | 0.570 | 0.186 | 0.106 |
+| Staged FPGA | 1.339 | 0.424 | 0.568 |
+| Full-sparse FPGA | 1.484 | 0.412 | 0.612 |
+| TinyMPC (MCU) | 20.899 | 6.000 | 125.396 |
+| Wu et al. FPGA | 0.769 | 0.271 | 0.208 |
+
+| H40 FPGA resources | LUTs | FFs | BRAM tiles | DSPs |
+| --- | --- | --- | --- | --- |
+| Fused FPGA | 27412 | 25371 | 58 | 152 |
+| Staged FPGA | 22127 | 26540 | 36 | 80 |
+| Full-sparse FPGA | 9280 | 12051 | 78.5 | 77 |
+| Wu et al. FPGA | 27764 | 31378 | 88 | 138 |
+
+| Largest recorded timing-clean horizon | Horizon | Variables | Constraints | Solve (ms) |
+| --- | --- | --- | --- | --- |
+| Full-sparse FPGA | 90 | 1452 | 1632 | 3.295 |
+| Staged FPGA | 1350 | 21612 | 24312 | 44.859 |
+| Fused FPGA | 1800 | 28812 | 32412 | 24.683 |
+
+<!-- END GENERATED BENCHMARKS -->
+
 ![Solve latency and energy versus horizon](figures/benchmark_latency_energy.png)
 
 ![Energy-delay product comparison](figures/benchmark_edp_bars.png)
