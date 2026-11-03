@@ -22,26 +22,30 @@ LABELS = {
     "full_sparse": "Full-sparse FPGA",
     "staged_a": "Staged FPGA",
     "tinympc_e": "TinyMPC (MCU)",
-    "tinympc_fpga_float": "TinyMPC FPGA*",
+    "tinympc_fpga_float": "Wu et al. FPGA",
+    "staged_fused": "Fused FPGA",
+    "mobydic_small": "MOBY-DIC2*",
 }
 
 # Dartmouth's official primary/tertiary palette.
 COLORS = {
     "full_sparse": "#267ABA",  # River Blue
+    "staged_fused": "#009E73",
+    "mobydic_small": "#777777",
     "staged_a": "#00693E",  # Dartmouth Green
     "tinympc_fpga_float": "#8067A8",
     "tinympc_e": "#D94415",  # Tuck Orange
 }
 
-ARCH_ORDER = ["staged_a", "full_sparse", "tinympc_e", "tinympc_fpga_float"]
+ARCH_ORDER = ["staged_fused", "staged_a", "full_sparse", "tinympc_e", "tinympc_fpga_float", "mobydic_small"]
 
 # Use a consistent selection of synthesis-derived timing and resource results.
-# These readability exclusions do not remove any measured-power configuration.
-EXCLUDED_POINTS: set[tuple[str, int]] = {("staged_a", 768),("staged_a", 900), ("staged_a", 1000), ("staged_a", 1100), ("staged_a", 1200), ("staged_a", 1300)}
+# Publication CSV already excludes invalid configurations.
+EXCLUDED_POINTS: set[tuple[str, int]] = set()
 
 DEFAULT_TINYMPC_POWER_W = 0.087 * 3.3
 ENERGY_AREA_SCALE = 55.0
-RADAR_ARCHES = ["staged_a", "full_sparse"]
+RADAR_ARCHES = ["staged_fused", "staged_a", "full_sparse"]
 RADAR_METRIC_UNITS = {
     "Latency": "ms",
     "Energy/solve": "mJ",
@@ -55,7 +59,7 @@ HERE = Path(__file__).resolve().parent
 DATA_DIR = HERE / "data"
 OUTPUT_DIR = HERE / "output"
 
-BENCHMARK_SUMMARY_CSV = DATA_DIR / "benchmark_summary.csv"
+BENCHMARK_SUMMARY_CSV = DATA_DIR / "benchmarks.csv"
 
 FIGURE8_REFERENCE_CSV = DATA_DIR / "figure8_ref_trajectory.csv"
 FIGURE8_FPGA_CSV = DATA_DIR / "figure8_fpga_trajectory.csv"
@@ -68,11 +72,13 @@ FIGURE8_TINYMPC_ROW_RANGE = (350, 1070)
 FIGURE8_FPGA_ALIGNMENT = (0.757180, -0.383558, 0.598284, -0.289005)
 FIGURE8_TINYMPC_ALIGNMENT = (0.971674, -0.439716, 0.580961, -0.313049)
 
-FEASIBILITY_HORIZONS = (5, 10, 20, 30, 40, 50, 70, 90, 100, 150, 200, 250, 275)
+FEASIBILITY_HORIZONS = (5, 10, 30, 50, 100, 250, 600)
 FEASIBILITY_SOLVERS = (
     ("tinympc_e", "TinyMPC (MCU)"),
-    ("full_sparse", r"\texttt{Full\_sparse} FPGA"),
-    ("staged_a", r"\texttt{Staged} FPGA"),
+    ("full_sparse", r"\texttt{full\_sparse}"),
+    ("staged_a", r"\texttt{staged\_a}"),
+    ("staged_fused", r"\texttt{staged\_fused}"),
+    ("tinympc_fpga_float", "Wu et al. FPGA"),
 )
 FEASIBILITY_MANUAL_ITERATIONS = {
     ("tinympc_e", 5): 4,
@@ -117,7 +123,7 @@ def row_has_valid_feasibility_timing(row: dict[str, str]) -> bool:
         return False
 
     arch = row.get("arch")
-    if arch in {"staged_a", "full_sparse"}:
+    if arch in {"staged_fused", "staged_a", "full_sparse", "tinympc_fpga_float"}:
         return row.get("status") == "pass"
     if arch == "tinympc_e":
         return row.get("status") == "benchmark"
@@ -146,7 +152,7 @@ def feasible_iteration_table(
 
     for arch, _label in FEASIBILITY_SOLVERS:
         budget_us = control_period_us
-        if arch in {"staged_a", "full_sparse"}:
+        if arch in {"staged_fused", "staged_a", "full_sparse", "tinympc_fpga_float"}:
             budget_us -= fpga_spi_overhead_us
         if budget_us <= 0:
             continue
@@ -296,7 +302,7 @@ def best_rows(rows: list[dict[str, str]], compare_iters: int) -> list[dict[str, 
 
     Latency is the primary selection criterion. If implementation variants have
     identical latency, prefer lower reported power and then the stable input
-    order. TinyMPC rows are restricted to the requested ADMM iteration count.
+    order. All rows are restricted to the requested ADMM iteration count.
     """
 
     best: dict[tuple[str, int], dict[str, str]] = {}
@@ -311,7 +317,7 @@ def best_rows(rows: list[dict[str, str]], compare_iters: int) -> list[dict[str, 
             continue
         if (arch, horizon) in EXCLUDED_POINTS:
             continue
-        if arch in ("tinympc_e", "tinympc_fpga_float") and int(f(row, "admm_iters", -1)) != compare_iters:
+        if int(f(row, "admm_iters", -1)) != compare_iters:
             continue
 
         key = (arch, horizon)
@@ -334,31 +340,10 @@ def best_rows(rows: list[dict[str, str]], compare_iters: int) -> list[dict[str, 
     )
 
 
-def attach_measured_power(rows, path=DATA_DIR / "arty_power_measurements.csv"):
-    """Join only matching architecture/horizon/iteration rows; retain synthesis-derived timing."""
-    measured = {(r["arch"], int(r["horizon"]), int(r["iterations"])): r
-                for r in load_rows(path) if r["status"] == "measured"}
-    result = []
-    for original in rows:
-        row = dict(original)
-        key = (row["arch"], int(f(row, "horizon")), int(f(row, "admm_iters")))
-        if key in measured:
-            r = measured[key]
-            extra_power = f(r, "estimated_aux_w") + f(r, "estimated_io_w")
-            if not math.isfinite(extra_power) or extra_power < 0:
-                raise ValueError(f"Missing or invalid auxiliary/I/O estimate for {key}")
-            row.update(measured_power_w=f(r, "raw_core_w_mean") + extra_power,
-                       measured_energy_uj=f(r, "raw_core_energy_uj_mean") + extra_power * f(r, "latency_us_mean"),
-                       measured_latency_us=r["latency_us_mean"],
-                       measured_energy_std_uj=r["raw_core_energy_uj_std"])
-        result.append(row)
-    return result
-
-
 def comparison_latency_us(row):
     if row["arch"] in ("tinympc_e", "tinympc_fpga_float"):
         return f(row, "solve_us_cfg_clk")
-    return f(row, "measured_latency_us")
+    return f(row, "measured_latency_us", f(row, "solve_us_cfg_clk"))
 
 
 def power_w(row: dict[str, str], tinympc_power_w: float) -> float:
@@ -366,12 +351,12 @@ def power_w(row: dict[str, str], tinympc_power_w: float) -> float:
 
 
 def energy_mj(row: dict[str, str], tinympc_power_w: float) -> float:
-    """Measured AccelMPC energy; explicit post-route estimates for TinyMPC FPGA only."""
+    """Publication energy, with the source carried explicitly in each CSV row."""
     if row["arch"] == "tinympc_e":
         return tinympc_power_w * comparison_latency_us(row) / 1000
-    if row["arch"] == "tinympc_fpga_float":
-        return f(row, "energy_per_solve_cfg_uj") / 1000
-    return f(row, "measured_energy_uj") / 1000
+    if math.isfinite(f(row, "measured_energy_uj")):
+        return f(row, "measured_energy_uj") / 1000
+    return f(row, "energy_per_solve_cfg_uj") / 1000
 
 
 def edp_uj_us(row: dict[str, str], tinympc_power_w: float) -> float:
@@ -421,8 +406,8 @@ def _plot_points(ax, rows: list[dict[str, str]], tinympc_power_w: float) -> None
         millijoules = bubble_energy(row)
         if not math.isfinite(millijoules) or millijoules <= 0:
             continue
-        estimated = row["arch"] == "tinympc_fpga_float" or not math.isfinite(energy_mj(row, tinympc_power_w))
-        latency = f(row, "solve_us_cfg_clk") / 1000
+        estimated = row.get("energy_source") in ("post_route_estimate", "nominal_mcu")
+        latency = comparison_latency_us(row) / 1000
         ax.scatter(
             f(row, "horizon"),
             latency,
@@ -430,7 +415,7 @@ def _plot_points(ax, rows: list[dict[str, str]], tinympc_power_w: float) -> None
             color=COLORS.get(row["arch"], "#424141"),
             alpha=0.78,
             edgecolor="white",
-            linewidth=1.25,
+            linewidth=0.35,
             zorder=3,
         )
         if estimated:
@@ -476,7 +461,7 @@ def plot_headline(
 
     for ax in (left_ax, right_ax):
         ax.set_yscale("log")
-        ax.set_ylim(0.08, 65)
+        ax.set_ylim(0.07, 110)
         ax.grid(True, axis="y", which="major", color="#D9D9D9", linewidth=0.9)
         ax.grid(True, axis="y", which="minor", color="#EEEEEE", linewidth=0.55)
         ax.grid(True, axis="x", which="major", color="#EEEEEE", linewidth=0.7)
@@ -486,9 +471,9 @@ def plot_headline(
         ax.spines["bottom"].set_linewidth(1.1)
 
     left_ax.set_xlim(2, 102)
-    right_ax.set_xlim(140, 1400)
+    right_ax.set_xlim(140, 1880)
     left_ax.set_xticks(list(range(10, 101, 10)))
-    right_ax.set_xticks([160, 320, 500, 700, 900, 1100, 1350])
+    right_ax.set_xticks([160, 400, 800, 1200, 1500, 1800])
 
     y_ticks = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50]
     left_ax.yaxis.set_major_locator(FixedLocator(y_ticks))
@@ -515,81 +500,9 @@ def plot_headline(
     right_ax.plot((-break_size, +break_size), (1 - break_size, 1 + break_size),
                   transform=right_ax.transAxes, **break_style)
 
-    baseline = {int(f(r, "horizon")): r for r in rows if r["arch"] == "tinympc_e"}
-    compared = [r for r in rows if r["arch"] != "tinympc_e"
-                and int(f(r, "horizon")) in baseline
-                and math.isfinite(energy_mj(r, tinympc_power_w))]
-    speedups = [f(baseline[int(f(r, "horizon"))], "solve_us_cfg_clk") /
-                f(r, "solve_us_cfg_clk") for r in rows
-                if r["arch"] in RADAR_ARCHES and int(f(r, "horizon")) in baseline]
-    staged = [r for r in compared if r["arch"] == "staged_a"]
-    savings = [energy_mj(baseline[int(f(r, "horizon"))], tinympc_power_w) /
-               energy_mj(r, tinympc_power_w) for r in staged]
-    staged_horizons = [int(f(r, "horizon")) for r in staged]
-
-    left_ax.annotate(
-        f"TinyMPC (MCU)\n{min(speedups):.1f}–{max(speedups):.1f}× slower",
-        xy=(80, 42.012),
-        xytext=(50, 9),
-        color=COLORS["tinympc_e"],
-        fontsize=11,
-        fontweight="semibold",
-        ha="left",
-        va="top",
-        arrowprops={"arrowstyle": "-", "color": COLORS["tinympc_e"], "lw": 1.2},
-        zorder=5,
-    )
-    left_ax.annotate(
-        "Full-sparse FPGA\nFit limit H=90",
-        xy=(90, 3.29467),
-        xytext=(65, 0.8),
-        color=COLORS["full_sparse"],
-        fontsize=11,
-        fontweight="semibold",
-        ha="left",
-        va="bottom",
-        arrowprops={"arrowstyle": "-", "color": COLORS["full_sparse"], "lw": 1.2},
-        zorder=5,
-    )
-    left_ax.text(
-        25,
-        0.085,
-        f"Staged FPGA uses {min(savings):.1f}–{max(savings):.1f}× less energy\n"
-        f"than TinyMPC (MCU) over H={min(staged_horizons)}–{max(staged_horizons)}",
-        color=COLORS["staged_a"],
-        fontsize=11,
-        fontweight="semibold",
-        ha="left",
-        va="bottom",
-        zorder=5,
-    )
-    right_ax.annotate(
-        "Staged FPGA\nworks up to H=1350",
-        xy=(1350, 44.85917),
-        xytext=(900, 10),
-        color=COLORS["staged_a"],
-        fontsize=11,
-        fontweight="bold",
-        ha="left",
-        va="top",
-        arrowprops={"arrowstyle": "-", "color": COLORS["staged_a"], "lw": 1.3},
-        zorder=5,
-    )
-
-    tiny_fpga = [r for r in rows if r["arch"] == "tinympc_fpga_float"]
-    if tiny_fpga:
-        largest = max(tiny_fpga, key=lambda r: f(r, "horizon"))
-        right_ax.annotate(
-            f"TinyMPC FPGA*\nverified through H={int(f(largest, 'horizon'))}",
-            xy=(f(largest, "horizon"), f(largest, "solve_us_cfg_clk") / 1000),
-            xytext=(650, 3.0), color=COLORS["tinympc_fpga_float"],
-            fontsize=11, fontweight="semibold",
-            arrowprops={"arrowstyle": "-", "color": COLORS["tinympc_fpga_float"], "lw": 1.2},
-        )
-        left_ax.annotate("TinyMPC FPGA*", xy=(20, 0.39349), xytext=(6, 0.19),
-                         color=COLORS["tinympc_fpga_float"], fontsize=10,
-                         arrowprops={"arrowstyle": "-", "color": COLORS["tinympc_fpga_float"]})
-
+    from matplotlib.lines import Line2D
+    fig.legend(handles=[Line2D([], [], marker="o", linestyle="", color=COLORS[a], label=LABELS[a])
+                        for a in ARCH_ORDER], loc="upper center", ncol=3, frameon=False, fontsize=10)
     legend_energies = [0.25, 2.5, 25.0]
     legend_handles = [
         left_ax.scatter([], [], s=ENERGY_AREA_SCALE * millijoules, color="#707070", alpha=0.35,
@@ -599,7 +512,7 @@ def plot_headline(
     right_ax.legend(
         legend_handles,
         [f"{millijoules:g} mJ" for millijoules in legend_energies],
-        title="Bubble area = energy/solve\n* Post-route estimate",
+        title="Bubble area = energy/solve\n* Estimated energy",
         loc="lower right",
         bbox_to_anchor=(0.985, 0.075),
         frameon=False,
@@ -673,13 +586,12 @@ def plot_edp_bars(
     }
     horizons = [
         horizon
-        for horizon in range(10, 81, 10)
-        if ("tinympc_e", horizon) in rows_by_key and
-           any((arch, horizon) in rows_by_key and
+        for horizon in [5, 10, 20, 40, 80, 250, 800]
+        if any((arch, horizon) in rows_by_key and
                math.isfinite(edp_uj_us(rows_by_key[(arch, horizon)], tinympc_power_w))
                for arch in RADAR_ARCHES)
     ]
-    bar_order = ["tinympc_e", "staged_a", "full_sparse", "tinympc_fpga_float"]
+    bar_order = ARCH_ORDER
     if not horizons:
         raise ValueError("No horizons have measured FPGA EDP and a TinyMPC baseline")
 
@@ -688,8 +600,8 @@ def plot_edp_bars(
     non_axis_fontsize = 10
     improvement_label_fontsize = 13
 
-    bar_width = 0.20
-    offsets = {arch: (i - 1.5) * bar_width for i, arch in enumerate(bar_order)}
+    bar_width = 0.13
+    offsets = {arch: (i - (len(bar_order)-1)/2) * bar_width for i, arch in enumerate(bar_order)}
     x_positions = list(range(len(horizons)))
     edp_by_arch = {
         arch: [edp_uj_us(rows_by_key[(arch, horizon)], tinympc_power_w)
@@ -705,12 +617,17 @@ def plot_edp_bars(
             color=COLORS[arch],
             alpha=0.78,
             label=LABELS[arch],
-            hatch="//" if arch == "tinympc_fpga_float" else None,
+            hatch=None,
             edgecolor="white",
             linewidth=0.8,
             zorder=3,
         )
 
+    for arch in bar_order:
+        for idx,h in enumerate(horizons):
+            row=rows_by_key.get((arch,h))
+            if row and row.get("energy_source") in ("post_route_estimate", "nominal_mcu"):
+                ax.text(idx+offsets[arch], edp_by_arch[arch][idx]*1.1,"*",ha="center",fontsize=9)
     ax.set_yscale("log")
     all_edp = [value for values in edp_by_arch.values() for value in values if math.isfinite(value)]
     ax.set_ylim(min(all_edp) * 0.55, max(all_edp) * 2.0)
@@ -735,15 +652,15 @@ def plot_edp_bars(
             if not math.isfinite(edp_by_arch[arch][idx]):
                 ax.text(idx + offsets[arch], min(all_edp) * .65, "n/a",
                         ha="center", color=COLORS[arch], fontsize=8, rotation=90)
-    fig.text(0.5, 0.025, "* TinyMPC FPGA: post-route estimated energy and synthesized latency. n/a: no result.",
+    fig.text(0.5, 0.025, "* Estimated energy. FPGA measurements include estimated auxiliary/I/O rails. n/a: no result.",
              ha="center", fontsize=9)
 
     legend = ax.legend(
-        loc="upper left",
-        frameon=True,
+        loc="upper center", bbox_to_anchor=(0.5, 1.24),
+        frameon=False,
         fancybox=False,
         edgecolor="#D0D0D0",
-        fontsize=non_axis_fontsize+2.5,
+        fontsize=9, ncol=3,
     )
     legend.get_frame().set_linewidth(0.8)
     legend.get_frame().set_facecolor("white")
@@ -801,7 +718,7 @@ def plot_solver_radar(
     raw_by_arch = {}
     for arch, row in selected.items():
         # Match the EDP comparison: measured latency and core/BRAM energy,
-        # plus the auxiliary/I/O estimates joined by attach_measured_power().
+        # plus auxiliary/I/O estimates stored in the consolidated CSV.
         latency_ms = comparison_latency_us(row) / 1000.0
         energy = energy_mj(row, tinympc_power_w)
         if not all(math.isfinite(value) and value > 0 for value in (latency_ms, energy)):
@@ -846,43 +763,6 @@ def plot_solver_radar(
             zorder=3,
         )
         ax.fill(angles, values, color=COLORS[arch], alpha=0.13, zorder=2)
-        for metric_idx, metric in enumerate(metrics):
-            radius = values[metric_idx]
-            if not math.isfinite(radius):
-                continue
-            label_overrides = {
-                ("Latency", "staged_a"): (0.060, 0.85),
-                ("Latency", "full_sparse"): (0.00, 1.05),
-                ("Energy/solve", "staged_a"): (-0.030, 0.82),
-                ("Energy/solve", "full_sparse"): (-0.1, 0.55),
-                ("EDP", "staged_a"): (0.1, 0.965),
-                ("EDP", "full_sparse"): (-0.07, 0.53),
-                ("BRAM", "staged_a"): (-0.0, 0.53),
-                ("BRAM", "full_sparse"): (0.00, 1.06),
-                ("Logic", "staged_a"): (-0.020, 0.82),
-                ("Logic", "full_sparse"): (0.17, 0.47),
-                ("Scalability", "staged_a"): (0.030, 0.18),
-                ("Scalability", "full_sparse"): (0.030, 0.84),
-            }
-            default_radius = min(0.98, max(0.10, radius + 0.075 + 0.035 * arch_idx))
-            theta_offset, label_radius = label_overrides.get(
-                (metric, arch),
-                ((arch_idx - 0.5) * 0.035, default_radius),
-            )
-            ax.text(
-                angles[metric_idx] + theta_offset,
-                label_radius,
-                format_radar_value(metric, raw_by_arch[arch][metric], max_horizons[arch]),
-                color=COLORS[arch],
-                fontsize=radar_label_fontsize-2.0,
-                fontweight="semibold",
-                ha="center",
-                va="center",
-                clip_on=False,
-                bbox={"boxstyle": "round,pad=0.14", "fc": "white", "ec": "none", "alpha": 0.72},
-                zorder=4,
-            )
-
     ax.set_xticks(angles[:-1])
     ax.set_xticklabels([])
     label_distances = {
@@ -1018,8 +898,42 @@ def plot_figure8_trajectory(
     plt.close(fig)
 
 
+def write_publication_numbers(rows, output, tinympc_power_w):
+    """Generate manuscript values using common horizons and board-measured fused points."""
+    by_key = {(r["arch"], int(f(r,"horizon"))): r for r in rows}
+    numbers = {}
+    for baseline, prefix in [("tinympc_e","MCU"), ("tinympc_fpga_float","Wu"),
+                             ("mobydic_small","Moby"), ("staged_a","Staged")]:
+        pairs = [(base, by_key[("staged_fused", h)]) for (arch,h),base in by_key.items()
+                 if arch == baseline and ("staged_fused",h) in by_key
+                 and by_key[("staged_fused",h)]["energy_source"] == "board_core_plus_estimated_aux_io"
+                 and (baseline in ("tinympc_e","mobydic_small") or
+                      base["energy_source"] == "board_core_plus_estimated_aux_io")]
+        for metric, getter in [("Speed",comparison_latency_us),
+                               ("Energy",lambda r: energy_mj(r,tinympc_power_w)),
+                               ("EDP",lambda r: edp_uj_us(r,tinympc_power_w))]:
+            ratios = [getter(base)/getter(fused) for base,fused in pairs]
+            for suffix, value in [("Min",min(ratios)),("Max",max(ratios))]:
+                precision = 2 if prefix in ("Wu","Staged") else (0 if metric == "EDP" else 1)
+                numbers[prefix+metric+suffix] = f"{value:.{precision}f}"
+    largest = max((r for r in rows if r["arch"] == "staged_fused"),key=lambda r:f(r,"horizon"))
+    h = int(f(largest,"horizon"))
+    numbers.update(FusedHorizon=str(h), FusedVariables=f"{16*h+12:,}",
+                   FusedConstraints=f"{18*h+12:,}", FusedLargestMs=f"{comparison_latency_us(largest)/1000:.2f}")
+    for arch,prefix in [("staged_fused","Fused"),("tinympc_fpga_float","Wu")]:
+        row = by_key[arch,40]
+        numbers[prefix+"FortyUs"] = f"{comparison_latency_us(row):.2f}"
+        numbers[prefix+"FortyUj"] = f"{energy_mj(row,tinympc_power_w)*1000:.2f}"
+    numbers["FortyEDPRatio"] = f"{edp_uj_us(by_key['tinympc_fpga_float',40],tinympc_power_w)/edp_uj_us(by_key['staged_fused',40],tinympc_power_w):.2f}"
+    output.parent.mkdir(parents=True,exist_ok=True)
+    output.write_text("% Generated from benchmarks.csv; do not edit.\n" + "".join(
+        "\\newcommand{\\bench"+name+"}{"+value.replace(",","{,}")+"}\n" for name,value in numbers.items()))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--numbers-output", type=Path, default=OUTPUT_DIR / "benchmark_numbers.tex")
+    parser.add_argument("--skip-trajectory", action="store_true", help="Regenerate benchmark figures only")
     parser.add_argument("--input", type=Path, default=BENCHMARK_SUMMARY_CSV)
     parser.add_argument("--compare-iters", type=int, default=10)
     parser.add_argument(
@@ -1068,9 +982,21 @@ def main() -> int:
         parser.error(str(exc))
 
     rows = load_rows(args.input)
-    selected = attach_measured_power(best_rows(rows, args.compare_iters))
-    tiny_fpga_rows = load_rows(DATA_DIR / "tinympc_fpga_comparison.csv")
-    plot_selected = selected + best_rows(tiny_fpga_rows, args.compare_iters)
+    seen = set()
+    for row in rows:
+        key = (row["arch"], f(row,"horizon"), f(row,"admm_iters"), f(row,"clock_mhz"))
+        if key in seen or row.get("timing_clean") != "1":
+            raise ValueError(f"Duplicate or invalid publication point: {key}")
+        seen.add(key)
+        latency = comparison_latency_us(row)
+        energy = energy_mj(row,args.tinympc_power_w)*1000
+        if not all(math.isfinite(v) and v > 0 for v in (latency,energy)):
+            raise ValueError(f"Invalid latency/energy: {key}")
+        if not math.isclose(f(row,"edp_uj_us"),latency*energy,rel_tol=1e-8):
+            raise ValueError(f"Inconsistent EDP units: {key}")
+    selected = best_rows(rows, args.compare_iters)
+    write_publication_numbers(selected, args.numbers_output, args.tinympc_power_w)
+    plot_selected = selected
     plot_headline(
         plot_selected,
         args.svg_output,
@@ -1095,14 +1021,15 @@ def main() -> int:
         args.radar_horizon,
         args.tinympc_power_w,
     )
-    plot_figure8_trajectory(
-        args.trajectory_reference,
-        args.trajectory_fpga,
-        args.trajectory_tinympc,
-        args.trajectory_svg_output,
-        args.trajectory_png_output,
-        args.trajectory_pdf_output,
-    )
+    if not args.skip_trajectory:
+        plot_figure8_trajectory(
+            args.trajectory_reference,
+            args.trajectory_fpga,
+            args.trajectory_tinympc,
+            args.trajectory_svg_output,
+            args.trajectory_png_output,
+            args.trajectory_pdf_output,
+        )
     write_feasibility_table(
         rows,
         args.feasibility_table_output,
@@ -1110,13 +1037,7 @@ def main() -> int:
         args.control_period_us,
         args.fpga_spi_overhead_us,
     )
-    print(
-        f"Wrote {args.svg_output}, {args.png_output}, {args.pdf_output}, "
-        f"{args.edp_svg_output}, {args.edp_png_output}, {args.edp_pdf_output}, "
-        f"{args.radar_svg_output}, {args.radar_png_output}, {args.radar_pdf_output}, "
-        f"{args.trajectory_svg_output}, {args.trajectory_png_output}, "
-        f"{args.trajectory_pdf_output}, and {args.feasibility_table_output}"
-    )
+    print(f"Generated benchmark figures, {args.feasibility_table_output}, and {args.numbers_output}")
     return 0
 
 

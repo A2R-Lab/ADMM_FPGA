@@ -11,69 +11,55 @@ and the scope of the supplied experiment data.
 
 ## Solver benchmarks
 
-The [benchmark CSV](data/benchmark_summary.csv) contains MCU timing measurements,
-implementation estimates and failed points. The table uses the same row selection
-as `plot_benchmarks.py`: timing-clean implementations, lowest latency then lowest
-power, with the figure's explicit readability exclusions. The default comparison
-uses 10 iterations; the common-horizon resource comparison is H40.
+[benchmarks.csv](data/benchmarks.csv) is the single publication input for the
+latency/energy plot, EDP plot, three-mapping radar, feasibility table, and generated
+manuscript numbers. It contains only valid completed configurations at ten
+iterations. New measurements replace estimates at the same architecture/horizon;
+all fused implementations are named `staged_fused`. Failed, incorrect, incomplete,
+and timing-failed runs are excluded. Historical campaign files are not inputs to
+the publication generator.
 
-Both post-route power estimates and Arty measurements are available. At the
-measured configurations, the post-route benchmark estimates give more conservative
-power values. The latency/energy and EDP figures use measured Arty core/BRAM power
-plus matching estimated auxiliary/I/O supply contributions (VCCADC excluded because
-it is tied to ground in the custom PCB), with energy and EDP calculated using the
-campaign's measured solve latency. Bubble positions retain synthesis-derived FPGA
-timing for the latency comparison. 
-TinyMPC uses its recorded timing and a 287.1 mW active-power estimate. Both energy
-and EDP exclude communication and board support circuitry. Asterisked bubbles use
-post-route estimates where instrumented measurement builds failed; unmeasured
-configurations remain absent from the EDP comparison. The resource table and maximum-horizon results also use implementation reports;
-they do not imply 1 kHz operation at the largest horizons. See [benchmark methodology](../docs/benchmarking.md#energy-and-timing-definitions)
-for measurement boundaries and the separate 100 µs feasibility reserve.
-The architecture radar uses measured latency and core/BRAM energy plus estimated
-auxiliary/I/O energy, matching the EDP comparison. Its BRAM/LUT utilization and
-maximum horizons come from implementation reports. The “Logic” axis is LUT
-utilization as a percentage of the device's LUT capacity (34.9% staged versus
-14.6% full_sparse at H40); register utilization is reported separately in the table.
+`energy_source` distinguishes measured core/BRAM plus estimated auxiliary/I/O
+energy, total post-route estimates, and nominal MCU power (0.2871 W). Energies are
+in microjoules, latency in microseconds, and EDP in microjoule-microseconds.
+`energy_per_solve_cfg_uj` holds the plotted energy for every source;
+`measured_energy_uj` is populated only for board measurements. Its reported
+standard deviation covers measured core energy, not uncertainty in auxiliary/I/O
+estimates. Communication, host processing, and board support circuitry are excluded.
+Asterisks mark estimates in both plots; no values are interpolated.
 
-The [device power comparison CSV](data/device_power_comparison.csv) compares
-routed Artix-7 50T designs with matching 100T estimates using the same
-architecture, horizon and 10 ADMM iterations. Power is Vivado total on-chip power 
-in watts. The percentage change is `100 * (50T / 100T - 1)`. The CSV also records 
-50T distributed RAM LUT and BRAM tile counts.
+The new fused and Wu measurements average three valid repetitions with a target
+batch duration of two seconds and at least 1024 solves. Existing full_sparse and
+staged_a measurements retain their original collection procedure. Each new board
+point passed output validation. Fixed iteration counts do not imply equal solution
+accuracy across Cholesky fixed-point, Riccati float32, and dense-inverse solvers.
 
-<!-- BEGIN GENERATED BENCHMARKS -->
+`resource_scope` records whether utilization includes measurement instrumentation
+or the solver/SPI wrapper. The radar shows complete-build utilization, so fused
+includes its harness while the two original mappings use solver/SPI reports.
+Largest demonstrated horizons include valid uninstrumented builds; they are not
+proven exact capacity limits or claims of board validation at those horizons.
 
-| H40 / 10 iterations | Solve (ms) | Energy (mJ) | EDP (mJ·ms) |
-| --- | --- | --- | --- |
-| Staged FPGA | 1.339 | 0.424 | 0.568 |
-| Full-sparse FPGA | 1.484 | 0.412 | 0.612 |
-| TinyMPC | 20.899 | 6.000 | 125.396 |
+Regenerate the publication artifacts with:
 
-| H40 FPGA resources | LUTs | FFs | BRAM tiles | DSPs |
-| --- | --- | --- | --- | --- |
-| Staged FPGA | 22127 | 26540 | 36 | 80 |
-| Full-sparse FPGA | 9280 | 12051 | 78.5 | 77 |
+```sh
+~/venv/bin/python evaluation/plot_benchmarks.py --skip-trajectory
+cp evaluation/output/benchmark_*.pdf ../paper/img/
+cp evaluation/output/benchmark_numbers.tex ../paper/tex/
+cp evaluation/output/feasibility_table.tex ../paper/tex/benchmark_feasibility.tex
+```
 
-| Largest recorded timing-clean horizon | Horizon | Variables | Constraints | Solve (ms) |
-| --- | --- | --- | --- | --- |
-| Full-sparse FPGA | 90 | 1452 | 1632 | 3.295 |
-| Staged FPGA | 1350 | 21612 | 24312 | 44.859 |
-
-<!-- END GENERATED BENCHMARKS -->
+To incorporate later completed measurements, replace the corresponding CSV row
+with the aggregate latency, measured core energy plus matching auxiliary/I/O
+energy, standard deviation, repetition count, clock, and complete-build resources.
+Set `energy_source=board_core_plus_estimated_aux_io`, then regenerate. Keep one row
+per architecture/horizon/iteration/clock; do not add failed attempts or build artifacts.
+The paper's numerical macros regenerate from common-horizon comparisons, restricted
+to measured fused points (and measured FPGA baselines, except MOBY-DIC2).
 
 ![Solve latency and energy versus horizon](figures/benchmark_latency_energy.png)
 
 ![Energy-delay product comparison](figures/benchmark_edp_bars.png)
-
-Purple TinyMPC FPGA points/bars use the timing-closed 100 MHz results from
-[data/tinympc_fpga_comparison.csv](data/tinympc_fpga_comparison.csv). Their energy
-and EDP use total post-route estimated power and synthesized solve latency,
-marked with an asterisk (and hatching in the EDP plot). AccelMPC retains its
-existing measurement-based energy/EDP values; TinyMPC MCU retains its nominal
-power estimate. Missing TinyMPC FPGA horizons are shown as n/a, not interpolated.
-See the [FPGA baseline methodology](tinympc_fpga/README.md) for formulation and
-precision differences. The summary tables above retain their original scope.
 
 ## Numerical accuracy
 
