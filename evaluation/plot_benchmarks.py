@@ -586,7 +586,7 @@ def plot_edp_bars(
     }
     horizons = [
         horizon
-        for horizon in [5, 10, 20, 40, 80, 250, 800]
+        for horizon in [5, 10, 20, 40, 80, 250, 800, 1000, 1023]
         if any((arch, horizon) in rows_by_key and
                math.isfinite(edp_uj_us(rows_by_key[(arch, horizon)], tinympc_power_w))
                for arch in RADAR_ARCHES)
@@ -909,6 +909,8 @@ def write_publication_numbers(rows, output, tinympc_power_w):
                  and by_key[("staged_fused",h)]["energy_source"] == "board_core_plus_estimated_aux_io"
                  and (baseline in ("tinympc_e","mobydic_small") or
                       base["energy_source"] == "board_core_plus_estimated_aux_io")]
+        numbers[prefix+"SharedHorizonMin"] = str(min(int(f(base,"horizon")) for base,_ in pairs))
+        numbers[prefix+"SharedHorizonMax"] = str(max(int(f(base,"horizon")) for base,_ in pairs))
         for metric, getter in [("Speed",comparison_latency_us),
                                ("Energy",lambda r: energy_mj(r,tinympc_power_w)),
                                ("EDP",lambda r: edp_uj_us(r,tinympc_power_w))]:
