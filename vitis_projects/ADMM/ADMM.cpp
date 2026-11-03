@@ -224,6 +224,67 @@ static inline ap_uint<128> pack_command_out(const command_out_t &command_out) {
     return command_out_bits;
 }
 
+#if ADMM_SOLVER_ARCH_FULL_SPARSE
+// One physical factor reader serves the two sequential triangular solves.
+// Both directions visit products from the farthest diagonal to the nearest.
+static void full_sparse_substitution(
+    const fp_t b[N_VAR], bool backward, bool use_traj_q, int traj_idx,
+    const fp_t q_vec[N_VAR], bool use_q_vec, fp_t x[N_VAR]
+) {
+#pragma HLS INLINE off
+#pragma HLS ARRAY_PARTITION variable=L_banded complete dim=2
+    fp_t window[L_BANDED_COLS - 1] = {0};
+#pragma HLS ARRAY_PARTITION variable=window complete dim=1
+    int traj_stage = 0;
+    int traj_local = 0;
+    SHARED_SUBST_ROWS:
+    for (int step = 0; step < N_VAR; ++step) {
+        const int i = backward ? N_VAR - 1 - step : step;
+        acc_t sum_val = 0;
+        fp_t q_i = 0;
+        if (!backward) {
+            if (use_q_vec) {
+                q_i = q_vec[i];
+            } else {
+#if ADMM_ENABLE_TRAJECTORY
+                if (use_traj_q && traj_local < 3) {
+                    q_i = traj_q_packed[traj_idx + traj_stage][traj_local];
+                }
+#endif
+            }
+        }
+        SHARED_SUBST_PRODUCTS:
+        for (int j = 0; j < L_BANDED_COLS - 1; ++j) {
+            const int row = backward ? i + L_BANDED_COLS - 1 - j : i;
+            const fp_t coefficient = row < N_VAR ? L_banded[row][j] : (fp_t)0;
+            if (backward) {
+                // Backward substitution accumulates the full-width product.
+                sum_val += (acc_t)coefficient * (acc_t)window[j];
+            } else {
+                // Forward substitution rounds/saturates each product first.
+                acc_t mul_term = (acc_t)coefficient * (acc_t)window[j];
+                sum_val += mul_term;
+            }
+        }
+        acc_t new_x;
+        if (backward) {
+            new_x = ((acc_t)b[i] - sum_val) * (acc_t)L_banded[i][L_BANDED_COLS - 1];
+        } else {
+            new_x = ((acc_t)b[i] - (acc_t)q_i - sum_val) * (acc_t)L_banded[i][L_BANDED_COLS - 1];
+        }
+        x[i] = (fp_t)new_x;
+        SHARED_SUBST_SHIFT:
+        for (int j = 0; j < L_BANDED_COLS - 2; ++j) window[j] = window[j + 1];
+        window[L_BANDED_COLS - 2] = (fp_t)new_x;
+        ++traj_local;
+        if (traj_stage < HORIZON_LENGTH && traj_local == STAGE_SIZE) {
+            traj_local = 0;
+            ++traj_stage;
+        }
+    }
+}
+#endif
+
 static void forward_substitution_impl(
     const fp_t b[L_BANDED_ROWS],
     bool use_traj_q,
@@ -233,7 +294,9 @@ static void forward_substitution_impl(
     fp_t x[L_BANDED_ROWS]
 ) {
 #pragma HLS INLINE
-
+#if ADMM_SOLVER_ARCH_FULL_SPARSE
+    full_sparse_substitution(b, false, use_traj_q, traj_idx, q_vec, use_q_vec, x);
+#else
     fp_t window[L_BANDED_COLS - 1] = {0};
 #pragma HLS ARRAY_PARTITION variable=window complete dim=1
     int traj_stage = 0;
@@ -303,6 +366,7 @@ static void forward_substitution_impl(
             }
         }
     }
+#endif
 }
 
 void forward_substitution(
@@ -320,6 +384,9 @@ void backward_substitution(
     fp_t x[LT_BANDED_ROWS]
 ) {
 #pragma HLS INLINE
+#if ADMM_SOLVER_ARCH_FULL_SPARSE
+    full_sparse_substitution(b, true, false, 0, nullptr, false, x);
+#else
     fp_t window[LT_BANDED_COLS - 1];
 #pragma HLS ARRAY_PARTITION variable=window complete dim=1
 
@@ -360,6 +427,7 @@ void backward_substitution(
         }
         window[0] = (fp_t)new_x;
     }
+#endif
 }
 
 void AT_mul(
@@ -450,6 +518,7 @@ void AT_mul(
         ATx[xk_col + 1] += x[row_base + 1];
     }
 #else
+#pragma HLS ARRAY_PARTITION variable=AT_sparse_indexes complete dim=2
     AT_MUL_EXTERN_LOOP:
     for (int i = 0; i < AT_SPARSE_DATA_ROWS; i++) {
         acc_t sum_val = 0;
@@ -476,6 +545,9 @@ void ADMM_iteration(
     bool use_q_vec
 ) {
 #pragma HLS INLINE
+#if ADMM_SOLVER_ARCH_FULL_SPARSE
+#pragma HLS ALLOCATION function instances=full_sparse_substitution limit=1
+#endif
 #if ADMM_SOLVER_ARCH_STAGED_A
 #pragma HLS ARRAY_PARTITION variable=A_stage_row_counts complete dim=1
 #pragma HLS ARRAY_PARTITION variable=A_stage_row_cols complete dim=2

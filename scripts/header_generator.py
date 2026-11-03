@@ -848,7 +848,11 @@ else:
 data = []
 data.append(generate_constants_header(constants))
 data.append(generate_matrix_header(L_banded, "L_banded"))
-data.append(generate_matrix_header(LT_banded, "LT_banded"))
+if ADMM_SOLVER_ARCH == "full_sparse":
+    # Retain dimension aliases for the public substitution interface.
+    data.append("#define LT_BANDED_ROWS L_BANDED_ROWS\n#define LT_BANDED_COLS L_BANDED_COLS\n")
+else:
+    data.append(generate_matrix_header(LT_banded, "LT_banded"))
 
 if ADMM_SOLVER_ARCH in ("staged_a", "staged_fused"):
     A_stage_row_counts, A_stage_row_cols, A_stage_row_vals, A_stage_nnz_max = build_sparse_rows(A_stage)

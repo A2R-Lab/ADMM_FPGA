@@ -1,0 +1,234 @@
+{
+  "date": "2026-11-03",
+  "baseline_commit": "0f17551",
+  "wrapper": "top_spi",
+  "board": "custom",
+  "iterations": 10,
+  "trajectory": false,
+  "power_measured": false,
+  "runs": [
+    {
+      "run": "/home/agrillo/moailImpl/full-sparse-hls-runs/baseline-single-l-spi-h40",
+      "hls_cycles": 148467,
+      "hls_resources": {
+        "BRAM_18K": 224,
+        "DSP": 77,
+        "FF": 18848,
+        "LUT": 24103,
+        "URAM": 0
+      },
+      "clock_ns": 10.0,
+      "hls_clock_uncertainty_ns": 2.7,
+      "sha256": {
+        "vitis_projects/ADMM/ADMM/hls/syn/report/ADMM_solver_csynth.xml": "9552d8ed2afbe92e3961e51cc29e06f80c7e6deead3ea35e3c970cd877b049ee",
+        "vitis_projects/ADMM/ADMM.cpp": "bcf10e4ad1fc78f5e69c4bc187e54d6cdb8e767cb07a7e10605df42918189353",
+        "vitis_projects/ADMM/data.h": "554500b2de1ef35278ef2b78f5e5029663deb28ff2cb833cc1321fb6e755bd8a",
+        "vitis_projects/ADMM/admm_runtime_config.h": "890ec3d4571fb083c12bff1a300655adec83566ea4adfe3200e965487d9d7716",
+        "build/reports/post_route_utilization.rpt": "a1770a4d5324b879d77e714f806d3ccc63444067421a59f333d435c1c276c739",
+        "build/reports/post_route_timing.rpt": "14f1798d81975e33c718676abff858d1dede61b9c932c5e9239803be48ddd9e6"
+      },
+      "routed": {
+        "LUT": 9280.0,
+        "FF": 12051.0,
+        "DSP": 77.0,
+        "BRAM_tiles": 78.5,
+        "WNS_ns": 0.308,
+        "WHS_ns": 0.025
+      }
+    },
+    {
+      "run": "/home/agrillo/moailImpl/full-sparse-hls-runs/candidate-single-l-spi-h40",
+      "hls_cycles": 161847,
+      "hls_resources": {
+        "BRAM_18K": 186,
+        "DSP": 82,
+        "FF": 19361,
+        "LUT": 23713,
+        "URAM": 0
+      },
+      "clock_ns": 10.0,
+      "hls_clock_uncertainty_ns": 2.7,
+      "sha256": {
+        "vitis_projects/ADMM/ADMM/hls/syn/report/ADMM_solver_csynth.xml": "413dc281a7836805147e307cb1187b01c3669479568ddfc27c1081e9c3a45a55",
+        "vitis_projects/ADMM/ADMM.cpp": "9dcdf6ad8a95f4ad1cd4d3a3d1f4f217d0972a1a1e87bbba903194b7debffede",
+        "vitis_projects/ADMM/data.h": "a8f92279cb74da18e0d6a6de7b0f52e7b45de1f0d75aaee0754a882564cab5a2",
+        "vitis_projects/ADMM/admm_runtime_config.h": "890ec3d4571fb083c12bff1a300655adec83566ea4adfe3200e965487d9d7716",
+        "build/reports/post_route_utilization.rpt": "92fe0be803610928d9def1149d3f22af29b22f6877d9b7be99b92e7b5938759d",
+        "build/reports/post_route_timing.rpt": "20d094bfe95d16366e5eb7b159fe4f8001ddf2d572041db3245324243e037f01"
+      },
+      "routed": {
+        "LUT": 7878.0,
+        "FF": 10139.0,
+        "DSP": 82.0,
+        "BRAM_tiles": 70.5,
+        "WNS_ns": 0.269,
+        "WHS_ns": 0.021
+      }
+    },
+    {
+      "run": "/home/agrillo/moailImpl/full-sparse-hls-runs/candidate-single-l-indexbanks-h40",
+      "hls_cycles": 161847,
+      "hls_resources": {
+        "BRAM_18K": 129,
+        "DSP": 82,
+        "FF": 19337,
+        "LUT": 23422,
+        "URAM": 0
+      },
+      "clock_ns": 10.0,
+      "hls_clock_uncertainty_ns": 2.7,
+      "sha256": {
+        "vitis_projects/ADMM/ADMM/hls/syn/report/ADMM_solver_csynth.xml": "45ea9125529c2ce1abeaeca5b6d7eb70df0a81f338241efda421c6073de62df9",
+        "vitis_projects/ADMM/ADMM.cpp": "639b1595389cec21eb2cb81e1ea2399149253b008f70a09fc75d00333e7a0c73",
+        "vitis_projects/ADMM/data.h": "a8f92279cb74da18e0d6a6de7b0f52e7b45de1f0d75aaee0754a882564cab5a2",
+        "vitis_projects/ADMM/admm_runtime_config.h": "890ec3d4571fb083c12bff1a300655adec83566ea4adfe3200e965487d9d7716",
+        "build/reports/post_route_utilization.rpt": "7ebf3d768c060190e3bbce26d0dd76484d9c4a548c2cf98edf476ecffb5bca85",
+        "build/reports/post_route_timing.rpt": "c8f70e0b6f0396c011d3e1250dd0c80bd63c71e100be7f6b6c2b62d34f548527",
+        "vitis_projects/ADMM/ADMM/hls/sim/report/ADMM_solver_cosim.rpt": "a704a11794385732eb5a92ddbcb17223aea996ffb87c10a5faef7926905362d3"
+      },
+      "routed": {
+        "LUT": 7728.0,
+        "FF": 10165.0,
+        "DSP": 82.0,
+        "BRAM_tiles": 37.5,
+        "WNS_ns": 0.877,
+        "WHS_ns": 0.031
+      }
+    },
+    {
+      "run": "/home/agrillo/moailImpl/full-sparse-hls-runs/candidate-single-l-indexbanks-t2p-h40",
+      "hls_cycles": 200907,
+      "hls_resources": {
+        "BRAM_18K": 107,
+        "DSP": 80,
+        "FF": 18531,
+        "LUT": 23115,
+        "URAM": 0
+      },
+      "clock_ns": 10.0,
+      "hls_clock_uncertainty_ns": 2.7,
+      "sha256": {
+        "vitis_projects/ADMM/ADMM/hls/syn/report/ADMM_solver_csynth.xml": "222024e96f796b903c59b91de84e0f4ea9b78940c218b34426c16ff991054dc1",
+        "vitis_projects/ADMM/ADMM.cpp": "de53a70d03607b33e3f2b91da7d04b27e2f0440bec203410c1bfc3492b05c456",
+        "vitis_projects/ADMM/data.h": "a8f92279cb74da18e0d6a6de7b0f52e7b45de1f0d75aaee0754a882564cab5a2",
+        "vitis_projects/ADMM/admm_runtime_config.h": "890ec3d4571fb083c12bff1a300655adec83566ea4adfe3200e965487d9d7716",
+        "build/reports/post_route_utilization.rpt": "a751f322e14afac2059cb00525875d49d5911e81ef765e7b4372a2131414f522",
+        "build/reports/post_route_timing.rpt": "a7a10ce4e48c3c2e1cdaa97fc66d6cfea87681390524e01af873554408492efe",
+        "vitis_projects/ADMM/ADMM/hls/sim/report/ADMM_solver_cosim.rpt": "b9e5f423705e10c3099c01666a9f8a71d75e9ee8c779332ff61a6f5f83ad8c54"
+      },
+      "routed": {
+        "LUT": 7628.0,
+        "FF": 9911.0,
+        "DSP": 80.0,
+        "BRAM_tiles": 26.5,
+        "WNS_ns": 0.237,
+        "WHS_ns": 0.014
+      }
+    },
+    {
+      "run": "/home/agrillo/moailImpl/full-sparse-hls-runs/staged-fused-spi-h40",
+      "hls_cycles": 57086,
+      "hls_resources": {
+        "BRAM_18K": 90,
+        "DSP": 150,
+        "FF": 28387,
+        "LUT": 64745,
+        "URAM": 0
+      },
+      "clock_ns": 10.0,
+      "hls_clock_uncertainty_ns": 0.0,
+      "sha256": {
+        "vitis_projects/ADMM/ADMM/hls/syn/report/ADMM_solver_csynth.xml": "e056b97d453f886dff8a4b38047435f9aa595bec0f1df8693cf34742fef2eb85",
+        "vitis_projects/ADMM/ADMM.cpp": "bcf10e4ad1fc78f5e69c4bc187e54d6cdb8e767cb07a7e10605df42918189353",
+        "vitis_projects/ADMM/data.h": "c3b80742ac766f5b211ade56a4576da0140892c5944c96a165490fc6681ed7f9",
+        "vitis_projects/ADMM/admm_runtime_config.h": "1999aea29d1d10b587be8bb4ef3fcd8d91ad43d6f6cfe9f720b2c1839397a6a6",
+        "build/reports/post_route_utilization.rpt": "75cceaf95b8f72c51e2af5ca8c5be253a5c7f4216743698b20b00fa4d6d96685",
+        "build/reports/post_route_timing.rpt": "ae603fa0f92c70d70e901a631680c8b792a883179443d58a9cba3e6ff8434e81"
+      },
+      "routed": {
+        "LUT": 23284.0,
+        "FF": 22209.0,
+        "DSP": 150.0,
+        "BRAM_tiles": 27.0,
+        "WNS_ns": 0.144,
+        "WHS_ns": 0.016
+      }
+    },
+    {
+      "run": "/home/agrillo/moailImpl/full-sparse-hls-runs/baseline-single-l-h10",
+      "hls_cycles": 39867,
+      "hls_resources": {
+        "BRAM_18K": 105,
+        "DSP": 77,
+        "FF": 18816,
+        "LUT": 24037,
+        "URAM": 0
+      },
+      "clock_ns": 10.0,
+      "hls_clock_uncertainty_ns": 2.7,
+      "sha256": {
+        "vitis_projects/ADMM/ADMM/hls/syn/report/ADMM_solver_csynth.xml": "20a1d4b082985b69f856e64bcff1fb7b29d645aa7802a112a12f7af42625ba94",
+        "vitis_projects/ADMM/ADMM.cpp": "bcf10e4ad1fc78f5e69c4bc187e54d6cdb8e767cb07a7e10605df42918189353",
+        "vitis_projects/ADMM/data.h": "f3e072161bdf81f9f3953ef19968c7c4d47d99c4e7ac3f3005542a38036ac65b",
+        "vitis_projects/ADMM/admm_runtime_config.h": "890ec3d4571fb083c12bff1a300655adec83566ea4adfe3200e965487d9d7716"
+      }
+    },
+    {
+      "run": "/home/agrillo/moailImpl/full-sparse-hls-runs/candidate-single-l-h10",
+      "hls_cycles": 43647,
+      "hls_resources": {
+        "BRAM_18K": 86,
+        "DSP": 82,
+        "FF": 19329,
+        "LUT": 23537,
+        "URAM": 0
+      },
+      "clock_ns": 10.0,
+      "hls_clock_uncertainty_ns": 2.7,
+      "sha256": {
+        "vitis_projects/ADMM/ADMM/hls/syn/report/ADMM_solver_csynth.xml": "62859c8bae5ca1f2167561905cb127b48cf79c1eb70b6ce66fe4bbc24c0ce4a4",
+        "vitis_projects/ADMM/ADMM.cpp": "9dcdf6ad8a95f4ad1cd4d3a3d1f4f217d0972a1a1e87bbba903194b7debffede",
+        "vitis_projects/ADMM/data.h": "aca7ec2fd42a31627c4c81c7eef728bd05410559908643ab644327b51c9b38ef",
+        "vitis_projects/ADMM/admm_runtime_config.h": "890ec3d4571fb083c12bff1a300655adec83566ea4adfe3200e965487d9d7716"
+      }
+    },
+    {
+      "run": "/home/agrillo/moailImpl/full-sparse-hls-runs/candidate-single-l-indexbanks-h10",
+      "hls_cycles": 43647,
+      "hls_resources": {
+        "BRAM_18K": 85,
+        "DSP": 82,
+        "FF": 19309,
+        "LUT": 23272,
+        "URAM": 0
+      },
+      "clock_ns": 10.0,
+      "hls_clock_uncertainty_ns": 2.7,
+      "sha256": {
+        "vitis_projects/ADMM/ADMM/hls/syn/report/ADMM_solver_csynth.xml": "fd23469072cbdc3cd733228ea0ddfae0fd724a22b542a5a9e8fe305e6748ab5e",
+        "vitis_projects/ADMM/ADMM.cpp": "639b1595389cec21eb2cb81e1ea2399149253b008f70a09fc75d00333e7a0c73",
+        "vitis_projects/ADMM/data.h": "aca7ec2fd42a31627c4c81c7eef728bd05410559908643ab644327b51c9b38ef",
+        "vitis_projects/ADMM/admm_runtime_config.h": "890ec3d4571fb083c12bff1a300655adec83566ea4adfe3200e965487d9d7716"
+      }
+    },
+    {
+      "run": "/home/agrillo/moailImpl/full-sparse-hls-runs/candidate-single-l-indexbanks-t2p-h10",
+      "hls_cycles": 53907,
+      "hls_resources": {
+        "BRAM_18K": 63,
+        "DSP": 80,
+        "FF": 18486,
+        "LUT": 22965,
+        "URAM": 0
+      },
+      "clock_ns": 10.0,
+      "hls_clock_uncertainty_ns": 2.7,
+      "sha256": {
+        "vitis_projects/ADMM/ADMM/hls/syn/report/ADMM_solver_csynth.xml": "b73c95623c44e9d190b55cbf0cd12907afae2ff0bd4de07bb606a458885494e0",
+        "vitis_projects/ADMM/ADMM.cpp": "de53a70d03607b33e3f2b91da7d04b27e2f0440bec203410c1bfc3492b05c456",
+        "vitis_projects/ADMM/data.h": "aca7ec2fd42a31627c4c81c7eef728bd05410559908643ab644327b51c9b38ef",
+        "vitis_projects/ADMM/admm_runtime_config.h": "890ec3d4571fb083c12bff1a300655adec83566ea4adfe3200e965487d9d7716"
+      }
+    }
+  ]
+}

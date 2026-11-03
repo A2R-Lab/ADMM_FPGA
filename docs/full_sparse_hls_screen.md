@@ -1,5 +1,8 @@
 # Full sparse HLS scheduling screen
 
+This is the initial directive-only screen. The later storage experiments are
+recorded in [Full sparse memory tradeoffs](full_sparse_memory.md).
+
 ## Result
 
 Three H40/k10 HLS candidates were screened against the unchanged source at
@@ -16,8 +19,8 @@ limited to the Artix-7 100T, 100 MHz, fixed-point, trajectory-disabled,
 | Cyclic `x` banking, factor 8 | 148,466 | 1.48466 ms | 25,037 / 19,183 / 77 / 238 | Not routed | Not measured; no EDP |
 
 HLS estimates showed 7.220 ns estimated delay (138.50 MHz estimated Fmax) for
-the baseline, while the routed `arty-power` design had a 9.857 ns critical path
-against a 10 ns requirement. The routed critical path was in the backward
+the baseline, while the routed `arty-power` design had 0.143 ns setup slack
+against a 10 ns requirement (9.326 ns data-path delay). The routed critical path was in the backward
 substitution loop and was 95.5% routing delay. The full power wrapper estimated
 286 BRAM18Ks before implementation, above the device's 270; Vivado mapped some
 memory to LUT RAM. The final routed design used 101.5 BRAM tiles. These wrapper
