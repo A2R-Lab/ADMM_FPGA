@@ -1,0 +1,10 @@
+run,horizon,admm_iters,clock_mhz,wrapper,hls_cycles,latency_us_est,hls_bram18k,hls_uncertainty_ns,LUT,FF,DSP,BRAM_tiles,WNS_ns,WHS_ns,energy_source,power_w_est,energy_uj_est,source_sha256
+baseline-single-l-spi-h40,40,10,100,top_spi,148467,1484.67,224,2.7,9280.0,12051.0,77.0,78.5,0.308,0.025,post_route_estimate,0.333,494.39511000000005,bcf10e4ad1fc78f5e69c4bc187e54d6cdb8e767cb07a7e10605df42918189353
+candidate-single-l-spi-h40,40,10,100,top_spi,161847,1618.47,186,2.7,7878.0,10139.0,82.0,70.5,0.269,0.021,post_route_estimate,0.314,508.19958,9dcdf6ad8a95f4ad1cd4d3a3d1f4f217d0972a1a1e87bbba903194b7debffede
+candidate-single-l-indexbanks-h40,40,10,100,top_spi,161847,1618.47,129,2.7,7728.0,10165.0,82.0,37.5,0.877,0.031,post_route_estimate,0.234,378.72198000000003,639b1595389cec21eb2cb81e1ea2399149253b008f70a09fc75d00333e7a0c73
+candidate-single-l-indexbanks-t2p-h40,40,10,100,top_spi,200907,2009.07,107,2.7,7628.0,9911.0,80.0,26.5,0.237,0.014,post_route_estimate,0.234,470.12238,de53a70d03607b33e3f2b91da7d04b27e2f0440bec203410c1bfc3492b05c456
+staged-fused-spi-h40,40,10,100,top_spi,57086,570.86,90,0.0,23284.0,22209.0,150.0,27.0,0.144,0.016,post_route_estimate,0.292,166.69111999999998,bcf10e4ad1fc78f5e69c4bc187e54d6cdb8e767cb07a7e10605df42918189353
+baseline-single-l-h10,10,10,100,top_spi,39867,398.67,105,2.7,,,,,,,unmeasured,,,bcf10e4ad1fc78f5e69c4bc187e54d6cdb8e767cb07a7e10605df42918189353
+candidate-single-l-h10,10,10,100,top_spi,43647,436.47,86,2.7,,,,,,,unmeasured,,,9dcdf6ad8a95f4ad1cd4d3a3d1f4f217d0972a1a1e87bbba903194b7debffede
+candidate-single-l-indexbanks-h10,10,10,100,top_spi,43647,436.47,85,2.7,,,,,,,unmeasured,,,639b1595389cec21eb2cb81e1ea2399149253b008f70a09fc75d00333e7a0c73
+candidate-single-l-indexbanks-t2p-h10,10,10,100,top_spi,53907,539.07,63,2.7,,,,,,,unmeasured,,,de53a70d03607b33e3f2b91da7d04b27e2f0440bec203410c1bfc3492b05c456

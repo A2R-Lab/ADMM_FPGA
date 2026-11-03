@@ -663,7 +663,8 @@ def generate_runtime_config_header() -> str:
     lines.append(f"#define ADMM_USE_FLOAT {1 if ADMM_USE_FLOAT else 0}\n")
     lines.append(f"#define ADMM_ITERATIONS {int(ADMM_ITERATIONS)}\n")
     lines.append(f"#define ADMM_ENABLE_TRAJECTORY {1 if ADMM_ENABLE_TRAJECTORY else 0}\n")
-    lines.append(f"#define ADMM_SOLVER_ARCH_STAGED_A {1 if ADMM_SOLVER_ARCH == 'staged_a' else 0}\n")
+    lines.append(f"#define ADMM_SOLVER_ARCH_STAGED_A {1 if ADMM_SOLVER_ARCH in ('staged_a', 'staged_fused') else 0}\n")
+    lines.append(f"#define ADMM_SOLVER_ARCH_STAGED_FUSED {1 if ADMM_SOLVER_ARCH == 'staged_fused' else 0}\n")
     lines.append(f"#define ADMM_SOLVER_ARCH_FULL_SPARSE {1 if ADMM_SOLVER_ARCH == 'full_sparse' else 0}\n")
     lines.append(f"#define ADMM_SOLVER_ARCH_NAME \"{ADMM_SOLVER_ARCH}\"\n")
     lines.append(f"#define ADMM_SOLVER_INPUT_WIDTH {int(ADMM_SOLVER_INPUT_WIDTH)}\n")
@@ -831,7 +832,7 @@ constants["XY_MAX"] = xy_max_eff
 constants["U_HOVER"] = ug[0]
 constants["ADMM_ENABLE_TRAJECTORY"] = 1 if ADMM_ENABLE_TRAJECTORY else 0
 constants["ADMM_SOLVER_INPUT_WIDTH"] = ADMM_SOLVER_INPUT_WIDTH
-constants["ADMM_SOLVER_ARCH_STAGED_A"] = 1 if ADMM_SOLVER_ARCH == "staged_a" else 0
+constants["ADMM_SOLVER_ARCH_STAGED_A"] = 1 if ADMM_SOLVER_ARCH in ("staged_a", "staged_fused") else 0
 constants["ADMM_SOLVER_ARCH_FULL_SPARSE"] = 1 if ADMM_SOLVER_ARCH == "full_sparse" else 0
 if ADMM_ENABLE_TRAJECTORY:
     constants["TRAJ_LENGTH"] = load_traj_length_from_header(TRAJ_DATA_HEADER_PATH, horizon=N)
@@ -847,9 +848,13 @@ else:
 data = []
 data.append(generate_constants_header(constants))
 data.append(generate_matrix_header(L_banded, "L_banded"))
-data.append(generate_matrix_header(LT_banded, "LT_banded"))
+if ADMM_SOLVER_ARCH == "full_sparse":
+    # Retain dimension aliases for the public substitution interface.
+    data.append("#define LT_BANDED_ROWS L_BANDED_ROWS\n#define LT_BANDED_COLS L_BANDED_COLS\n")
+else:
+    data.append(generate_matrix_header(LT_banded, "LT_banded"))
 
-if ADMM_SOLVER_ARCH == "staged_a":
+if ADMM_SOLVER_ARCH in ("staged_a", "staged_fused"):
     A_stage_row_counts, A_stage_row_cols, A_stage_row_vals, A_stage_nnz_max = build_sparse_rows(A_stage)
     A_stage_col_counts, A_stage_col_rows, A_stage_col_vals, A_stage_t_nnz_max = build_sparse_cols(A_stage)
     constants["A_STAGE_NNZ_MAX"] = A_stage_nnz_max

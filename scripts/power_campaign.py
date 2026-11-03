@@ -32,7 +32,7 @@ GENERATED = {'data.h', 'admm_runtime_config.h', 'traj_data.h', 'traj_data_raw.h'
              'trajectory_refs.csv', 'admm_autogen_params.vh'}
 CAMPAIGN_SCRIPTS = (
     'power_campaign.py', 'power_benchmark.py', 'power_workload.py',
-    'power_build_manifest.py',
+    'power_build_manifest.py', 'power_tiny.py', 'power_rtl_check.py',
     'header_generator.py', 'trajectory_generator.py', 'parameters.py',
     'crazyflie_model.py',
     'synth.tcl', 'impl.tcl', 'bitstream.tcl', 'program.tcl',
@@ -127,6 +127,12 @@ def matrix(path):
     return points
 
 
+def comparison_matrix():
+    horizons = [40,10,5,20,30,50,60,70,80,90,100,150,160,200,250,275,300,320,400,500,600,640,704,768,800,900,950,1000,1023,1050,1100,1150,1250,1300,1350]
+    return [dict(id=f'{arch}_h{h}_k10',arch=arch,horizon=h,iterations=10,variant='baseline',historical={})
+            for h in horizons for arch in ('tinympc_fpga','staged_fused')]
+
+
 def source_files(root):
     # Copy only the campaign's dependencies, never local mounts or build outputs.
     files = [root / 'Makefile', root / 'docs/power.md']
@@ -139,6 +145,8 @@ def source_files(root):
     ):
         files += [p for p in (root / folder).iterdir()
                   if p.is_file() and p.suffix in suffixes and p.name not in GENERATED]
+    files += [p for p in (root/'evaluation/tinympc_fpga').rglob('*') if p.is_file() and (p.suffix == '.py' or 'validation' in p.parts and p.suffix == '.json' or p.name in ('README.md','LICENSE','upstream_revision.txt')) and '__pycache__' not in p.parts]
+    files += [root/'evaluation/mobydic/quadrotor.py']
     files += [root / p for p in ('vitis_projects/ADMM/Makefile',
                                  'scripts/power_synthetic_states.csv',
                                  'scripts/requirements.txt',
@@ -156,11 +164,11 @@ def prepare(args):
     files = source_files(ROOT)
     hashes = {str(p.relative_to(ROOT)): sha(p) for p in files}
     payload = {'schema': 1, 'source_hashes': hashes,
-               'points': matrix(ROOT / 'evaluation/data/benchmark_summary.csv'),
+               'points': comparison_matrix() if args.comparison else matrix(ROOT / 'evaluation/data/benchmark_summary.csv'),
                'clock_hz': 100_000_000, 'trajectory': False,
                'workload_records': 256, 'repetitions': 3, 'settle_s': 5,
                'idle_s': 3, 'target_active_s': 2, 'minimum_solves': 1024,
-               'smoke_ids': list(SMOKE), 'parameter_policy': 'frozen source defaults; sanitized environment'}
+               'smoke_ids': ['tinympc_fpga_h40_k10','staged_fused_h40_k10','tinympc_fpga_h10_k10','staged_fused_h10_k10'] if args.comparison else list(SMOKE), 'parameter_policy': 'frozen source defaults; sanitized environment'}
     payload['campaign_id'] = digest(payload)
     temp = campaign.with_name(campaign.name + '.preparing-' + uuid.uuid4().hex[:8])
     (temp / 'source').mkdir(parents=True)
@@ -232,7 +240,7 @@ def preflight(args):
 
 
 def select(m, ids=None, smoke=False):
-    wanted = set(SMOKE if smoke else ids.split(',') if ids else [p['id'] for p in m['points']])
+    wanted = set(m.get('smoke_ids',SMOKE) if smoke else ids.split(',') if ids else [p['id'] for p in m['points']])
     selected = [p for p in m['points'] if p['id'] in wanted]
     if wanted != {p['id'] for p in selected}:
         raise ValueError(f'Unknown point IDs: {wanted - {p["id"] for p in selected}}')
@@ -281,7 +289,7 @@ def timing_values(path):
 def golden(work, env, log):
     hls = work / 'vitis_projects/ADMM'
     exe = work / 'build/pilot_reference'
-    run(['g++', '-std=c++14', '-O1', '-Wno-unknown-pragmas', '-I'+env['XILINX_HLS']+'/include',
+    run(['g++', '-std=c++14', '-O1', '-ffp-contract=off', '-ftrivial-auto-var-init=zero', '-Wno-unknown-pragmas', '-I'+env['XILINX_HLS']+'/include',
          '-I'+str(hls), str(work/'tests/solver_reference.cpp'), str(hls/'ADMM.cpp'), '-o', str(exe)], work, env, log)
     output = subprocess.check_output([str(exe), str(work/'build/power/power_workload.mem'), '8'], cwd=work, env=env, text=True)
     lines = output.splitlines()
@@ -294,7 +302,7 @@ def golden(work, env, log):
         checksum = ((checksum << 1) | (checksum >> 31)) & 0xffffffff
         for word in words:
             checksum ^= word
-    return {'solves': 8, 'outputs_hex': lines, 'checksum': checksum, 'last_output_words': words}
+    return {'comparison': 'float_tolerance' if env.get('ADMM_SOLVER_ARCH')=='tinympc_fpga' else 'exact', 'solves': 8, 'outputs_hex': lines, 'checksum': checksum, 'last_output_words': words}
 
 
 def classify(stage, log):
@@ -306,6 +314,9 @@ def classify(stage, log):
 
 def build_point(campaign, m, point, threads, retry_failed):
     pid = point['id']
+    if (campaign/'STOP_NEW_BUILDS').exists():
+        print(f'{pid}: deferred by STOP_NEW_BUILDS',flush=True)
+        return False
     ready = campaign / 'ready' / pid
     state = campaign / 'state' / (pid+'.json')
     with locked(campaign / 'locks' / (pid+'.lock')):
@@ -345,11 +356,18 @@ def build_point(campaign, m, point, threads, retry_failed):
                     save(state, {'status':'building', 'stage':stage, 'point':point, 'variant':name,
                                  'attempt':str(attempt), 'campaign_id':m['campaign_id'], 'time':time.time()})
                     print(f'{pid}: {name} {stage}', flush=True)
-                    run(['make','BOARD=arty-power',f'PYTHON={sys.executable}',target], work, env, log)
+                    if point['arch']=='tinympc_fpga':
+                        from power_tiny import build_target
+                        build_target(work,target,env,log,run)
+                    else:
+                        run(['make','BOARD=arty-power',f'PYTHON={sys.executable}',target], work, env, log)
                 stage = 'timing'
                 timing = timing_values(work/'build/reports/post_route_timing.rpt')
                 stage, log = 'packaging', logs/'packaging.log'
-                run(['make','BOARD=arty-power',f'PYTHON={sys.executable}','bit'], work, env, log)
+                if point['arch']=='tinympc_fpga':
+                    build_target(work,'bit',env,log,run)
+                else:
+                    run(['make','BOARD=arty-power',f'PYTHON={sys.executable}','bit'], work, env, log)
                 manifest = read(work/'build/top_uart_power.json')
                 constants = manifest['solver_constants']
                 if (int(constants['HORIZON_LENGTH']) != point['horizon'] or manifest['trajectory_compiled']
@@ -358,6 +376,11 @@ def build_point(campaign, m, point, threads, retry_failed):
                     raise ValueError('Generated configuration mismatch')
                 stage, log = 'reference', logs/'reference.log'
                 expected = golden(work, env, log)
+                if point['arch'] in ('tinympc_fpga','staged_fused') and point['horizon'] in (10,40):
+                    stage, log = 'rtl_validation', logs/'rtl_validation.log'
+                    from power_rtl_check import check
+                    validation = check(work,env,log,expected,run)
+                    save(logs/'rtl_validation.json',validation)
                 temp = campaign/'ready'/('.'+pid+'-'+uuid.uuid4().hex)
                 temp.mkdir(parents=True)
                 for filename in ('top_uart_power.bit', 'top_uart_power.json'):
@@ -425,7 +448,10 @@ def validate_run(folder, info, expected_count, expected=None):
         raise ValueError('Invalid completion/status')
     if st['latency_min'] <= 0 or st['latency_min'] != st['latency_max']:
         raise ValueError('Unexpected variable solve latency')
-    if expected and (st['checksum'] != expected['checksum'] or st['last_output_words'] != expected['last_output_words']):
+    if expected and expected.get('comparison') == 'float_tolerance':
+        from power_tiny import validate_float_last
+        validate_float_last(st['last_output_words'],expected['last_output_words'])
+    elif expected and (st['checksum'] != expected['checksum'] or st['last_output_words'] != expected['last_output_words']):
         raise ValueError('Numerical pilot does not match C++')
     with (folder/'trace.csv').open(newline='') as f:
         rows = list(csv.DictReader(f))
@@ -598,10 +624,15 @@ def aggregate(args):
                                      'raw_core_energy_uj':rail['energy_per_solve_j']*1e6,
                                      'incremental_core_energy_uj':rail['incremental_energy_per_solve_j']*1e6,
                                      'five_w':r['summary']['rails']['five']['active']['power_w'],
+                                     'five_energy_uj':r['summary']['rails']['five']['energy_per_solve_j']*1e6,
                                      'latency_us':r['status']['latency_total']/count/r['clock_hz']*1e6,
                                      'temperature_drift_c':r['summary']['temperature_change_c'],
                                      'checksum':r['status']['checksum']})
                         break
+            for measured in runs:
+                measured['raw_core_edp_uj_us']=measured['raw_core_energy_uj']*measured['latency_us']
+                measured['incremental_core_edp_uj_us']=measured['incremental_core_energy_uj']*measured['latency_us']
+                measured['five_edp_uj_us']=measured['five_energy_uj']*measured['latency_us']
             row['valid_repetitions']=len(runs)
             complete=base/'complete.json'
             if complete.exists() and not read(complete).get('valid'):
@@ -645,6 +676,7 @@ def main():
     for cmd in ('prepare','preflight','build','status','measure','aggregate'):
         s=sub.add_parser(cmd)
         s.add_argument('--campaign',type=Path,required=True)
+        if cmd=='prepare': s.add_argument('--comparison',action='store_true',help='Full staged_fused/TinyMPC 100 MHz sweep')
         if cmd in ('preflight','build'):
             s.add_argument('--threads',type=int,default=8)
             s.add_argument('--jobs',type=int)

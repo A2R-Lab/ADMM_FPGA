@@ -60,3 +60,13 @@ This repository is released under the [MIT license](LICENSE).
   year={2026}
 }
 ```
+
+### Full-sparse memory optimization
+
+The current full_sparse implementation shares its Cholesky factor between the
+forward/backward solves and banks transpose indices to reduce memory replication.
+An optional compact RHS patch trades additional cycles for a smaller BRAM footprint.
+See [the routed comparison and validation](docs/full_sparse_memory.md). These
+new variants have not yet been power-measured; the publication CSV retains the
+original full_sparse measurements. The staged_fused implementation and its build
+flow are also available in this checkout.

@@ -1,0 +1,10 @@
+--- a/vitis_projects/ADMM/ADMM.cpp
++++ b/vitis_projects/ADMM/ADMM.cpp
+@@ -781,6 +781,7 @@
+ #else
+ #endif
+     fp_t b_tmp[N_CONSTR];
++#pragma HLS BIND_STORAGE variable=b_tmp type=ram_t2p impl=bram
+ #if ADMM_SOLVER_ARCH_STAGED_FUSED
+ #pragma HLS ARRAY_PARTITION variable=b_tmp cyclic factor=2 dim=1
+ #else

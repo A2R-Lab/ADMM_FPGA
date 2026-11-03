@@ -77,7 +77,7 @@ class CampaignTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
             campaign, local = root/'campaign', root/'measurements'
-            c.prepare(SimpleNamespace(campaign=campaign))
+            c.prepare(SimpleNamespace(campaign=campaign, comparison=False))
             manifest = c.campaign_data(campaign)
             c.aggregate(SimpleNamespace(campaign=campaign, local=local))
             output = local/'summaries'/manifest['campaign_id']
