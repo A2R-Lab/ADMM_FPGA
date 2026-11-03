@@ -1,8 +1,14 @@
 # Arty comparison campaigns
 
-Select `ADMM_SOLVER_ARCH=staged_fused` for the optimized Q10.22 staged
-implementation. Existing `staged_a` (default) and `full_sparse` remain
-available. Production solver names and default behavior are preserved.
+The two solver architectures are `staged_a` (default) and `full_sparse`.
+`staged_a` now uses the optimized Q10.22 staged implementation; there is no
+separate `staged_fused` build option. Floating-point staged builds retain the
+numerical-reference path, rather than the Q10.22-specific mapping.
+
+Existing frozen campaigns and benchmark CSV rows retain their original
+`staged_fused` identifiers for provenance. Run those campaigns with their
+frozen runner; newly prepared campaigns use `staged_a`. Historical `staged_a`
+CSV rows describe the previous implementation, not the current default.
 
 ## Prepare and build
 
@@ -86,7 +92,7 @@ retaining DSPs. Disabling BRAM mapping did not fix it; isolated multiplier tests
 passed. This implicates a synthesis optimization interaction, but does not yet
 identify a minimal vendor bug or a particular faulty optimization.
 
-For staged_fused, synth.tcl now uses `-flatten_hierarchy none`; other solvers
+For staged_a, synth.tcl now uses `-flatten_hierarchy none`; other solvers
 retain `rebuilt`. Solver math, precision, HLS pipeline schedule and cycle counts
 are unchanged. Preserving hierarchy can affect area, routing and power, so the
 corrected physical builds must be measured. Corrected staged builds contain this workaround and the ROM fix. H10 and H40 close routed timing at

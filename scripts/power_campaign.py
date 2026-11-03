@@ -130,7 +130,7 @@ def matrix(path):
 def comparison_matrix():
     horizons = [40,10,5,20,30,50,60,70,80,90,100,150,160,200,250,275,300,320,400,500,600,640,704,768,800,900,950,1000,1023,1050,1100,1150,1250,1300,1350]
     return [dict(id=f'{arch}_h{h}_k10',arch=arch,horizon=h,iterations=10,variant='baseline',historical={})
-            for h in horizons for arch in ('tinympc_fpga','staged_fused')]
+            for h in horizons for arch in ('tinympc_fpga','staged_a')]
 
 
 def source_files(root):
@@ -171,7 +171,7 @@ def prepare(args):
                'clock_hz': 100_000_000, 'trajectory': False,
                'workload_records': 256, 'repetitions': 3, 'settle_s': 5,
                'idle_s': 3, 'target_active_s': 2, 'minimum_solves': 1024,
-               'smoke_ids': ['tinympc_fpga_h40_k10','staged_fused_h40_k10','tinympc_fpga_h10_k10','staged_fused_h10_k10'] if args.comparison else list(SMOKE), 'parameter_policy': 'frozen source defaults; sanitized environment'}
+               'smoke_ids': ['tinympc_fpga_h40_k10','staged_a_h40_k10','tinympc_fpga_h10_k10','staged_a_h10_k10'] if args.comparison else list(SMOKE), 'parameter_policy': 'frozen source defaults; sanitized environment'}
     if compact:
         payload['points'] = [point for point in matrix(ROOT / 'evaluation/data/benchmark_summary.csv')
                              if point['arch'] == 'full_sparse']
@@ -405,7 +405,7 @@ def build_point(campaign, m, point, threads, retry_failed):
                     raise ValueError('Generated configuration mismatch')
                 stage, log = 'reference', logs/'reference.log'
                 expected = golden(work, env, log)
-                if (point['arch'] in ('tinympc_fpga','staged_fused') or m.get('mapping')) and point['horizon'] in (10,40):
+                if (point['arch'] in ('tinympc_fpga','staged_a') or m.get('mapping')) and point['horizon'] in (10,40):
                     stage, log = 'rtl_validation', logs/'rtl_validation.log'
                     from power_rtl_check import check
                     validation = check(work,env,log,expected,run)
@@ -708,7 +708,7 @@ def main():
         if cmd=='prepare':
             s.add_argument('--horizons', help='Comma-separated compact full_sparse horizons; default: historical sweep')
             group = s.add_mutually_exclusive_group()
-            group.add_argument('--comparison',action='store_true',help='Full staged_fused/TinyMPC 100 MHz sweep')
+            group.add_argument('--comparison',action='store_true',help='Full staged_a/TinyMPC 100 MHz sweep')
             group.add_argument('--compact-full-sparse',action='store_true',help='Compact full_sparse at all historical full_sparse horizons')
         if cmd in ('preflight','build'):
             s.add_argument('--threads',type=int,default=8,help='Vivado thread cap; 0 leaves tool defaults unrestricted by the campaign')

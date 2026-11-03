@@ -19,7 +19,7 @@ def main():
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     a.output.mkdir(parents=True,exist_ok=True)
-    labels={'staged_fused':'AccelMPC staged_fused','tinympc_fpga':'TinyMPC FPGA'}
+    labels={'staged_a':'AccelMPC staged','staged_fused':'AccelMPC staged','tinympc_fpga':'TinyMPC FPGA'}
     for rail,title in [('raw_core','Active core/BRAM'),('incremental_core','Incremental core/BRAM'),('five','Monitored 5 V')]:
         fig,ax=plt.subplots(1,2,figsize=(12,4.8),layout='constrained')
         for arch in labels:

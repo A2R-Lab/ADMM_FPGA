@@ -34,7 +34,7 @@ host validation, pass `--generate-only --model-report evaluation/tinympc_fpga/mo
 directories; inspect their `--help` for options.
 
 `quality.py --validation-dir /path/to/run --hls-include /path/to/Vitis/include`
-compares the generated H5/H10 diagnostics against the historical staged_a host
+compares the generated H5/H10 diagnostics against the current staged_a host
 interface. Its OSQP objective belongs to AccelMPC, so command errors do not
 establish TinyMPC own-objective optimality. This diagnostic is not RTL validation.
 Closed-loop helpers retain explicit cold/warm state conventions;

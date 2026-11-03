@@ -119,7 +119,7 @@ route_design {*}$route_args
 # Reports
 #------------------------------------------------------------------------------
 # Repair marginal setup paths in the complete instrumented core before reporting.
-if {[info exists ::env(ADMM_SOLVER_ARCH)] && $::env(ADMM_SOLVER_ARCH) in {staged_fused tinympc_fpga}} {
+if {![info exists ::env(ADMM_SOLVER_ARCH)] || $::env(ADMM_SOLVER_ARCH) in {staged_a tinympc_fpga}} {
     set worst [get_timing_paths -delay_type max -max_paths 1]
     if {[llength $worst] && [get_property SLACK $worst] < 0} {
         phys_opt_design -directive AggressiveExplore

@@ -100,11 +100,11 @@ read_xdc "$xdc_dir/$xdc_file"
 #------------------------------------------------------------------------------
 puts "Running Synthesis..."
 
-# A staged_fused post-synthesis mismatch disappears when hierarchy is retained
+# A staged_a post-synthesis mismatch disappears when hierarchy is retained
 # (with DSPs still enabled). Preserve hierarchy as a workaround; the precise
 # optimization responsible has not been isolated. See docs/arty_comparison.md.
 set flatten_mode rebuilt
-if {[info exists ::env(ADMM_SOLVER_ARCH)] && $::env(ADMM_SOLVER_ARCH) eq "staged_fused"} {
+if {![info exists ::env(ADMM_SOLVER_ARCH)] || $::env(ADMM_SOLVER_ARCH) eq "staged_a"} {
     set flatten_mode none
 }
 puts "Synthesis hierarchy policy: $flatten_mode"

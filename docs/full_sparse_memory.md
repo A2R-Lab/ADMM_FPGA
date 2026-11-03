@@ -15,7 +15,7 @@ proof of an absolute capacity limit.
 
 At H40, the matching uninstrumented solver/SPI builds use 7,628 LUTs, 9,911
 registers, 80 DSPs and 26.5 BRAM tiles for full_sparse, versus 23,284 LUTs,
-22,209 registers, 150 DSPs and 27 BRAM tiles for staged_fused. Instrumented
+22,209 registers, 150 DSPs and 27 BRAM tiles for AccelMPC staged (recorded as `staged_fused`). Instrumented
 Arty latency and energy are separate measurements; the radar combines these
 clearly identified scopes. Full_sparse offers lower logic usage at the cost of
 longer solve times.

@@ -1,3 +1,6 @@
+# Both explicit and default builds must use the optimized staged tool policy.
+export ADMM_SOLVER_ARCH ?= staged_a
+
 # =============================================================================
 # ADMM FPGA - Top-Level Makefile
 # =============================================================================
@@ -67,7 +70,7 @@ XDC_DIR       := $(PROJ_ROOT)/vivado_project/vivado_project.srcs/constrs_1/new
 IP_DIR        := $(PROJ_ROOT)/vivado_project/vivado_project.gen/sources_1/ip/ADMM_solver_0
 
 # Source files
-HLS_SOURCES   := $(HLS_DIR)/ADMM.cpp $(HLS_DIR)/ADMM.h $(HLS_DIR)/data_types.h $(HLS_DIR)/admm_runtime_config.h $(HLS_DIR)/hls_config.cfg $(HLS_DIR)/hls_fused_config.cfg
+HLS_SOURCES   := $(HLS_DIR)/ADMM.cpp $(HLS_DIR)/ADMM.h $(HLS_DIR)/data_types.h $(HLS_DIR)/admm_runtime_config.h $(HLS_DIR)/hls_config.cfg $(HLS_DIR)/hls_staged_config.cfg
 RTL_SOURCES   := $(wildcard $(RTL_DIR)/*.v) $(wildcard $(RTL_DIR)/*.sv) $(wildcard $(RTL_DIR)/*.vh)
 ifeq ($(BOARD),arty-power)
 XDC_SOURCES   := $(XDC_DIR)/constraints_arty_power.xdc
@@ -199,8 +202,8 @@ $(HLS_IP_MARKER): $(HLS_SOURCES) $(DATA_HEADER)
 	@echo "========================================="
 	@echo "Building HLS IP..."
 	@echo "========================================="
-	cd $(HLS_DIR) && $(MAKE) build $(if $(filter staged_fused,$(ADMM_SOLVER_ARCH)),CONFIG=hls_fused_config.cfg,)
-	cd $(HLS_DIR) && $(MAKE) export $(if $(filter staged_fused,$(ADMM_SOLVER_ARCH)),CONFIG=hls_fused_config.cfg,)
+	cd $(HLS_DIR) && $(MAKE) build $(if $(filter staged_a,$(ADMM_SOLVER_ARCH)),CONFIG=hls_staged_config.cfg,)
+	cd $(HLS_DIR) && $(MAKE) export $(if $(filter staged_a,$(ADMM_SOLVER_ARCH)),CONFIG=hls_staged_config.cfg,)
 	@mkdir -p $(dir $(HLS_IP_MARKER))
 	@touch $(HLS_IP_MARKER)
 

@@ -15,7 +15,8 @@ and the scope of the supplied experiment data.
 latency/energy plot, EDP plot, two-mapping radar, feasibility table, and generated
 manuscript numbers. It contains only valid completed configurations at ten
 iterations. New measurements replace estimates at the same architecture/horizon;
-all fused implementations are named `staged_fused`. Failed, incorrect, incomplete,
+the improved staged measurements retain their original `staged_fused` dataset
+identifier. The current build option for that implementation is `staged_a`. Failed, incorrect, incomplete,
 and timing-failed runs are excluded. Historical campaign files are not inputs to
 the publication generator.
 
