@@ -28,12 +28,6 @@ source before patching and records the resulting source hash. It does not modify
 the checkout. The compact campaign regression test checks that its solver matches
 the source used for the retained measurements.
 
-`scripts/check_full_sparse_shared_l.py` and
-`tests/full_sparse_shared_l_test.cpp` provide raw fixed-point comparisons
-between baseline and candidate builds. Run host/HLS/FPGA validation and validate outputs on the Arty before accepting
-new measurements.
-Source equality checks alone do not replace physical-board validation.
-
 Raw build reports, bitstreams, traces and intermediate experiment outputs stay
 outside Git. Regenerate publication plots from the consolidated CSV with
 `evaluation/plot_benchmarks.py --skip-trajectory`.

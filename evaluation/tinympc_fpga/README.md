@@ -30,17 +30,10 @@ python evaluation/tinympc_fpga/prepare.py --horizon 10 --iterations 10 --output 
 
 Preparation requires NumPy, SciPy, OSQP and autograd. For generation without
 host validation, pass `--generate-only --model-report evaluation/tinympc_fpga/model.json`.
-`build.py`, `collect.py` and `summarize.py` accept external build/output
-directories; inspect their `--help` for options.
-
-`quality.py --validation-dir /path/to/run --hls-include /path/to/Vitis/include`
-compares the generated H5/H10 diagnostics against the current staged_a host
-interface. Its OSQP objective belongs to AccelMPC, so command errors do not
-establish TinyMPC own-objective optimality. This diagnostic is not RTL validation.
-Closed-loop helpers retain explicit cold/warm state conventions;
-`summarize_quality.py --input /path/to/closed-loop` summarizes paired
-`cold.json` and `warm.json` outputs. These are optional reproduction tools,
-not inputs to the hardware benchmark figures.
+The campaign invokes this generator through `scripts/power_tiny.py`, which
+adapts its local-memory interface to the Arty measurement shell. Building,
+programming, output validation and acquisition use `scripts/power_campaign.py`;
+there is no separate TinyMPC build workflow.
 
 Generated sources, raw reports, logs, validation outputs and intermediate plots
 are ignored. Only accepted publication measurements are consolidated in the CSV.
