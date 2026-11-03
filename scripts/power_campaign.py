@@ -162,6 +162,9 @@ def prepare(args):
     if campaign.exists():
         raise ValueError('Prepare requires a new campaign directory')
     files = source_files(ROOT)
+    compact = getattr(args, 'compact_full_sparse', False)
+    if getattr(args, 'horizons', None) and not compact:
+        raise ValueError('--horizons requires --compact-full-sparse')
     hashes = {str(p.relative_to(ROOT)): sha(p) for p in files}
     payload = {'schema': 1, 'source_hashes': hashes,
                'points': comparison_matrix() if args.comparison else matrix(ROOT / 'evaluation/data/benchmark_summary.csv'),
@@ -169,6 +172,26 @@ def prepare(args):
                'workload_records': 256, 'repetitions': 3, 'settle_s': 5,
                'idle_s': 3, 'target_active_s': 2, 'minimum_solves': 1024,
                'smoke_ids': ['tinympc_fpga_h40_k10','staged_fused_h40_k10','tinympc_fpga_h10_k10','staged_fused_h10_k10'] if args.comparison else list(SMOKE), 'parameter_policy': 'frozen source defaults; sanitized environment'}
+    if compact:
+        payload['points'] = [point for point in matrix(ROOT / 'evaluation/data/benchmark_summary.csv')
+                             if point['arch'] == 'full_sparse']
+        payload['smoke_ids'] = ['full_sparse_h10_k10', 'full_sparse_h40_k10']
+        if getattr(args, 'horizons', None):
+            horizons = sorted(set(int(h) for h in args.horizons.split(',')))
+            if not horizons or min(horizons) < 1:
+                raise ValueError('Horizons must be positive integers')
+            payload['points'] = [dict(id=f'full_sparse_h{h}_k10', arch='full_sparse',
+                                      horizon=h, iterations=10, variant='baseline', historical={})
+                                 for h in horizons]
+            payload['smoke_ids'] = [point['id'] for point in payload['points'][:2]]
+        payload['mapping'] = 'shared L, banked AT indices, compact true-dual-port RHS'
+        source = (ROOT / 'vitis_projects/ADMM/ADMM.cpp').read_bytes()
+        original = b'    fp_t b_tmp[N_CONSTR];\n#if ADMM_SOLVER_ARCH_STAGED_FUSED'
+        replacement = b'    fp_t b_tmp[N_CONSTR];\n#pragma HLS BIND_STORAGE variable=b_tmp type=ram_t2p impl=bram\n#if ADMM_SOLVER_ARCH_STAGED_FUSED'
+        if source.count(original) != 1 or b'full_sparse_substitution' not in source:
+            raise ValueError('Compact campaign requires the shared-L source and one RHS binding site')
+        compact_source = source.replace(original, replacement)
+        hashes['vitis_projects/ADMM/ADMM.cpp'] = hashlib.sha256(compact_source).hexdigest()
     payload['campaign_id'] = digest(payload)
     temp = campaign.with_name(campaign.name + '.preparing-' + uuid.uuid4().hex[:8])
     (temp / 'source').mkdir(parents=True)
@@ -176,6 +199,8 @@ def prepare(args):
         dest = temp / 'source' / p.relative_to(ROOT)
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(p, dest)
+    if compact:
+        (temp / 'source/vitis_projects/ADMM/ADMM.cpp').write_bytes(compact_source)
     save(temp / 'campaign.json', payload)
     os.replace(temp, campaign)
     print(f'Prepared {len(payload["points"])} points at {campaign}\nCampaign: {payload["campaign_id"]}')
@@ -206,7 +231,7 @@ def resources(campaign, threads=8, requested=None, memory_gib=32, scratch_gib=40
     if limit.exists() and limit.read_text().strip() != 'max':
         available = min(available, int(limit.read_text()) - int(used.read_text()))
     disk = shutil.disk_usage(campaign).free
-    capacity = min(max(0, (cpus-4)//threads), max(0, int((available-16*GIB)//(memory_gib*GIB))),
+    capacity = min((max(0, (cpus-4)//threads) if threads else cpus-4), max(0, int((available-16*GIB)//(memory_gib*GIB))),
                    max(0, int((disk-40*GIB)//(scratch_gib*GIB))))
     jobs = min(8, capacity) if requested is None else requested
     if jobs < 1 or jobs > capacity:
@@ -343,6 +368,10 @@ def build_point(campaign, m, point, threads, retry_failed):
             env.update(ADMM_SOLVER_ARCH=point['arch'], ADMM_HORIZON_LENGTH=str(point['horizon']),
                        ADMM_ITERATIONS='10', ADMM_ENABLE_TRAJECTORY='0', ADMM_USE_FLOAT='0',
                        VIVADO_MAX_THREADS=str(threads))
+            if threads == 0:
+                # No campaign-imposed tool thread limit; let each tool schedule itself.
+                env.pop('VIVADO_MAX_THREADS', None)
+                env.pop('OMP_NUM_THREADS', None)
             variant = variants[name]
             for k, suffix in (('opt','OPT_DIRECTIVE'), ('place','PLACE_DIRECTIVE'), ('phys','PHYS_OPT_DIRECTIVE'),
                               ('route','ROUTE_DIRECTIVE'), ('place_subdirective','PLACE_SUBDIRECTIVE'),
@@ -376,7 +405,7 @@ def build_point(campaign, m, point, threads, retry_failed):
                     raise ValueError('Generated configuration mismatch')
                 stage, log = 'reference', logs/'reference.log'
                 expected = golden(work, env, log)
-                if point['arch'] in ('tinympc_fpga','staged_fused') and point['horizon'] in (10,40):
+                if (point['arch'] in ('tinympc_fpga','staged_fused') or m.get('mapping')) and point['horizon'] in (10,40):
                     stage, log = 'rtl_validation', logs/'rtl_validation.log'
                     from power_rtl_check import check
                     validation = check(work,env,log,expected,run)
@@ -676,9 +705,13 @@ def main():
     for cmd in ('prepare','preflight','build','status','measure','aggregate'):
         s=sub.add_parser(cmd)
         s.add_argument('--campaign',type=Path,required=True)
-        if cmd=='prepare': s.add_argument('--comparison',action='store_true',help='Full staged_fused/TinyMPC 100 MHz sweep')
+        if cmd=='prepare':
+            s.add_argument('--horizons', help='Comma-separated compact full_sparse horizons; default: historical sweep')
+            group = s.add_mutually_exclusive_group()
+            group.add_argument('--comparison',action='store_true',help='Full staged_fused/TinyMPC 100 MHz sweep')
+            group.add_argument('--compact-full-sparse',action='store_true',help='Compact full_sparse at all historical full_sparse horizons')
         if cmd in ('preflight','build'):
-            s.add_argument('--threads',type=int,default=8)
+            s.add_argument('--threads',type=int,default=8,help='Vivado thread cap; 0 leaves tool defaults unrestricted by the campaign')
             s.add_argument('--jobs',type=int)
             s.add_argument('--memory-gib',type=float,default=32,help='Planning RAM budget per worker (not a hard limit)')
             s.add_argument('--scratch-gib',type=float,default=40,help='Planning disk budget per worker')
@@ -695,7 +728,7 @@ def main():
     args=p.parse_args()
     args.campaign=args.campaign.resolve()
     if hasattr(args,'local'): args.local=args.local.resolve()
-    if hasattr(args,'threads') and args.threads<1: p.error('threads must be positive')
+    if hasattr(args,'threads') and args.threads<0: p.error('threads must be nonnegative')
     for name in ('memory_gib', 'scratch_gib', 'poll_seconds'):
         if hasattr(args,name) and getattr(args,name)<=0: p.error(name+' must be positive')
     if getattr(args,'smoke',False) and getattr(args,'ids',None): p.error('Use --smoke or --ids, not both')

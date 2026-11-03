@@ -166,3 +166,27 @@ The experiment radar is deliberately separate from publication figures:
 
 It reads only the compact results CSV and writes `evaluation/output/full_sparse_memory_radar.*`.
 Its energy/EDP values are post-route estimates and must not replace board measurements.
+
+## Preparing compact measurement campaigns
+
+The campaign runner can apply the compact RHS binding to its immutable source
+snapshot without changing the production checkout:
+
+```sh
+~/venv/bin/python scripts/power_campaign.py prepare \
+  --campaign /path/to/new-campaign --compact-full-sparse --horizons 10,40
+```
+
+Omit `--horizons` to use the historical full_sparse sweep. The manifest records
+the patched solver hash; H10/H40 compact builds run the same RTL-check stage as
+the staged/TinyMPC pilot points. `--comparison` and `--compact-full-sparse` are
+mutually exclusive. Run builds on a2r-main and copy completed bundles locally for
+Arty acquisition, following `docs/arty_comparison.md`.
+
+The build/preflight option `--threads 0` removes the campaign-imposed tool thread
+cap. It does not disable memory/disk admission checks or the concurrent-job limit.
+It does not guarantee a specific tool CPU utilization.
+
+This runner is imported unchanged from the server campaign. Its preparation
+check reproduces the compact solver hash used by the measured campaign. Full
+integration synthesis and board regression remain separate validation steps.
