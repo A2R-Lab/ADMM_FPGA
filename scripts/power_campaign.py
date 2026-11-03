@@ -145,7 +145,7 @@ def source_files(root):
     ):
         files += [p for p in (root / folder).iterdir()
                   if p.is_file() and p.suffix in suffixes and p.name not in GENERATED]
-    files += [p for p in (root/'evaluation/tinympc_fpga').rglob('*') if p.is_file() and (p.suffix == '.py' or 'validation' in p.parts and p.suffix == '.json' or p.name in ('README.md','LICENSE','upstream_revision.txt')) and '__pycache__' not in p.parts]
+    files += [p for p in (root/'evaluation/tinympc_fpga').rglob('*') if p.is_file() and (p.suffix == '.py' or p.name == 'model.json' or p.name in ('README.md','LICENSE','upstream_revision.txt')) and not {'__pycache__', 'output', 'results', 'comparison', 'validation'}.intersection(p.relative_to(root/'evaluation/tinympc_fpga').parts)]
     files += [root/'evaluation/mobydic/quadrotor.py']
     files += [root / p for p in ('vitis_projects/ADMM/Makefile',
                                  'scripts/power_synthetic_states.csv',

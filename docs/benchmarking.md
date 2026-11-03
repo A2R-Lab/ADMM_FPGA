@@ -99,10 +99,13 @@ Regenerate without FPGA tools:
 ~/venv/bin/python evaluation/summarize_results.py --benchmarks-only
 ```
 
-The H40 radar reports measured latency and energy for all three AccelMPC mappings.
+The H40 radar reports measured latency and energy for staged and compact full_sparse.
 Numbers on its spokes show actual values; radial positions normalize each cost to
-the worst design. Scalability uses inverse largest demonstrated horizon. Resources
-come from the consolidated CSV: fused includes its measurement harness, while the
-original mappings use solver/SPI builds, as recorded by `resource_scope`. Missing
-measurements at the radar horizon cause generation to fail. Historical campaign
+the worst design, with the BRAM radius additionally scaled by 0.8 for readability
+(the same factor for both mappings). Scalability uses inverse largest demonstrated horizon. Resources
+come from the consolidated CSV's `solver_*` fields and use matching uninstrumented
+SPI wrappers for both mappings. Measured energy includes the instrumented builds.
+Full_sparse currently uses H400 as its largest demonstrated horizon, which is not an exact capacity limit. Missing
+measurements or matched resource fields at the radar horizon cause generation
+to fail. Historical campaign
 CSVs and Vivado reports are not additional inputs to publication plotting.

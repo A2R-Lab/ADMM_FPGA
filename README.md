@@ -66,10 +66,9 @@ This repository is released under the [MIT license](LICENSE).
 The current full_sparse implementation shares its Cholesky factor between the
 forward/backward solves and banks transpose indices to reduce memory replication.
 An optional compact RHS patch trades additional cycles for a smaller BRAM footprint.
-See [the routed comparison and validation](docs/full_sparse_memory.md). These
-new variants have not yet been power-measured; the publication CSV retains the
-original full_sparse measurements. The staged_fused implementation and its build
-flow are also available in this checkout.
+See [the memory mapping and validation](docs/full_sparse_memory.md). The single
+[publication CSV](evaluation/data/benchmarks.csv) includes compact full_sparse
+and staged_fused Arty measurements, alongside the TinyMPC FPGA comparison.
 
 The selectable solver architectures are `full_sparse`, `staged_a` (default),
 and `staged_fused` (optimized Q10.22 staged implementation). For example:

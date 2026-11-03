@@ -13,7 +13,7 @@ def prepare(work, horizon, env, log, run):
     hls = work/'vitis_projects/ADMM'
     generated = work/'build/tiny'
     run([sys.executable, str(work/'evaluation/tinympc_fpga/prepare.py'),
-         '--generate-only', '--model-report', str(work/'evaluation/tinympc_fpga/validation/h5.json'),
+         '--generate-only', '--model-report', str(work/'evaluation/tinympc_fpga/model.json'),
          '--horizon', str(horizon), '--output', str(generated)], work, dict(env, ADMM_SOLVER_ARCH='staged_a'), log)
     for row in csv.DictReader((work/'scripts/power_synthetic_states.csv').open()):
         if int(row['constraints']) or int(row['traj_cmd']):

@@ -85,5 +85,10 @@ video/constrainedStarTopView.MP4
 /video/narration/*.wav
 /video/narration/*.srt
 
-# Retained TinyMPC FPGA benchmark dataset
-!evaluation/data/tinympc_fpga_comparison.csv
+# Local HLS exploration outputs
+/hls_greedy/
+
+# Generated FPGA implementation outputs
+*.bit
+*.dcp
+*.rpt

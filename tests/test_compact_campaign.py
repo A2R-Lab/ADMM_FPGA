@@ -27,6 +27,11 @@ class CompactCampaignTests(unittest.TestCase):
             self.assertEqual(manifest['source_hashes']['vitis_projects/ADMM/ADMM.cpp'], c.sha(frozen))
             self.assertEqual(source.read_bytes(), original)
 
+    def test_tiny_model_is_in_frozen_source_without_result_archives(self):
+        files = {str(p.relative_to(c.ROOT)) for p in c.source_files(c.ROOT)}
+        self.assertIn('evaluation/tinympc_fpga/model.json', files)
+        self.assertFalse(any('/validation/' in p or '/results/' in p for p in files))
+
     def test_custom_horizons_require_compact_and_positive_values(self):
         with tempfile.TemporaryDirectory() as tmp:
             for compact, horizons in [(False, '10'), (True, '0,10')]:

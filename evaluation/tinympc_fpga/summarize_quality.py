@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Summarize paired closed-loop scenarios without combining incompatible metrics."""
-import csv,json
+import argparse,csv,json
 from pathlib import Path
 import numpy as np
 HERE=Path(__file__).resolve().parent
-out=HERE/'comparison/closed_loop'
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--input', type=Path, required=True, help='Directory containing cold.json and warm.json; also receives summaries')
+out=parser.parse_args().input
 rows=[]
 for name in ['cold','warm']:
     rows+=json.loads((out/f'{name}.json').read_text())['results']

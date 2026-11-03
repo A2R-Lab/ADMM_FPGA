@@ -12,7 +12,7 @@ and the scope of the supplied experiment data.
 ## Solver benchmarks
 
 [benchmarks.csv](data/benchmarks.csv) is the single publication input for the
-latency/energy plot, EDP plot, three-mapping radar, feasibility table, and generated
+latency/energy plot, EDP plot, two-mapping radar, feasibility table, and generated
 manuscript numbers. It contains only valid completed configurations at ten
 iterations. New measurements replace estimates at the same architecture/horizon;
 all fused implementations are named `staged_fused`. Failed, incorrect, incomplete,
@@ -29,56 +29,63 @@ estimates. Communication, host processing, and board support circuitry are exclu
 Asterisks mark FPGA estimates; MCU points have no asterisk and retain the stated nominal-power calculation. No values are interpolated.
 
 The new fused and Wu measurements average three valid repetitions with a target
-batch duration of two seconds and at least 1024 solves. Existing full_sparse and
-staged_a measurements retain their original collection procedure. Each new board
+batch duration of two seconds and at least 1024 solves. Compact full_sparse measurements use the same three-repetition procedure.
+Historical measurements retain their original collection procedure. Each new board
 point passed output validation. Fixed iteration counts do not imply equal solution
 accuracy across Cholesky fixed-point, Riccati float32, and dense-inverse solvers.
 
-`resource_scope` records whether utilization includes measurement instrumentation
-or the solver/SPI wrapper. The radar shows complete-build utilization, so fused
-includes its harness while the two original mappings use solver/SPI reports.
-Largest demonstrated horizons include valid uninstrumented builds; they are not
-proven exact capacity limits or claims of board validation at those horizons.
+Publication plots select compact `full_sparse` and `staged_fused` (displayed as
+"AccelMPC staged"). Historical `full_sparse_original` and `staged_a` rows remain in
+the single CSV and are excluded from publication comparisons.
+
+`resource_scope` describes the complete build in the `route_*` columns. At H40,
+`solver_luts_used`, `solver_bram_tiles_used`, `solver_dsps_used`, and
+`solver_registers_used` additionally contain matching uninstrumented solver/SPI
+resources for both mappings; the radar uses these fields. Its latency/energy
+remain board measurements from the instrumented builds. Full_sparse uses H400 as its largest demonstrated
+horizon, not a proven exact capacity limit. Staged's H1800 is a demonstrated
+uninstrumented compilation point, not a proven exact capacity limit.
 
 Regenerate the publication artifacts with:
 
 ```sh
 ~/venv/bin/python evaluation/plot_benchmarks.py --skip-trajectory
-cp evaluation/output/benchmark_*.pdf ../paper/img/
-cp evaluation/output/benchmark_numbers.tex ../paper/tex/
-cp evaluation/output/feasibility_table.tex ../paper/tex/benchmark_feasibility.tex
 ```
 
-To incorporate later completed measurements, replace the corresponding CSV row
-with the aggregate latency, measured core energy plus matching auxiliary/I/O
-energy, standard deviation, repetition count, clock, and complete-build resources.
-Set `energy_source=board_core_plus_estimated_aux_io`, then regenerate. Keep one row
-per architecture/horizon/iteration/clock; do not add failed attempts or build artifacts.
-The paper's numerical macros regenerate from common-horizon comparisons, restricted
-to measured fused points (and measured FPGA baselines, except MOBY-DIC2).
+Import all completed compact measurements incrementally, then regenerate:
+
+```sh
+~/venv/bin/python evaluation/import_compact_measurements.py --campaign-root ../campaign_new_full_sparse
+~/venv/bin/python evaluation/plot_benchmarks.py --skip-trajectory
+~/venv/bin/python evaluation/summarize_results.py --benchmarks-only
+```
+
+The importer checks three valid repetitions, completion flags, routed timing and
+bitstream hashes, and adds matching auxiliary/I/O energy. Failed or unfinished
+points are skipped. Repeating the import is idempotent; historical full_sparse
+measurements stay under `full_sparse_original`. Current compact rows use
+`max_horizon_status=demonstrated`: the largest completed horizon is shown,
+without claiming an exact capacity limit. Generated figures are prepared
+in `evaluation/output/`; manuscript integration remains a separate review step.
 
 <!-- BEGIN GENERATED BENCHMARKS -->
 
 | H40 / 10 iterations | Solve (ms) | Energy (mJ) | EDP (mJ·ms) |
 | --- | --- | --- | --- |
-| Fused FPGA | 0.570 | 0.186 | 0.106 |
-| Staged FPGA | 1.339 | 0.424 | 0.568 |
-| Full-sparse FPGA | 1.484 | 0.412 | 0.612 |
+| AccelMPC staged | 0.570 | 0.186 | 0.106 |
+| AccelMPC full-sparse | 2.008 | 0.474 | 0.952 |
 | TinyMPC (MCU) | 20.899 | 6.000 | 125.396 |
 | Wu et al. FPGA | 0.769 | 0.271 | 0.208 |
 
-| H40 FPGA resources | LUTs | FFs | BRAM tiles | DSPs |
+| Matched H40 solver/SPI resources | LUTs | FFs | BRAM tiles | DSPs |
 | --- | --- | --- | --- | --- |
-| Fused FPGA | 27412 | 25371 | 58 | 152 |
-| Staged FPGA | 22127 | 26540 | 36 | 80 |
-| Full-sparse FPGA | 9280 | 12051 | 78.5 | 77 |
-| Wu et al. FPGA | 27764 | 31378 | 88 | 138 |
+| AccelMPC staged | 23284.0 | 22209.0 | 27.0 | 150.0 |
+| AccelMPC full-sparse | 7628.0 | 9911.0 | 26.5 | 80.0 |
 
 | Largest recorded timing-clean horizon | Horizon | Variables | Constraints | Solve (ms) |
 | --- | --- | --- | --- | --- |
-| Full-sparse FPGA | 90 | 1452 | 1632 | 3.295 |
-| Staged FPGA | 1350 | 21612 | 24312 | 44.859 |
-| Fused FPGA | 1800 | 28812 | 32412 | 24.683 |
+| AccelMPC staged | 1800 | 28812 | 32412 | 24.683 |
+| AccelMPC full-sparse | 400 | 6412 | 7212 | 19.648 |
 
 <!-- END GENERATED BENCHMARKS -->
 

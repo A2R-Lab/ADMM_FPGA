@@ -5,7 +5,7 @@ import argparse
 
 from plot_benchmarks import (
     HERE, OUTPUT_DIR, BENCHMARK_SUMMARY_CSV, LABELS, DEFAULT_TINYMPC_POWER_W,
-    load_rows, best_rows, f, energy_mj, edp_uj_us, comparison_latency_us,
+    load_rows, best_rows, f, energy_mj, edp_uj_us, comparison_latency_us, RADAR_ARCHES,
 )
 
 def table(headers, rows):
@@ -35,18 +35,20 @@ def main():
           f'{edp_uj_us(r, DEFAULT_TINYMPC_POWER_W) / 1e6:.3f}') for r in common],
     )
     benchmark += "\n\n" + table(
-        ["H40 FPGA resources", "LUTs", "FFs", "BRAM tiles", "DSPs"],
+        ["Matched H40 solver/SPI resources", "LUTs", "FFs", "BRAM tiles", "DSPs"],
         [(LABELS[r["arch"]], *(r[k] for k in (
-            "route_slice_luts_used", "route_slice_registers_used",
-            "route_bram_tile_used", "route_dsps_used")))
-         for r in common if r["arch"] != "tinympc_e"],
+            "solver_luts_used", "solver_registers_used",
+            "solver_bram_tiles_used", "solver_dsps_used")))
+         for r in common if r["arch"] in RADAR_ARCHES],
     )
     largest = [max((r for r in rows if r["arch"] == arch), key=lambda r: f(r, "horizon"))
-               for arch in ("full_sparse", "staged_a", "staged_fused")]
+               for arch in RADAR_ARCHES]
     benchmark += "\n\n" + table(
         ["Largest recorded timing-clean horizon", "Horizon", "Variables", "Constraints", "Solve (ms)"],
-        [(LABELS[r["arch"]], r["horizon"], 16 * int(r["horizon"]) + 12, 18 * int(r["horizon"]) + 12,
-          f'{f(r, "solve_us_cfg_clk") / 1000:.3f}') for r in largest],
+        [(LABELS[r["arch"]], ("TBD" if r.get("max_horizon_status") == "TBD" else r["horizon"]),
+          ("TBD" if r.get("max_horizon_status") == "TBD" else 16 * int(r["horizon"]) + 12),
+          ("TBD" if r.get("max_horizon_status") == "TBD" else 18 * int(r["horizon"]) + 12),
+          ("TBD" if r.get("max_horizon_status") == "TBD" else f'{f(r, "solve_us_cfg_clk") / 1000:.3f}')) for r in largest],
     )
     if args.benchmarks_only:
         page = HERE / "README.md"

@@ -6,7 +6,7 @@ ap.add_argument('--output',type=Path,required=True)
 args=ap.parse_args()
 root=Path(__file__).resolve().parents[2]
 out=args.output.resolve();out.mkdir(parents=True,exist_ok=True)
-model=json.loads((root/'evaluation/tinympc_fpga/validation/h5.json').read_text())['model']
+model=json.loads((root/'evaluation/tinympc_fpga/model.json').read_text())['model']
 sys.path.insert(0,str(root/'scripts'));import parameters as cfg
 for H in [10,40]:
  d=out/f'h{H}';s=d/'scripts';p=d/'vitis_projects/ADMM';s.mkdir(parents=True,exist_ok=True);p.mkdir(parents=True,exist_ok=True)
@@ -16,7 +16,7 @@ for H in [10,40]:
  env={k:v for k,v in os.environ.items() if not k.startswith('ADMM_')}
  env.update(ADMM_HORIZON_LENGTH=str(H),ADMM_ITERATIONS='10',ADMM_ENABLE_TRAJECTORY='0',ADMM_SOLVER_ARCH='staged_a',ADMM_USE_FLOAT='0',OPENBLAS_NUM_THREADS='1')
  with (d/'generate.log').open('w') as log:subprocess.run([sys.executable,str(s/'header_generator.py')],cwd=d,env=env,stdout=log,stderr=subprocess.STDOUT,check=True)
- subprocess.run([sys.executable,str(root/'evaluation/tinympc_fpga/prepare.py'),'--generate-only','--horizon',str(H),'--model-report',str(root/'evaluation/tinympc_fpga/validation/h5.json'),'--output',str(d/'tiny')],check=True)
+ subprocess.run([sys.executable,str(root/'evaluation/tinympc_fpga/prepare.py'),'--generate-only','--horizon',str(H),'--model-report',str(root/'evaluation/tinympc_fpga/model.json'),'--output',str(d/'tiny')],check=True)
  q=','.join(str(v) for v in cfg.Q_DIAG)
  (p/'bridge.cpp').write_text('#include "ADMM.h"\nextern "C" void control(const double* state,const double* ref,double* u){\n'+f'const double weights[12]={{{q}}};\n'+'''fp_t x[12],q[N_VAR],z[N_VAR];
  for(int i=0;i<12;i++)x[i]=state[i];

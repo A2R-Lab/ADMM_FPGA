@@ -19,25 +19,25 @@ import numpy as np
 
 
 LABELS = {
-    "full_sparse": "Full-sparse FPGA",
+    "full_sparse": "AccelMPC full-sparse",
     "staged_a": "Staged FPGA",
     "tinympc_e": "TinyMPC (MCU)",
     "tinympc_fpga_float": "Wu et al. FPGA",
-    "staged_fused": "Fused FPGA",
+    "staged_fused": "AccelMPC staged",
     "mobydic_small": "MOBY-DIC2*",
 }
 
 # Dartmouth's official primary/tertiary palette.
 COLORS = {
     "full_sparse": "#267ABA",  # River Blue
-    "staged_fused": "#009E73",
+    "staged_fused": "#00693E",
     "mobydic_small": "#777777",
     "staged_a": "#00693E",  # Dartmouth Green
     "tinympc_fpga_float": "#8067A8",
     "tinympc_e": "#D94415",  # Tuck Orange
 }
 
-ARCH_ORDER = ["staged_fused", "staged_a", "full_sparse", "tinympc_e", "tinympc_fpga_float", "mobydic_small"]
+ARCH_ORDER = ["staged_fused", "full_sparse", "tinympc_e", "tinympc_fpga_float", "mobydic_small"]
 
 # Use a consistent selection of synthesis-derived timing and resource results.
 # Publication CSV already excludes invalid configurations.
@@ -45,7 +45,7 @@ EXCLUDED_POINTS: set[tuple[str, int]] = set()
 
 DEFAULT_TINYMPC_POWER_W = 0.087 * 3.3
 ENERGY_AREA_SCALE = 55.0
-RADAR_ARCHES = ["staged_fused", "staged_a", "full_sparse"]
+RADAR_ARCHES = ["staged_fused", "full_sparse"]
 RADAR_METRIC_UNITS = {
     "Latency": "ms",
     "Energy/solve": "mJ",
@@ -72,13 +72,12 @@ FIGURE8_TINYMPC_ROW_RANGE = (350, 1070)
 FIGURE8_FPGA_ALIGNMENT = (0.757180, -0.383558, 0.598284, -0.289005)
 FIGURE8_TINYMPC_ALIGNMENT = (0.971674, -0.439716, 0.580961, -0.313049)
 
-FEASIBILITY_HORIZONS = (5, 10, 30, 50, 100, 250, 600)
+FEASIBILITY_HORIZONS = (5, 10, 40, 100, 200, 300, 400, 500, 600, 800)
 FEASIBILITY_SOLVERS = (
     ("tinympc_e", "TinyMPC (MCU)"),
-    ("full_sparse", r"\texttt{full\_sparse}"),
-    ("staged_a", r"\texttt{staged\_a}"),
-    ("staged_fused", r"\texttt{staged\_fused}"),
     ("tinympc_fpga_float", "Wu et al. FPGA"),
+    ("full_sparse", r"\texttt{full\_sparse}"),
+    ("staged_fused", r"\texttt{staged}"),
 )
 FEASIBILITY_MANUAL_ITERATIONS = {
     ("tinympc_e", 5): 4,
@@ -167,7 +166,7 @@ def feasible_iteration_table(
                 continue
             best_per_iter_us = min(f(row, "solve_us_per_iter_cfg_clk") for row in candidates)
             max_iters = math.floor(budget_us / best_per_iter_us)
-            if max_iters >= 1:
+            if max_iters >= 0:
                 table[arch][horizon] = max_iters
 
     return table
@@ -176,7 +175,7 @@ def feasible_iteration_table(
 def format_feasibility_cell(value: int | None, best_value: int | None) -> str:
     if value is None:
         return "--"
-    if best_value is not None and value == best_value:
+    if best_value is not None and value > 0 and value == best_value:
         return rf"\textbf{{{value}}}"
     return str(value)
 
@@ -310,7 +309,7 @@ def best_rows(rows: list[dict[str, str]], compare_iters: int) -> list[dict[str, 
         if row.get("timing_clean") != "1":
             continue
         arch = row.get("arch", "")
-        if not arch:
+        if arch not in ARCH_ORDER:
             continue
         horizon = int(f(row, "horizon", -1))
         if horizon < 0:
@@ -378,7 +377,7 @@ def normalized_costs(values: dict[str, float]) -> dict[str, float]:
 
 def format_radar_value(metric: str, value: float, max_horizon: int) -> str:
     if metric == "Scalability":
-        return f"H={max_horizon}"
+        return "TBD" if max_horizon is None else f"H={max_horizon}"
     if not math.isfinite(value):
         return "n/a"
     if metric == "Latency":
@@ -419,9 +418,9 @@ def _plot_points(ax, rows: list[dict[str, str]], tinympc_power_w: float) -> None
             zorder=3,
         )
         if estimated:
-            ax.annotate("*", (f(row, "horizon"), latency), xytext=(0, 2),
-                        textcoords="offset points", ha="center", va="center",
-                        color="#333333", fontsize=11, zorder=4)
+            # A centered marker avoids the font baseline offset of a text asterisk.
+            ax.scatter(f(row, "horizon"), latency, marker=r"$\ast$", s=45,
+                       color="#333333", linewidths=0, zorder=4)
 
 
 def plot_headline(
@@ -451,7 +450,7 @@ def plot_headline(
     # Thin only the display; keep every valid row for comparisons and statistics.
     right_rows = []
     for arch in ARCH_ORDER:
-        candidates = sorted((r for r in rows if r["arch"] == arch and f(r,"horizon") >= 140),
+        candidates = sorted((r for r in rows if r["arch"] == arch and f(r,"horizon") >= 110),
                             key=lambda r: f(r,"horizon"))
         picked = []
         for row in candidates:
@@ -462,7 +461,23 @@ def plot_headline(
                 picked[-1] = candidates[-1]
             else:
                 picked.append(candidates[-1])
-        right_rows.extend(picked)
+        # Align staged with Wu's largest shared horizon rather than thinning
+        # their nearby endpoints independently (e.g. H1000 versus H1023).
+        if arch == "staged_fused":
+            wu_horizons = {f(r, "horizon") for r in rows if r["arch"] == "tinympc_fpga_float"}
+            shared = [r for r in candidates if f(r, "horizon") in wu_horizons]
+            if shared:
+                endpoint = shared[-1]
+                nearby = [i for i, r in enumerate(picked)
+                          if abs(f(r, "horizon") - f(endpoint, "horizon")) < 140]
+                if nearby:
+                    closest = min(nearby, key=lambda i: abs(f(picked[i], "horizon") - f(endpoint, "horizon")))
+                    picked[closest] = endpoint
+                else:
+                    picked.append(endpoint)
+                picked.sort(key=lambda r: f(r, "horizon"))
+        right_rows.extend(r for r in picked
+                          if not (r["arch"] == "full_sparse" and f(r, "horizon") in (120, 400)))
 
     fig, (left_ax, right_ax) = plt.subplots(
         1,
@@ -485,9 +500,9 @@ def plot_headline(
         ax.spines["bottom"].set_linewidth(1.1)
 
     left_ax.set_xlim(2, 102)
-    right_ax.set_xlim(140, 1880)
+    right_ax.set_xlim(110, 1880)
     left_ax.set_xticks(list(range(10, 101, 10)))
-    right_ax.set_xticks([160, 400, 800, 1200, 1500, 1800])
+    right_ax.set_xticks([120, 400, 800, 1200, 1500, 1800])
 
     y_ticks = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50]
     left_ax.yaxis.set_major_locator(FixedLocator(y_ticks))
@@ -514,9 +529,91 @@ def plot_headline(
     right_ax.plot((-break_size, +break_size), (1 - break_size, 1 + break_size),
                   transform=right_ax.transAxes, **break_style)
 
+    # Direct callouts retain the original plot's explanation of each mapping.
+    by_arch = {arch: {int(f(r, "horizon")): r for r in rows if r["arch"] == arch}
+               for arch in ARCH_ORDER}
+    staged = by_arch["staged_fused"]
+
+    def callout(ax, arch, horizon, label, position):
+        row = by_arch[arch][horizon]
+        ax.annotate(label, xy=(horizon, f(row, "solve_us_cfg_clk") / 1000),
+                    xytext=position, color=COLORS[arch], fontsize=10,
+                    fontweight="semibold", ha="left", va="top",
+                    arrowprops={"arrowstyle": "-", "color": COLORS[arch], "lw": 1.2},
+                    bbox={"fc": "white", "ec": "none", "alpha": 0.85, "pad": 1.5},
+                    zorder=5)
+
+    common = sorted(staged.keys() & by_arch["tinympc_e"].keys())
+    speedups = [f(by_arch["tinympc_e"][h], "solve_us_cfg_clk") /
+                f(staged[h], "solve_us_cfg_clk") for h in common]
+    callout(left_ax, "tinympc_e", max(common),
+            f"TinyMPC MCU: {min(speedups):.1f}–{max(speedups):.1f}× slower\nthan AccelMPC staged", (36, 95))
+    # Magnify the short-horizon FPGA region; preserve energy ratios within inset.
+    zoom = left_ax.inset_axes([0.35, 0.065, 0.60, 0.27])
+    zoom.set_facecolor("white")
+    zoom.set_yscale("log")
+    zoom.set_xlim(3, 22)
+    zoom.set_ylim(0.07, 4.5)
+    zoom.set_xticks([5, 10, 20])
+    zoom.set_yticks([0.1, 0.3, 1.0])
+    zoom.yaxis.set_major_formatter(FuncFormatter(lambda value, _pos: f"{value:g}"))
+    zoom.yaxis.set_minor_formatter(NullFormatter())
+    zoom.tick_params(labelsize=8, pad=1)
+    zoom.grid(True, which="major", color="#E5E5E5", linewidth=.6)
+    zoom_rows = [r for r in rows if r["arch"] in
+                 ("staged_fused", "full_sparse", "tinympc_fpga_float") and f(r, "horizon") <= 20]
+    for row in sorted(zoom_rows, key=lambda r: energy_mj(r, tinympc_power_w), reverse=True):
+        zoom.scatter(f(row, "horizon"), comparison_latency_us(row) / 1000,
+                     s=9 * ENERGY_AREA_SCALE * energy_mj(row, tinympc_power_w),
+                     color=COLORS[row["arch"]], alpha=.78,
+                     edgecolor="white", linewidth=.35, zorder=3)
+    zoom.text(.03, .97, "FPGA close-up\nBubble areas ×9", transform=zoom.transAxes,
+              ha="left", va="top", fontsize=9, color="#555555")
+    right_ax.text(.05, .20,
+                 "AccelMPC staged: lowest latency,\nlowest energy per solve,\nlargest supported horizon",
+                 transform=right_ax.transAxes, ha="left", va="center",
+                 fontsize=10, color=COLORS["staged_fused"], fontweight="semibold",
+                 bbox={"fc": "white", "ec": "none", "alpha": .85, "pad": 1.5},
+                 zorder=6)
+    zoom.set_xlabel("H", fontsize=8, labelpad=-4)
+    zoom.set_ylabel("ms", fontsize=8, labelpad=1)
+    # Link the actual data region (excluding inset caption headroom) to the zoom.
+    from matplotlib.patches import Rectangle, ConnectionPatch
+    zoom_region = (3, 0.07, 19, 1.23)
+    left_ax.add_patch(Rectangle(zoom_region[:2], zoom_region[2], zoom_region[3],
+                                fill=False, edgecolor="#999999", linewidth=.7, zorder=2))
+    for source, destination in [((22, 1.3), (0, 1)), ((22, 0.07), (0, 0))]:
+        connector = ConnectionPatch(xyA=source, coordsA=left_ax.transData,
+                                    xyB=destination, coordsB=zoom.transAxes,
+                                    color="#AAAAAA", linewidth=.65, zorder=2)
+        left_ax.add_artist(connector)
+
+    right_ax.annotate(
+        "AccelMPC full-sparse\nLower compute resources\nWorks up to H=100\nwithout BRAM spillover",
+        xy=(100, f(by_arch["full_sparse"][100], "solve_us_cfg_clk") / 1000),
+        xycoords=left_ax.transData, xytext=(160, 85), textcoords=right_ax.transData,
+        color=COLORS["full_sparse"], fontsize=10, fontweight="semibold",
+        ha="left", va="top",
+        arrowprops={"arrowstyle": "-", "color": COLORS["full_sparse"], "lw": 1.2},
+        bbox={"fc": "white", "ec": "none", "alpha": .85, "pad": 1.5},
+        annotation_clip=False, zorder=5,
+    )
+    staged_h = max(staged)
+    callout(right_ax, "staged_fused", staged_h,
+            f"AccelMPC staged\nWorks up to H={staged_h}", (1300, 90))
+    common_wu = sorted(staged.keys() & by_arch["tinympc_fpga_float"].keys())
+    wu_speedups = [f(by_arch["tinympc_fpga_float"][h], "solve_us_cfg_clk") /
+                   f(staged[h], "solve_us_cfg_clk") for h in common_wu]
+    callout(right_ax, "tinympc_fpga_float", max(common_wu),
+            f"Wu et al. FPGA: {min(wu_speedups):.2f}–{max(wu_speedups):.2f}× slower\nthan AccelMPC staged",
+            (300, 2.2))
+    if by_arch["mobydic_small"]:
+        callout(left_ax, "mobydic_small", min(by_arch["mobydic_small"]),
+                "MOBY-DIC FPGA", (8, 42))
+
     from matplotlib.lines import Line2D
-    fig.legend(handles=[Line2D([], [], marker="o", linestyle="", color=COLORS[a], label=LABELS[a])
-                        for a in ARCH_ORDER], loc="upper center", ncol=3, frameon=False, fontsize=10)
+    fig.legend(handles=[Line2D([], [], marker="o", linestyle="", color=COLORS[a], label=LABELS[a].rstrip("*") if a == "mobydic_small" else LABELS[a])
+                        for a in ARCH_ORDER], loc="upper center", ncol=5, frameon=False, fontsize=10)
     legend_energies = [0.25, 2.5, 25.0]
     legend_handles = [
         left_ax.scatter([], [], s=ENERGY_AREA_SCALE * millijoules, color="#707070", alpha=0.35,
@@ -563,7 +660,7 @@ def plot_headline(
     #     fontsize=8.7,
     #     color="#555555",
     # )
-    fig.subplots_adjust(left=0.09, right=0.985, top=0.875, bottom=0.16)
+    fig.subplots_adjust(left=0.09, right=0.985, top=0.925, bottom=0.16)
 
     for output in (svg_output, png_output, pdf_output):
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -600,12 +697,12 @@ def plot_edp_bars(
     }
     horizons = [
         horizon
-        for horizon in range(10, 81, 10)
+        for horizon in [5, *range(10, 81, 10)]
         if any((arch, horizon) in rows_by_key and
                math.isfinite(edp_uj_us(rows_by_key[(arch, horizon)], tinympc_power_w))
                for arch in RADAR_ARCHES)
     ]
-    bar_order = ["tinympc_e", "full_sparse", "staged_a", "tinympc_fpga_float", "staged_fused"]
+    bar_order = ["tinympc_e", "tinympc_fpga_float", "staged_fused"]
     if not horizons:
         raise ValueError("No horizons have measured FPGA EDP and a TinyMPC baseline")
 
@@ -636,6 +733,16 @@ def plot_edp_bars(
             linewidth=0.8,
             zorder=3,
         )
+
+    # MOBY-DIC is available only at H5; do not reserve empty bars elsewhere.
+    if 5 in horizons and ("mobydic_small", 5) in rows_by_key:
+        idx = horizons.index(5)
+        mobydic = rows_by_key[("mobydic_small", 5)]
+        mobydic_x = idx + offsets["tinympc_e"] - bar_width
+        mobydic_edp = edp_uj_us(mobydic, tinympc_power_w)
+        ax.bar(mobydic_x, mobydic_edp, width=bar_width,
+               color=COLORS["mobydic_small"], alpha=.78,
+               label=LABELS["mobydic_small"].rstrip("*"), edgecolor="white", linewidth=.8, zorder=3)
 
     for arch in bar_order:
         for idx,h in enumerate(horizons):
@@ -670,11 +777,11 @@ def plot_edp_bars(
     for idx, horizon in enumerate(horizons):
         target = edp_by_arch["staged_fused"][idx]
         target_x = idx + offsets["staged_fused"]
-        for baseline, color, label_scale in [("tinympc_e", COLORS["staged_fused"], 0.5),
+        for baseline, color, label_scale in [("tinympc_e", COLORS["tinympc_e"], 0.5),
                                               ("tinympc_fpga_float", COLORS["tinympc_fpga_float"], 0.5)]:
             base = edp_by_arch[baseline][idx]
             top, bottom = base * .95, target * 1.08
-            x = target_x if baseline == "tinympc_e" else target_x - bar_width*.45
+            x = target_x + bar_width * .30 if baseline == "tinympc_e" else target_x
             ax.plot([idx+offsets[baseline]+bar_width/2, x], [top,top],
                     color=color, linewidth=1.25, linestyle="--", zorder=5)
             ax.annotate("",xy=(x,bottom),xytext=(x,top),
@@ -683,19 +790,21 @@ def plot_edp_bars(
             ratio = base/target
             label = f"{ratio:.0f}×" if baseline == "tinympc_e" else f"{ratio:.2f}×"
             ax.annotate(label, xy=(x, bottom*(top/bottom)**label_scale),
-                        xytext=(0,0),textcoords="offset points",color=color,
-                        fontsize=11,fontweight="semibold",ha="center",va="center",
+                        xytext=(-9, 0) if baseline == "tinympc_fpga_float" else (0, 0),
+                        textcoords="offset points",color=color,
+                        fontsize=11,fontweight="semibold",
+                        ha="right" if baseline == "tinympc_fpga_float" else "center",va="center",
                         bbox={"boxstyle":"round,pad=0.14","fc":"white","ec":color,
                               "alpha":.9,"linewidth":.55},zorder=6)
-    fig.text(0.5, 0.025, "Arrows: EDP reduction to fused FPGA. MCU energy uses nominal active power.",
+    fig.text(0.5, 0.025, "Arrows: EDP reduction to AccelMPC staged. MCU energy uses nominal active power.",
              ha="center", fontsize=10)
 
     legend = ax.legend(
-        loc="upper center", bbox_to_anchor=(0.5, 1.24),
+        loc="lower center", bbox_to_anchor=(0.5, 1.005),
         frameon=False,
         fancybox=False,
         edgecolor="#D0D0D0",
-        fontsize=11, ncol=3,
+        fontsize=11, ncol=4,
     )
     legend.get_frame().set_linewidth(0.8)
     legend.get_frame().set_facecolor("white")
@@ -745,10 +854,11 @@ def plot_solver_radar(
         raise ValueError(f"No timing-clean H={horizon} radar rows for: {', '.join(missing)}")
 
     max_horizons = {
-        arch: max(int(f(row, "horizon")) for row in rows if row.get("arch") == arch)
+        arch: (None if selected[arch].get("max_horizon_status") == "TBD" else
+               max(int(f(row,"horizon")) for row in rows if row["arch"] == arch))
         for arch in RADAR_ARCHES
     }
-    best_horizon = max(max_horizons.values())
+    best_horizon = max(h for h in max_horizons.values() if h is not None)
 
     raw_by_arch = {}
     for arch, row in selected.items():
@@ -758,13 +868,16 @@ def plot_solver_radar(
         energy = energy_mj(row, tinympc_power_w)
         if not all(math.isfinite(value) and value > 0 for value in (latency_ms, energy)):
             raise ValueError(f"Missing measured radar latency/energy for {arch}, H={horizon}")
+        if not all(math.isfinite(f(row,k)) and f(row,k) > 0
+                   for k in ("solver_luts_used", "solver_bram_tiles_used")):
+            raise ValueError(f"Missing matched solver/SPI resources for {arch}")
         raw_by_arch[arch] = {
             "Latency": latency_ms,
             "Energy/solve": energy,
             "EDP": energy * 1000.0 * latency_ms,
-            "BRAM": f(row, "route_bram_tile_util_pct"),
-            "Logic": f(row, "route_slice_luts_util_pct"),
-            "Scalability": best_horizon / max_horizons[arch],
+            "BRAM": f(row,"solver_bram_tiles_used") / 135 * 100,
+            "Logic": f(row,"solver_luts_used") / 63400 * 100,
+            "Scalability": best_horizon / max_horizons[arch] if max_horizons[arch] else math.nan,
         }
 
     metrics = list(RADAR_METRIC_UNITS)
@@ -772,6 +885,10 @@ def plot_solver_radar(
         metric: normalized_costs({arch: raw_by_arch[arch][metric] for arch in RADAR_ARCHES})
         for metric in metrics
     }
+
+    # Compress the BRAM spoke equally for both mappings; retain actual percentages.
+    for arch in RADAR_ARCHES:
+        norm_by_metric["BRAM"][arch] *= 0.8
 
     angles = np.linspace(0, 2 * np.pi, len(metrics), endpoint=False).tolist()
     angles += angles[:1]
@@ -797,22 +914,32 @@ def plot_solver_radar(
             label=LABELS[arch],
             zorder=3,
         )
-        ax.fill(angles, values, color=COLORS[arch], alpha=0.13, zorder=2)
-    label_positions = {
-        "Latency": [(0.04,.38),(-.12,.86),(.08,1.06)],
-        "Energy/solve": [(-.04,.42),(-.11,.90),(.08,1.06)],
-        "EDP": [(0,.20),(-.10,.89),(.08,1.07)],
-        "BRAM": [(0,.73),(.03,.42),(0,1.06)],
-        "Logic": [(0,1.06),(.04,.82),(-.04,.35)],
-        "Scalability": [(-.18,.16),(.08,.34),(0,.92)],
+        # Leave the unknown horizon open instead of inventing a radius.
+        if all(max_horizons[a] is not None for a in RADAR_ARCHES):
+            ax.fill(angles, values, color=COLORS[arch], alpha=0.13, zorder=2)
+    # Anchor labels to the actual data points; offsets are in display points.
+    # Separate the nearly coincident BRAM labels to either side of the spoke.
+    label_offsets = {
+        "Latency": [(0, 9), (0, 9)],
+        "Energy/solve": [(8, 5), (8, 5)],
+        "EDP": [(7, -9), (7, -9)],
+        "BRAM": [(9, -7), (-9, 7)],
+        "Logic": [(-8, -5), (-8, -5)],
+        "Scalability": [(-8, 6), (-8, 6)],
     }
     for i, metric in enumerate(metrics):
         for j, arch in enumerate(RADAR_ARCHES):
-            theta, radius = label_positions[metric][j]
-            ax.text(angles[i]+theta, radius,
-                    format_radar_value(metric,raw_by_arch[arch][metric],max_horizons[arch]),
-                    color=COLORS[arch],fontsize=10,fontweight="semibold",ha="center",va="center",
-                    bbox={"boxstyle":"round,pad=0.12","fc":"white","ec":"none","alpha":.85},zorder=6)
+            dx, dy = label_offsets[metric][j]
+            radius = norm_by_metric[metric][arch]
+            ax.annotate(
+                format_radar_value(metric, raw_by_arch[arch][metric], max_horizons[arch]),
+                xy=(angles[i], radius), xytext=(dx, dy), textcoords="offset points",
+                color=COLORS[arch], fontsize=10, fontweight="semibold",
+                ha="left" if dx > 0 else "right" if dx < 0 else "center",
+                va="bottom" if dy > 0 else "top",
+                bbox={"boxstyle": "round,pad=0.12", "fc": "white", "ec": "none", "alpha": .85},
+                zorder=6,
+            )
     ax.set_xticks(angles[:-1])
     ax.set_xticklabels([])
     label_distances = {
@@ -953,7 +1080,7 @@ def write_publication_numbers(rows, output, tinympc_power_w):
     by_key = {(r["arch"], int(f(r,"horizon"))): r for r in rows}
     numbers = {}
     for baseline, prefix in [("tinympc_e","MCU"), ("tinympc_fpga_float","Wu"),
-                             ("mobydic_small","Moby"), ("staged_a","Staged")]:
+                             ("mobydic_small","Moby"), ("full_sparse","FullSparse")]:
         pairs = [(base, by_key[("staged_fused", h)]) for (arch,h),base in by_key.items()
                  if arch == baseline and ("staged_fused",h) in by_key
                  and by_key[("staged_fused",h)]["energy_source"] == "board_core_plus_estimated_aux_io"
@@ -966,7 +1093,7 @@ def write_publication_numbers(rows, output, tinympc_power_w):
                                ("EDP",lambda r: edp_uj_us(r,tinympc_power_w))]:
             ratios = [getter(base)/getter(fused) for base,fused in pairs]
             for suffix, value in [("Min",min(ratios)),("Max",max(ratios))]:
-                precision = 2 if prefix in ("Wu","Staged") else (0 if metric == "EDP" else 1)
+                precision = 2 if prefix in ("Wu","FullSparse") else (0 if metric == "EDP" else 1)
                 numbers[prefix+metric+suffix] = f"{value:.{precision}f}"
     largest = max((r for r in rows if r["arch"] == "staged_fused"),key=lambda r:f(r,"horizon"))
     h = int(f(largest,"horizon"))

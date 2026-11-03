@@ -26,12 +26,14 @@ from quadrotor import problem, cases, declaration
 def main():
     ap=argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--hls-include',type=Path,required=True)
+    ap.add_argument('--validation-dir', type=Path, required=True, help='prepare.py outputs h5/numerical.json and h10/numerical.json')
+    ap.add_argument('--output', type=Path, default=HERE/'output/quality.json')
     args=ap.parse_args()
     results=[]
     for H in [5,10]:
         P,E,G,h,order,_,model=problem(H)
         cs=cases(H,order)
-        tiny=json.loads((HERE/f'validation/h{H}.json').read_text())
+        tiny=json.loads((args.validation_dir/f'h{H}/numerical.json').read_text())
         with tempfile.TemporaryDirectory(prefix='accel-quality-') as tmp:
             work=Path(tmp)
             scripts=work/'scripts'; scripts.mkdir()
@@ -77,7 +79,8 @@ def main():
         initialization_note='Host automatic storage forced to zero for deterministic cold-start emulation; without this flag the ap_fixed host test failed the zero-input sanity check. Solver source is unchanged. These are host diagnostics, not RTL quality validation.',
         basis='Four cold-start cases; unchanged fixed-point staged ADMM_benchmark_solve; OSQP uses AccelMPC objective. TinyMPC retains different terminal and rho/reference weighting. Not evidence of equal-quality latency or closed-loop superiority.',results=results,
         sources={name:hashlib.sha256((ROOT/'vitis_projects/ADMM'/name).read_bytes()).hexdigest() for name in ['ADMM.cpp','ADMM.h','data_types.h']})
-    (HERE/'comparison/quality.json').write_text(json.dumps(report,indent=2)+'\n')
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(results,indent=2))
 
 if __name__=='__main__':main()
