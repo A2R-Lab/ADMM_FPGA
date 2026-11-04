@@ -47,15 +47,19 @@ class CampaignTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             path = Path(d)/'benchmarks.csv'
             path.write_text(
-                'arch,horizon,admm_iters,timing_clean,solve_us_cfg_clk,route_power_total_w,vivado_impl_variant\n'
-                'full_sparse,20,10,1,200,0.2,slow\n'
-                'full_sparse,20,10,1,100,0.3,fast\n'
-                'full_sparse,20,10,0,50,0.1,timing_failure\n'
-                'staged_a,40,5,1,50,0.1,wrong_iterations\n'
-                'tinympc_e,40,10,1,50,0.1,cpu\n')
+                'arch,horizon,admm_iters,timing_clean,solve_us_cfg_clk,route_power_total_w,vivado_impl_variant,clock_mhz,status,resource_scope\n'
+                'full_sparse,20,10,1,200,0.2,slow,100,pass,instrumented\n'
+                'full_sparse,20,10,1,100,0.3,fast,100,pass,instrumented\n'
+                'full_sparse,20,10,0,50,0.1,timing_failure,100,pass,instrumented\n'
+                'staged_fused,40,5,1,50,0.1,wrong_iterations,100,pass,instrumented\n'
+                'staged_a,40,10,1,50,0.1,historical,100,pass,instrumented\n'
+                'staged_fused,1800,10,1,50,0.1,solver_only,100,pass,uninstrumented\n'
+                'staged_fused,40,10,1,50,,baseline,100,pass,instrumented\n'
+                'tinympc_e,40,10,1,50,0.1,cpu,100,pass,instrumented\n')
             points = c.matrix(path)
-            self.assertEqual(len(points), 1)
+            self.assertEqual(len(points), 2)
             self.assertEqual(points[0]['variant'], 'fast')
+            self.assertEqual(points[1]['id'], 'staged_a_h40_k10')
 
     def test_counts_cover_workload_and_active_window(self):
         for latency in (1000, 84041, 10000000):

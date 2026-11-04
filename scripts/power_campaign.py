@@ -103,17 +103,19 @@ def clean_environment():
 
 
 def matrix(path):
-    # Same latency/power/stable-order ranking as paper best_rows, without its
-    # presentation exclusions. No dependency on plotting packages during acquisition.
+    # Reproduce current instrumented configurations, excluding historical mappings
+    # and solver-only builds that may not fit the measurement instrumentation.
     best = {}
     with Path(path).open(newline='') as f:
         for row in csv.DictReader(f):
-            if row['arch'] not in ('full_sparse', 'staged_a') or row['timing_clean'] != '1':
+            if row['arch'] not in ('full_sparse', 'staged_fused') or row['timing_clean'] != '1':
                 continue
-            if int(row['admm_iters']) != 10:
+            if (int(row['admm_iters']) != 10 or float(row['clock_mhz']) != 100
+                    or row['status'] != 'pass' or row['resource_scope'] != 'instrumented'):
                 continue
-            key = row['arch'], int(row['horizon'])
-            score = float(row['solve_us_cfg_clk']), float(row['route_power_total_w'])
+            arch = 'staged_a' if row['arch'] == 'staged_fused' else 'full_sparse'
+            key = arch, int(row['horizon'])
+            score = float(row['solve_us_cfg_clk']), float(row.get('measured_power_w') or row.get('route_power_total_w') or 'inf')
             if key not in best or score < best[key][0]:
                 best[key] = score, row
     points = []
@@ -150,7 +152,7 @@ def source_files(root):
     files += [root / p for p in ('vitis_projects/ADMM/Makefile',
                                  'scripts/power_synthetic_states.csv',
                                  'scripts/requirements.txt',
-                                 'evaluation/data/benchmark_summary.csv')]
+                                 'evaluation/data/benchmarks.csv')]
     for p in files:
         if p.is_symlink():
             raise ValueError(f'Symlinks are not allowed in source snapshot: {p}')
@@ -167,13 +169,13 @@ def prepare(args):
         raise ValueError('--horizons requires --compact-full-sparse')
     hashes = {str(p.relative_to(ROOT)): sha(p) for p in files}
     payload = {'schema': 1, 'source_hashes': hashes,
-               'points': comparison_matrix() if args.comparison else matrix(ROOT / 'evaluation/data/benchmark_summary.csv'),
+               'points': comparison_matrix() if args.comparison else matrix(ROOT / 'evaluation/data/benchmarks.csv'),
                'clock_hz': 100_000_000, 'trajectory': False,
                'workload_records': 256, 'repetitions': 3, 'settle_s': 5,
                'idle_s': 3, 'target_active_s': 2, 'minimum_solves': 1024,
                'smoke_ids': ['tinympc_fpga_h40_k10','staged_a_h40_k10','tinympc_fpga_h10_k10','staged_a_h10_k10'] if args.comparison else list(SMOKE), 'parameter_policy': 'frozen source defaults; sanitized environment'}
     if compact:
-        payload['points'] = [point for point in matrix(ROOT / 'evaluation/data/benchmark_summary.csv')
+        payload['points'] = [point for point in matrix(ROOT / 'evaluation/data/benchmarks.csv')
                              if point['arch'] == 'full_sparse']
         payload['smoke_ids'] = ['full_sparse_h10_k10', 'full_sparse_h40_k10']
         if getattr(args, 'horizons', None):
@@ -706,10 +708,10 @@ def main():
         s=sub.add_parser(cmd)
         s.add_argument('--campaign',type=Path,required=True)
         if cmd=='prepare':
-            s.add_argument('--horizons', help='Comma-separated compact full_sparse horizons; default: historical sweep')
+            s.add_argument('--horizons', help='Comma-separated compact full_sparse horizons; default: current instrumented configurations')
             group = s.add_mutually_exclusive_group()
             group.add_argument('--comparison',action='store_true',help='Full staged_a/TinyMPC 100 MHz sweep')
-            group.add_argument('--compact-full-sparse',action='store_true',help='Compact full_sparse at all historical full_sparse horizons')
+            group.add_argument('--compact-full-sparse',action='store_true',help='Compact full_sparse at current instrumented full_sparse horizons')
         if cmd in ('preflight','build'):
             s.add_argument('--threads',type=int,default=8,help='Vivado thread cap; 0 leaves tool defaults unrestricted by the campaign')
             s.add_argument('--jobs',type=int)

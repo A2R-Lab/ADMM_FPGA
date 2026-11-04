@@ -329,9 +329,6 @@ styles in the source scripts; exported figures should be regenerated.
 The committed [Arty power measurements](../docs/power.md) report core/BRAM rail power.
 Current publication results are consolidated in [benchmarks.csv](data/benchmarks.csv);
 use the [Arty comparison workflow](../docs/arty_comparison.md) for new measurements.
-The historical [Arty power measurements CSV](data/arty_power_measurements.csv) contains the
-campaign summary for 42 planned configurations: 24 measured with three valid
-repetitions each and 18 marked failed.
 
 MOBY-DIC baseline: see [comparison and reproduction](mobydic/README.md).
 
