@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import sys
 from PIL import Image, ImageChops, ImageDraw, ImageFont
+from benchmark_evidence import benchmark_evidence
 
 ROOT = Path(__file__).resolve().parent
 WORK = ROOT / "generated_accelmpc_assets"
@@ -32,7 +33,7 @@ FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
 TIMINGS = {
-    "cover": 7, "system": 12, "hardware": 6,
+    "cover": 7, "system": 12, "hardware": 6, "benchmark": 20,
     "nominal": 10, "star": 26, "dynamic": 38, "closing": 16.5,
 }
 
@@ -305,7 +306,7 @@ def evidence_assets():
                     'method':'Nearest reference polyline segment in XY; state_x/y; rows [500:1300]; historical plot translation (-0.383558,+0.598284) m; not time-synchronized tracking error.',
                     'sources':{name:hashlib.sha256((data/name).read_bytes()).hexdigest() for name in ['figure8_ref_trajectory.csv','figure8_fpga_trajectory.csv']}},
         'dynamic': dynamic,
-        'benchmark': {'speedup': 15.6, 'edp_improvement': 231.5, 'source': 'paper/tex/5_exp_eval.tex'},
+        'benchmark': benchmark_evidence(),
         'star':[{ 'id':v['spec']['id'],'tracking':v['tracking'],'constraint':v['metrics']['xy_any']} for v in results]}
     (WORK/'video_metrics.json').write_text(json.dumps(report,indent=2)+'\n')
     return rms,p95,results,dynamic
@@ -347,32 +348,90 @@ def render_demo(kind,out,duration):
     filters += ['[v0][v1]vstack=inputs=2,pad=1920:1080:0:120:color=#09121f[base]', '[base][2:v]overlay=0:0:format=auto,format=yuv420p[out]']
     run([FFMPEG,'-y','-loglevel','error',*inputs,'-loop','1','-i',str(WORK/f'{kind}_ov.png'),'-filter_complex',';'.join(filters),'-map','[out]','-t',str(duration),'-an','-r',str(FPS),'-c:v','libx264','-preset','medium','-crf','18',str(out)])
 
+def benchmark_card(path):
+    """Video-sized adaptation of the paper's latency/energy bars at H40."""
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import ScalarFormatter
+    from paper_figures import COLOR
+    evidence = benchmark_evidence()
+    designs = evidence['designs']
+    labels = ['TinyMPC / MCU', 'Wu et al. / FPGA', 'AccelMPC full_sparse', 'AccelMPC staged']
+    with plt.rc_context({'font.family': 'DejaVu Sans', 'font.size': 22,
+                         'text.color': '#f5f7fa', 'axes.labelcolor': '#f5f7fa',
+                         'xtick.color': '#aebbca', 'ytick.color': '#f5f7fa'}):
+        fig, axes = plt.subplots(1, 2, figsize=(17.6, 5.4), dpi=100, sharey=True)
+        fig.patch.set_facecolor('#09121f')
+        for ax, key, title, ticks in zip(axes, ('latency_ms', 'energy_mj'),
+                                       ('Solve latency [ms]', 'Energy per solve [mJ]'),
+                                       ([0.1, 1, 10, 100], [0.1, 1, 10])):
+            ax.set_facecolor('#09121f')
+            values = [v[key] for v in designs.values()]
+            ax.barh(range(4), values, color=[COLOR[a] for a in designs], height=.55)
+            ax.set_xscale('log')
+            ax.set_xlim(.1, 100 if key == 'latency_ms' else 20)
+            ax.set_xticks(ticks)
+            ax.xaxis.set_major_formatter(ScalarFormatter())
+            ax.minorticks_off()
+            ax.set_title(title, fontsize=27, pad=22)
+            ax.set_yticks(range(4), labels)
+            ax.tick_params(axis='y', length=0, pad=15)
+            ax.grid(axis='x', color='#425063', alpha=.45)
+            ax.set_axisbelow(True)
+            ax.spines[['top','right','left']].set_visible(False)
+            ax.spines['bottom'].set_color('#425063')
+            for y, value in enumerate(values):
+                ax.text(value*1.12,y,f'{value:.3f}',va='center',fontsize=22)
+        axes[0].invert_yaxis()
+        fig.subplots_adjust(left=.25, right=.97, top=.83, bottom=.14, wspace=.24)
+        fig.savefig(WORK/'benchmark_plot.png', dpi=100)
+        plt.close(fig)
+    im = Image.new('RGBA', (W,H), BG)
+    im.alpha_composite(Image.open(WORK/'benchmark_plot.png').convert('RGBA'), (80,190))
+    d = ImageDraw.Draw(im)
+    text(d,(80,50),'Solver benchmarks / improved implementations',54,WHITE,True)
+    text(d,(85,135),'H = 40 · k = 10 iterations · Lower is better · Logarithmic axes',32,AMBER)
+    text(d,(85,750),'Staged: low latency / energy · full_sparse: lower logic usage',34,WHITE,True)
+    lines(d,85,825,[
+        'FPGA: measured Arty core/BRAM energy + estimated auxiliary/I/O. MCU: nominal active power.',
+        'Solve only: excludes communication, host processing and board support circuitry.',
+        # 'Different numerical formulations; ten iterations do not establish equal solution accuracy.',
+        # 'Adapted from paper benchmark data. Following flights use the historical implementations.'
+    ],27,MUTED,step=43)
+    im.save(path)
+
+
 def closing(path):
     from PIL import ImageOps
-    def frame(source, seconds, name, transform=None):
-        target = WORK/name
-        args = [FFMPEG, '-y', '-loglevel', 'error', '-ss', str(seconds), '-i', str(source)]
-        if transform:
-            args += ['-vf', transform]
-        run(args + ['-frames:v', '1', str(target)])
-        return Image.open(target).convert('RGB')
-    dynamic = frame(SOURCES['dynamic'], DYNAMIC_START+18, 'closing_dynamic.png')
-    recap = Image.open(ROOT.parent/'paper/img/real_deployment_overlay.png').convert('RGB')
-    def fit(canvas, photo, box):
-        photo = ImageOps.contain(photo, (box[2]-box[0], box[3]-box[1]), Image.Resampling.LANCZOS)
-        canvas.paste(photo, (box[0]+(box[2]-box[0]-photo.width)//2,
-                             box[1]+(box[3]-box[1]-photo.height)//2))
     im = Image.new('RGBA', (W,H), BG)
-    fit(im,recap,(900,190,1830,580))
-    fit(im,dynamic,(900,650,1830,1000))
+    # Repository-local recap assets avoid requiring a separate paper checkout.
+    for source, seconds, transform, name, box in [
+        (ROOT/'constrainedStar.png', None, None, 'closing_star.png', (930,190,1830,580)),
+        (SOURCES['dynamic'], DYNAMIC_START+18, None, 'closing_dynamic.png', (930,650,1830,1000))
+    ]:
+        target = source
+        if seconds is not None:
+            target = WORK/name
+            command = [FFMPEG, '-y', '-loglevel', 'error', '-ss', str(seconds), '-i', str(source)]
+            if transform:
+                command += ['-vf', transform]
+            run(command + ['-frames:v','1',str(target)])
+        photo = ImageOps.contain(Image.open(target).convert('RGB'),
+                                (box[2]-box[0],box[3]-box[1]), Image.Resampling.LANCZOS)
+        im.paste(photo,(box[0]+(box[2]-box[0]-photo.width)//2,box[1]+(box[3]-box[1]-photo.height)//2))
     d = ImageDraw.Draw(im)
     text(d,(100,170),'AccelMPC',82,WHITE,True)
     text(d,(105,290),'Thank you for watching',40,AMBER)
-    lines(d,105,440,['Solver benchmarks vs TinyMPC on MCU','','Up to 15.6× faster','Up to 231.5× lower','energy-delay product'],32,step=54)
-    text(d,(105,735),'Solve-only comparison',25,MUTED)
-    text(d,(900,135),'Constrained tracking',32,AMBER,True)
-    text(d,(900,605),'Dynamic obstacle avoidance',32,AMBER,True)
-    # Bottom left remains available for a QR code after deanonymization.
+    r = benchmark_evidence()['ratios']['tinympc_e']
+    lines(d,105,440,[
+        'Improved staged vs TinyMPC MCU', '',
+        f"{r['speedup']:.1f}× faster solves",
+        f"{r['edp_reduction']:.0f}× lower energy-delay product",
+    ],32,step=54)
+    lines(d,105,720,['H40 · 10 iterations · Solve only',
+                    'Measured FPGA rails + auxiliary/I/O estimates',
+                    'MCU energy: nominal active power'],25,MUTED,step=40)
+    text(d,(930,135),'Constrained tracking',32,AMBER,True)
+    text(d,(930,605),'Dynamic obstacle avoidance',32,AMBER,True)
     im.save(path)
 
 
@@ -393,6 +452,29 @@ def subtitle_phrase_start(path, phrase):
             hours, minutes, seconds = stamp.replace(',', '.').split(':')
             return int(hours)*3600 + int(minutes)*60 + float(seconds)
     raise ValueError(f'{phrase!r} must begin a cue in {path}; regenerate narration.')
+
+
+def continuous_subtitles(names, durations, offsets, directory):
+    """Shift chapter cues with the same offsets as the PCM soundtrack."""
+    import re
+    def seconds(stamp):
+        h, m, s = stamp.replace(',', '.').split(':')
+        return int(h)*3600 + int(m)*60 + float(s)
+    def stamp(seconds):
+        ms = round(seconds*1000)
+        return f"{ms//3600000:02}:{ms//60000%60:02}:{ms//1000%60:02},{ms%1000:03}"
+    cues, cursor = [], 0.0
+    for name in names:
+        for block in re.split(r'\n\s*\n', (directory/f'{name}.srt').read_text().strip()):
+            rows = block.splitlines()
+            start, end = [seconds(v) + cursor + offsets[name] for v in rows[1].split(' --> ')]
+            if start < 0 or end > sum(durations.values()):
+                raise ValueError(f'Subtitle outside timeline: {name}')
+            cues.append(f"{len(cues)+1}\n{stamp(start)} --> {stamp(end)}\n" + '\n'.join(rows[2:]))
+        cursor += durations[name]
+    target = WORK/'subtitles.srt'
+    target.write_text('\n\n'.join(cues)+'\n')
+    return target
 
 
 def main():
@@ -419,16 +501,17 @@ def main():
     cover(WORK/'cover.png')
     hardware(WORK/'hardware.png')
     system_card(WORK/'system.png')
+    benchmark_card(WORK/'benchmark.png')
     closing(WORK/'closing.png')
     tr, cv = star[0]['tracking'], star[0]['metrics']['xy_any']
     demo_overlay(WORK/'nominal_ov.png', 'Figure-eight / onboard MPC', [
         f'XY path deviation: {rms:.2f} cm RMS', # | P95 {p95:.2f} cm',
-        'FPGA: 20 step horizon, 28 ADMM iterations'
+        'FPGA: full_sparse, 20 step horizon, 28 ADMM iterations'
     ], WORK/'nominal_plot.png')
     demo_overlay(WORK/'star_ov.png', 'Constrained tracking / 1 kHz onboard MPC', [
         f'3D tracking {tr["rmse_cm"]:.2f} cm RMSE over feasible section of the reference', # | Feasible reference: {tr["coverage_percent"]:.2f}% of samples; fitted phase',
         f'Bound violation: RMS {cv["rms_violation_cm"]:.3f} cm | Maximum {cv["max_violation_cm"]:.2f} cm per axis',
-        '27 step horizon , 9 ADMM iterations | Square: allowed region.'
+        'staged_a, 27 step horizon , 9 ADMM iterations, Square: allowed region.'
     ], WORK/'star_plot.png')
     demo_overlay(WORK/'dynamic_ov.png', 'Moving obstacles / changing position limits', [
         'Motion capture: 120 Hz | Onboard MPC: 1 kHz',
@@ -451,8 +534,10 @@ def main():
             audio = args.narration_dir/f'{name}.wav'
             if not audio.is_file():
                 raise FileNotFoundError(audio)
-            tail = 0.4 if name in ('cover', 'system', 'hardware', 'star') else 1.0
-            duration = max(duration, math.ceil((media_duration(audio)+audio_offsets[name]+tail)*FPS)/FPS)
+            tail = 0.25 if name == 'benchmark' else 0.4 if name in ('cover', 'system', 'hardware', 'star') else 1.0
+            narrated_duration = math.ceil((media_duration(audio)+audio_offsets[name]+tail)*FPS)/FPS
+            # Cut promptly after the benchmark narration instead of holding for 20 seconds.
+            duration = narrated_duration if name == 'benchmark' else max(duration, narrated_duration)
         durations[name] = duration
     if len(names) > 1 and not 120 <= sum(durations.values()) <= 180:
         raise ValueError('Full cut must be 2–3 minutes; shorten narration or adjust TIMINGS.')
@@ -462,7 +547,7 @@ def main():
         out = WORK/f'narrated_{name}.mp4'
         if name == 'cover':
             render_cover(out, duration)
-        elif name in ('hardware', 'system', 'closing'):
+        elif name in ('hardware', 'system', 'benchmark', 'closing'):
             still_segment(WORK/f'{name}.png', duration, out)
         elif name == 'dynamic':
             # Play the experiment once. Any extra narration holds the final frame.
@@ -500,9 +585,11 @@ def main():
     destination.parent.mkdir(parents=True, exist_ok=True)
     concat = WORK/'concat.txt'
     concat.write_text(''.join("file '"+str(p.resolve()).replace("'", "'\\''")+"'\n" for p in segments))
+    subtitles = continuous_subtitles(names, durations, audio_offsets, args.narration_dir)
     run([FFMPEG, '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', str(concat),
-         '-i', str(mix), '-map', '0:v:0', '-map', '1:a:0',
-         '-c:v', 'copy', '-c:a', 'aac', '-t', str(total_duration), '-movflags', '+faststart', str(destination)])
+         '-i', str(mix), '-i', str(subtitles), '-map', '0:v:0', '-map', '1:a:0', '-map', '2:s:0',
+         '-c:v', 'copy', '-c:a', 'aac', '-c:s', 'mov_text', '-metadata:s:s:0', 'language=eng',
+         '-t', str(total_duration), '-movflags', '+faststart', str(destination)])
     (WORK/'audio_offsets.json').write_text(json.dumps(audio_offsets, indent=2)+'\n')
     (WORK/'timeline.json').write_text(json.dumps(durations, indent=2)+'\n')
     print(f'Wrote {destination} ({sum(durations.values())} seconds)')

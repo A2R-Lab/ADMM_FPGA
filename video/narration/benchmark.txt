@@ -1,0 +1,1 @@
+At horizon forty and ten iterations, the improved staged mapping offers the lowest latency and energy. Full sparse trades higher latency and energy for lower logic usage, making it an option for more resource-constrained deployments.
