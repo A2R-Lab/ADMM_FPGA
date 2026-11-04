@@ -70,8 +70,9 @@ Ten iterations do not imply equal solution accuracy.
 
 Publication energy combines measured core/BRAM energy with matching auxiliary/I/O
 estimates; it excludes board support circuitry, host processing and communication.
-Transaction latency includes adapter handshaking. EDP is energy times transaction
-latency. See [benchmark methodology](benchmarking.md) for the complete definitions.
+Solve latency is the on-chip start-to-completion cycle count divided by the
+clock frequency; no separate handshake penalty is added. EDP is energy times
+that latency. See [benchmark methodology](benchmarking.md) for the complete definitions.
 
 ## Dataset and figures
 

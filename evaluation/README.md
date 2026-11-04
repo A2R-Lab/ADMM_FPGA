@@ -13,9 +13,10 @@ and the scope of the supplied experiment data.
 
 The [benchmark CSV](data/benchmarks.csv) contains MCU timing measurements,
 implementation estimates and Arty measurements for valid completed points.
-The table uses the same row selection as `plot_benchmarks.py`, with the figure's
-explicit readability exclusions. The default comparison uses 10 iterations;
-the common-horizon resource comparison is H40. Publication plots select compact
+The table uses the same row selection as `plot_benchmarks.py`: timing-clean
+implementations, lowest latency then lowest power, with the figure's explicit
+readability exclusions. The default comparison uses 10 iterations; the
+common-horizon resource comparison is H40. Publication plots select compact
 `full_sparse` and improved staged (recorded as `staged_fused`; built with
 `staged_a`). Historical `full_sparse_original` and `staged_a` rows are excluded.
 
@@ -25,7 +26,7 @@ The latency/energy and EDP figures use measured Arty core/BRAM power
 plus matching estimated auxiliary/I/O supply contributions (VCCADC excluded because
 it is tied to ground in the custom PCB), with energy and EDP calculated using the
 campaign's measured solve latency. Bubble positions use measured FPGA
-latency where available and synthesis-derived latency otherwise.
+cycle counts where available and synthesis-derived timing otherwise.
 TinyMPC MCU uses its recorded timing and a 287.1 mW active-power estimate. Both energy
 and EDP exclude communication and board support circuitry. Asterisked bubbles use
 post-route estimates where instrumented measurement builds failed; unmeasured
@@ -33,9 +34,10 @@ AccelMPC configurations remain absent from the EDP comparison. The resource tabl
 they do not imply 1 kHz operation at the largest horizons. See [benchmark methodology](../docs/benchmarking.md#energy-and-timing-definitions)
 for measurement boundaries and the separate 100 µs feasibility reserve.
 The architecture radar uses measured latency and core/BRAM energy plus estimated
-auxiliary/I/O energy, matching the EDP comparison. Its BRAM/LUT utilization
-uses matching uninstrumented solver/SPI builds in the CSV's `solver_*` fields; maximum horizons are demonstrated compilation points,
-not proven capacity limits. The “Logic” axis is LUT
+auxiliary/I/O energy, matching the EDP comparison. Its BRAM/LUT utilization and
+maximum horizons come from implementation reports. Resource values use matching
+uninstrumented solver/SPI builds; horizons are demonstrated, not proven capacity
+limits. The “Logic” axis is LUT
 utilization as a percentage of the device's LUT capacity (36.7% staged versus
 12.0% full_sparse at H40); register utilization is reported separately in the table.
 
@@ -324,10 +326,10 @@ styles in the source scripts; exported figures should be regenerated.
 
 ## New power measurements
 
-Use the [Arty comparison workflow](../docs/arty_comparison.md) to collect new
-measurements. Current publication results are consolidated in
-[benchmarks.csv](data/benchmarks.csv). The historical
-[Arty power measurements CSV](data/arty_power_measurements.csv) contains the
+The committed [Arty power measurements](../docs/power.md) report core/BRAM rail power.
+Current publication results are consolidated in [benchmarks.csv](data/benchmarks.csv);
+use the [Arty comparison workflow](../docs/arty_comparison.md) for new measurements.
+The historical [Arty power measurements CSV](data/arty_power_measurements.csv) contains the
 campaign summary for 42 planned configurations: 24 measured with three valid
 repetitions each and 18 marked failed.
 

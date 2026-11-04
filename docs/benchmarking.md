@@ -62,23 +62,28 @@ It writes canonical CSVs, figures and a short source/settings record. Its
 
 ## Energy and timing definitions
 
-FPGA solve latency uses measured transaction latency where available; otherwise
-it uses HLS cycle count divided by the operating clock, subject to route timing
-closure. It excludes SPI and host processing. Measured transaction latency
-includes the measurement adapter's handshaking.
+Synthesis-derived FPGA solve latency is HLS cycle count divided by 100 MHz,
+subject to route timing closure. It excludes SPI and host processing.
+Latency coordinates use the on-chip start-to-completion cycle count divided by
+100 MHz where measured, and synthesis-derived latency otherwise.
 
 Both post-route power estimates and [Arty measurements](power.md) are provided.
 AccelMPC and TinyMPC FPGA (Wu et al.) use measured values where available;
 all 29 Wu FPGA points, H5 through H1023, are measured.
 The latency/energy and EDP figures use measured active
 core/BRAM rail power plus the auxiliary and I/O supply estimates
-from each configuration's matching post-route report. VCCADC is excluded as it
-is tied to ground in the custom PCB. FPGA EDP bars require measured core/BRAM
-power, except for the MOBY-DIC baseline estimate. The latency/energy plot
+from each configuration's matching post-route report. At the report's printed
+precision these contributions are 32.4 mW VCCAUX and 13.2 mW VCCO33 for all 68
+current measured configurations. VCCADC is excluded as it is tied to ground in the custom
+PCB. The EDP comparison requires measured core/BRAM power, except for the
+MOBY-DIC baseline estimate. The latency/energy plot
 uses post-route estimates for unmeasured AccelMPC configurations, marked by an
 asterisk. Each such bubble uses the matching synthesis-derived latency.
 
-The monitored core rail includes measurement instrumentation.
+The monitored core rail includes measurement instrumentation. Vivado estimates
+that this instrumentation and other non-solver dynamic power account for
+approximately 30% of total power consumption in staged H40 (28.5%; 46.9% for
+compact full_sparse and 25.7% for Wu FPGA at H40).
 We retain this overhead in the reported measurements, giving a conservative assessment
 of solver power rather than introducing uncertainty by subtracting an estimated
 contribution. The added estimates use total supply current (including static current).
@@ -111,18 +116,18 @@ python evaluation/plot_benchmarks.py --skip-trajectory
 python evaluation/summarize_results.py --benchmarks-only
 ```
 
-The consolidated CSV retains valid completed configurations and distinguishes
-measured energy from post-route estimates through `energy_source`. Measured
-energy already includes matching auxiliary/I/O contributions; raw reports are
-not required to regenerate the figures. MCU points use nominal power and have
-no asterisk.
+`evaluation/data/benchmarks.csv` stores measured core/BRAM energy in
+`raw_core_energy_uj` and the missing supply estimates in `estimated_aux_io_w`.
+The estimates were taken from the matching post-route supply reports using
+voltage times total current. The combined energy is already stored in the CSV;
+no separate preprocessing step is needed. MCU points use nominal power and
+have no asterisk.
 
 The architecture radar uses measured solve latency and measured core/BRAM energy
 plus estimated auxiliary/I/O energy, on the same basis as the EDP comparison.
 BRAM and LUT utilization use matching uninstrumented solver/SPI builds in the
 consolidated CSV's `solver_*` fields. Maximum demonstrated horizons are H400 for
-full_sparse and H1800 for staged, not proven capacity limits.
-The “Logic” axis is LUT utilization
+full_sparse and H1800 for staged, not proven capacity limits. The “Logic” axis is LUT utilization
 as a percentage of the device's LUT capacity. At H40 this is 36.7% for staged and
 12.0% for full_sparse. Missing measured latency, energy or matched resource fields
 causes radar generation to fail rather than silently use power estimates.
