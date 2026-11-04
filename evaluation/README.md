@@ -72,6 +72,18 @@ in watts. The percentage change is `100 * (50T / 100T - 1)`. The CSV also record
 
 ![Energy-delay product comparison](figures/benchmark_edp_bars.png)
 
+The paper's benchmark figures come from `evaluation/paper_figures.py`, which reads the same
+CSV: clustered latency, energy and EDP bars with ratios to `staged` (and the EDP of the FPGA
+designs at large horizons), the FPGA horizon sweep with energy-scaled markers, the 0.9 ms
+budget line and the block RAM ceilings, and the H40 radar with Wu et al. added on the
+instrumented-build resource basis.
+
+![Baseline comparison at H = 5 to 80](figures/fig1_dismissal_bars.png)
+
+![FPGA horizon sweep](figures/fig2_horizon_sweep.png)
+
+![H40 radar](figures/fig3_radar_h40.png)
+
 ## Numerical accuracy
 
 The current H27/k9 analysis uses the actual C++ solver and persistent warm starts.
