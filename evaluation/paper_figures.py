@@ -171,7 +171,7 @@ def figure1(rows):
     ax4 = fig.add_subplot(gs[0, 3])
     lo4, hi4 = draw(ax4, metrics[2][1], high, fpga, label_legend=False)
     ax4.set_ylim(lo4, hi4)
-    ax4.set_title("EDP (mJ·ms), FPGA designs\nat large horizons", fontsize=14)
+    ax4.set_title("EDP (mJ·ms), large horizons", fontsize=14)
     save(fig, "fig1_dismissal_bars")
 
 
