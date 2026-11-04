@@ -35,7 +35,7 @@ def main():
           f'{edp_uj_us(r, DEFAULT_TINYMPC_POWER_W) / 1e6:.3f}') for r in common],
     )
     benchmark += "\n\n" + table(
-        ["Matched H40 solver/SPI resources", "LUTs", "FFs", "BRAM tiles", "DSPs"],
+        ["Matched H40 solver resources", "LUTs", "FFs", "BRAM tiles", "DSPs"],
         [(LABELS[r["arch"]], *(r[k] for k in (
             "solver_luts_used", "solver_registers_used",
             "solver_bram_tiles_used", "solver_dsps_used")))

@@ -266,7 +266,7 @@ directory. The aggregate CSV records total solve cycles, not per-loop IIs.
 For current latency, energy and resource comparisons, see the
 [benchmark results](../evaluation/README.md#solver-benchmarks) and consolidated
 [benchmarks.csv](../evaluation/data/benchmarks.csv). The H40 resource comparison
-uses matching uninstrumented solver/SPI builds; latency and energy use the
+uses matching uninstrumented solver builds; latency and energy use the
 instrumented Arty measurements. Maximum horizons are demonstrated compilation
 points, not guarantees of operation at 1 kHz.
 

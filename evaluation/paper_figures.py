@@ -10,8 +10,8 @@ Figure 2 (fig2_horizon_sweep): solve latency versus horizon for the three FPGA d
 bubble area = energy per solve, the 0.9 ms budget line with the 1 kHz horizon capacities,
 and each design's block RAM ceiling.
 Figure 3 (fig3_radar_h40): H = 40 radar with staged, full-sparse and Wu et al. on the
-instrumented-build resource basis.
-Writes evaluation/output/paper_figures/*.{png,pdf}; copy the results into evaluation/figures/.
+uninstrumented solver resource basis.
+Writes evaluation/output/paper_figures/*.{png,pdf}; only PNG previews belong in evaluation/figures/.
 """
 import argparse
 import csv
@@ -64,6 +64,14 @@ def edp(r):
     return energy_uj(r) * latency_us(r)
 
 
+def feasible_horizon(fit):
+    """Estimated largest integer horizon satisfying the fitted solve budget."""
+    slope, intercept = fit
+    if slope <= 0 or not all(math.isfinite(v) for v in fit):
+        raise ValueError('A finite positive latency slope is required')
+    return max(0, math.floor((1000 * BUDGET_MS - intercept) / slope))
+
+
 def rows_for(rows, arch, scope=True):
     out = [r for r in rows if r["arch"] == arch and int(r["admm_iters"]) == 10
            and (not scope or arch not in INSTRUMENTED or r["resource_scope"] == "instrumented")]
@@ -104,7 +112,7 @@ def figure1(rows):
     width, gap = 0.8, 3.4
 
     def any_row(arch, h):
-        """Instrumented row if there is one, else the solver/SPI estimate (staged beyond H1023)."""
+        """Instrumented row if there is one, else the solver estimate (staged beyond H1023)."""
         r = at(rows, arch, h)
         if r is None:
             m = [x for x in rows if x["arch"] == arch and int(x["admm_iters"]) == 10 and int(x["horizon"]) == h]
@@ -193,13 +201,20 @@ def figure2(rows, fits):
             ax.scatter(hs, ys, marker="*", s=28, color="black", zorder=4)
         return hs, ys
 
+    # Thin dense horizon ranges on the log axis; retain each measured endpoint.
+    # This only thins displayed bubbles, not the CSV or the latency fits.
+    display_horizons = {5, 10, 20, 30, 40, 60, 80, 100, 150, 200, 300, 400, 500, 600, 800}
     for arch in ("full_sparse", "tinympc_fpga_float", "staged_fused"):
-        pts = rows_for(rows, arch)
+        all_pts = rows_for(rows, arch)
+        endpoint = int(all_pts[-1]["horizon"])
+        pts = [r for r in all_pts if int(r["horizon"]) in display_horizons | {endpoint}]
         hs, ys = bubbles(arch, pts)
         if arch == "staged_fused":
             extra = [r for r in rows if r["arch"] == arch and int(r["admm_iters"]) == 10
                      and r["resource_scope"] == "solver_spi" and int(r["horizon"]) > max(hs)]
             extra = sorted(extra, key=lambda r: int(r["horizon"]))
+            # Show one intermediate estimate as well as the demonstrated endpoint.
+            extra = [r for r in extra if int(r["horizon"]) == 1350 or r is extra[-1]]
             hs2, ys2 = bubbles(arch, extra, estimated=True)
             ax.annotate(f"largest demonstrated\nH = {hs2[-1]}", (hs2[-1], ys2[-1]), xytext=(4, -88), textcoords="offset points",
                         ha="right", fontsize=11.5, color=COLOR[arch], arrowprops=dict(arrowstyle="-", color=COLOR[arch], lw=0.8))
@@ -228,7 +243,7 @@ def figure2(rows, fits):
     ax.set_ylabel("Solve latency (ms)", fontsize=14)
     ax.tick_params(labelsize=12.5)
     ticks = [(5, "5", "black"), (10, "10", "black"), (100, "100", "black"), (200, "200", "black"), (500, "500", "black"),
-             (1000, "1000", "black"), (1800, "1800", "black")] + [(hm, f"{hm:.0f}", COLOR[a]) for a, hm in crossings.items()]
+             (1000, "1000", "black"), (1800, "1800", "black")] + [(hm, f"{math.floor(hm)}", COLOR[a]) for a, hm in crossings.items()]
     ticks.sort()
     ax.set_xticks([t[0] for t in ticks], [t[1] for t in ticks])
     for lab, (_, _, c) in zip(ax.get_xticklabels(), ticks):
@@ -236,7 +251,7 @@ def figure2(rows, fits):
         if c != "black":
             lab.set_fontweight("bold")
     ax.set_xticks([], minor=True)
-    ax.set_xlim(4, 2300)
+    ax.set_xlim(4, 2800)  # Leave room for the full H1800 energy bubble.
     ax.set_ylim(0.05, 120)
     names = {"staged_fused": "AccelMPC staged", "full_sparse": "AccelMPC full-sparse", "tinympc_fpga_float": "Wu et al."}
     handles = [Line2D([], [], marker="o", ls="", color=COLOR[a], ms=10, label=names[a]) for a in ("staged_fused", "full_sparse", "tinympc_fpga_float")]
@@ -254,9 +269,12 @@ def figure3(rows, fits):
     for a in archs:
         r = at(rows, a, h)
         s, b = fits[a]
+        if r is None or not all(math.isfinite(f(r, key)) and f(r, key) > 0
+                                for key in ("solver_luts_used", "solver_bram_tiles_used")):
+            raise ValueError(f"Missing uninstrumented H40 resources for {a}")
         raw[a] = {"Latency": latency_us(r) / 1e3, "Energy/solve": energy_uj(r) / 1e3, "EDP": edp(r) / 1e6,
-                  "Logic (LUT)": 100 * f(r, "route_slice_luts_used") / 63400, "Block RAM": 100 * f(r, "route_bram_tile_used") / 135,
-                  "1 kHz horizon": (1000 * BUDGET_MS - b) / s}
+                  "Logic (LUT)": 100 * f(r, "solver_luts_used") / 63400, "Block RAM": 100 * f(r, "solver_bram_tiles_used") / 135,
+                  "1 kHz horizon": feasible_horizon((s, b))}
     metrics = list(raw[archs[0]])
     # radial position: cost normalized to the worst design (1 = worst, smaller = better); capacity inverted
     norm = {}
@@ -277,7 +295,15 @@ def figure3(rows, fits):
     ax.set_xticklabels(metrics, fontsize=16)
     ax.tick_params(axis="x", pad=14)
     ax.grid(color="#d8d8d3")
-    offsets = {"staged_fused": 1.0, "full_sparse": 1.0, "tinympc_fpga_float": 1.0}
+    # Point offsets separate nearby values without shifting their data positions.
+    label_offsets = {
+        "Latency": [(-27.28, -13.6, 'left'), (4.32, -21.0, 'center'), (33.88, 14.72, 'right')],
+        "Energy/solve": [(-31.6, -13.68, 'left'), (-24.56, -19.4, 'left'), (-42.56, 18.48, 'left')],
+        "EDP": [(31.0, 15.0, 'right'), (-47.6, -13.44, 'left'), (-24.56, -15.76, 'left')],
+        "Logic (LUT)": [(-9.28, -6.16, 'right'), (0, -16, 'center'), (12.88, 4.72, 'left')],
+        "Block RAM": [(9.28, 10.4, 'left'), (11.6, -17.6, 'right'), (11.6, 15.76, 'right')],
+        "1 kHz horizon": [(6.56, -9.36, 'left'), (19.36, -16.24, 'right'), (10.72, 14.32, 'right')],
+    }
     for a in archs:
         vals = [norm[m][a] for m in metrics] + [norm[metrics[0]][a]]
         ang = list(angles) + [angles[0]]
@@ -286,13 +312,29 @@ def figure3(rows, fits):
         for m, th in zip(metrics, angles):
             v = norm[m][a]
             txt = fmt[m].format(raw[a][m] * (1000 if m == "EDP" else 1))
-            others = [norm[m][o] for o in archs if o != a]
-            crowded = any(abs(v - o) < 0.12 for o in others)
-            # stagger near-coincident labels: first design inside the point, the others outside
-            dr = -0.10 if (crowded and a == archs[0]) else 0.075 + (0.075 if (crowded and a == archs[2]) else 0)
-            ax.text(th, v + dr, txt, ha="center", va="center", fontsize=11.5, color=COLOR[a], fontweight="bold",
-                    bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.85))
-    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.11), ncol=3, frameon=False, fontsize=14, columnspacing=1.2, handlelength=1.6)
+            dx, dy, ha = label_offsets[m][archs.index(a)]
+            ax.annotate(txt, xy=(th, v), xytext=(dx, dy), textcoords="offset points",
+                        ha=ha, va="center", fontsize=11.5, color=COLOR[a], fontweight="bold",
+                        bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.85))
+    # Manually positioned axis titles, independent of the polar tick redraw.
+    axis_offsets = {
+        "Latency": (4.32, -11.52),
+        "Energy/solve": (26.64, 5.04),
+        "EDP": (0, -4.32),
+        "Logic (LUT)": (2.16, 6.48),
+        "Block RAM": (-30.24, -4.32),
+        "1 kHz horizon": (-33.12, 5.04),
+    }
+    fig.canvas.draw()
+    for tick in ax.get_xticklabels():
+        anchor = ax.transAxes.inverted().transform(
+            tick.get_transform().transform(tick.get_position()))
+        ax.annotate(tick.get_text(), xy=anchor, xycoords="axes fraction",
+                    xytext=axis_offsets[tick.get_text()], textcoords="offset points",
+                    ha=tick.get_ha(), va=tick.get_va(), fontsize=16,
+                    annotation_clip=False)
+        tick.set_visible(False)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.075), ncol=3, frameon=False, fontsize=14, columnspacing=1.2, handlelength=1.6)
     save(fig, "fig3_radar_h40")
 
 
