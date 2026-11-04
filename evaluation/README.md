@@ -11,51 +11,39 @@ and the scope of the supplied experiment data.
 
 ## Solver benchmarks
 
-[benchmarks.csv](data/benchmarks.csv) is the single publication input for the
-latency/energy plot, EDP plot, two-mapping radar, feasibility table, and generated
-manuscript numbers. It contains only valid completed configurations at ten
-iterations. New measurements replace estimates at the same architecture/horizon;
-the improved staged measurements retain their original `staged_fused` dataset
-identifier. The current build option for that implementation is `staged_a`. Failed, incorrect, incomplete,
-and timing-failed runs are excluded. Historical campaign files are not inputs to
-the publication generator.
+The [benchmark CSV](data/benchmarks.csv) contains MCU timing measurements,
+implementation estimates and Arty measurements for valid completed points.
+The table uses the same row selection as `plot_benchmarks.py`, with the figure's
+explicit readability exclusions. The default comparison uses 10 iterations;
+the common-horizon resource comparison is H40. Publication plots select compact
+`full_sparse` and improved staged (recorded as `staged_fused`; built with
+`staged_a`). Historical `full_sparse_original` and `staged_a` rows are excluded.
 
-`energy_source` distinguishes measured core/BRAM plus estimated auxiliary/I/O
-energy, total post-route estimates, and nominal MCU power (0.2871 W). Energies are
-in microjoules, latency in microseconds, and EDP in microjoule-microseconds.
-`energy_per_solve_cfg_uj` holds the plotted energy for every source;
-`measured_energy_uj` is populated only for board measurements. Its reported
-standard deviation covers measured core energy, not uncertainty in auxiliary/I/O
-estimates. Communication, host processing, and board support circuitry are excluded.
-Asterisks mark FPGA estimates; MCU points have no asterisk and retain the stated nominal-power calculation. No values are interpolated.
+Both post-route power estimates and Arty measurements are available.
+AccelMPC and TinyMPC FPGA (Wu et al.) use measured values where available.
+The latency/energy and EDP figures use measured Arty core/BRAM power
+plus matching estimated auxiliary/I/O supply contributions (VCCADC excluded because
+it is tied to ground in the custom PCB), with energy and EDP calculated using the
+campaign's measured solve latency. Bubble positions use measured FPGA
+latency where available and synthesis-derived latency otherwise.
+TinyMPC MCU uses its recorded timing and a 287.1 mW active-power estimate. Both energy
+and EDP exclude communication and board support circuitry. Asterisked bubbles use
+post-route estimates where instrumented measurement builds failed; unmeasured
+AccelMPC configurations remain absent from the EDP comparison. The resource table and maximum-horizon results also use implementation reports;
+they do not imply 1 kHz operation at the largest horizons. See [benchmark methodology](../docs/benchmarking.md#energy-and-timing-definitions)
+for measurement boundaries and the separate 100 µs feasibility reserve.
+The architecture radar uses measured latency and core/BRAM energy plus estimated
+auxiliary/I/O energy, matching the EDP comparison. Its BRAM/LUT utilization
+uses matching uninstrumented solver/SPI builds in the CSV's `solver_*` fields; maximum horizons are demonstrated compilation points,
+not proven capacity limits. The “Logic” axis is LUT
+utilization as a percentage of the device's LUT capacity (36.7% staged versus
+12.0% full_sparse at H40); register utilization is reported separately in the table.
 
-The new fused and Wu measurements average three valid repetitions with a target
-batch duration of two seconds and at least 1024 solves. Compact full_sparse measurements use the same three-repetition procedure.
-Historical measurements retain their original collection procedure. Each new board
-point passed output validation. Fixed iteration counts do not imply equal solution
-accuracy across Cholesky fixed-point, Riccati float32, and dense-inverse solvers.
-
-Publication plots select compact `full_sparse` and `staged_fused` (displayed as
-"AccelMPC staged"). Historical `full_sparse_original` and `staged_a` rows remain in
-the single CSV and are excluded from publication comparisons.
-
-`resource_scope` describes the complete build in the `route_*` columns. At H40,
-`solver_luts_used`, `solver_bram_tiles_used`, `solver_dsps_used`, and
-`solver_registers_used` additionally contain matching uninstrumented solver/SPI
-resources for both mappings; the radar uses these fields. Its latency/energy
-remain board measurements from the instrumented builds. Full_sparse uses H400 as its largest demonstrated
-horizon, not a proven exact capacity limit. Staged's H1800 is a demonstrated
-uninstrumented compilation point, not a proven exact capacity limit.
-
-Regenerate the publication artifacts with:
-
-```sh
-python evaluation/plot_benchmarks.py --skip-trajectory
-python evaluation/summarize_results.py --benchmarks-only
-```
-
-Generated figures are written to `evaluation/output/`. For collecting new
-measurements, use the [Arty campaign workflow](../docs/arty_comparison.md).
+The [device power comparison CSV](data/device_power_comparison.csv) compares
+routed Artix-7 50T designs with matching 100T estimates using the same
+architecture, horizon and 10 ADMM iterations. Power is Vivado total on-chip power
+in watts. The percentage change is `100 * (50T / 100T - 1)`. The CSV also records
+50T distributed RAM LUT and BRAM tile counts.
 
 <!-- BEGIN GENERATED BENCHMARKS -->
 
@@ -336,8 +324,10 @@ styles in the source scripts; exported figures should be regenerated.
 
 ## New power measurements
 
-The committed [Arty power measurements](../docs/power.md) report core/BRAM rail power.
-The [Arty power measurements CSV](data/arty_power_measurements.csv) contains the
+Use the [Arty comparison workflow](../docs/arty_comparison.md) to collect new
+measurements. Current publication results are consolidated in
+[benchmarks.csv](data/benchmarks.csv). The historical
+[Arty power measurements CSV](data/arty_power_measurements.csv) contains the
 campaign summary for 42 planned configurations: 24 measured with three valid
 repetitions each and 18 marked failed.
 
