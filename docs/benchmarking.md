@@ -75,8 +75,8 @@ core/BRAM rail power plus the auxiliary and I/O supply estimates
 from each configuration's matching post-route report. At the report's printed
 precision these contributions are 32.4 mW VCCAUX and 13.2 mW VCCO33 for all 68
 current measured configurations. VCCADC is excluded as it is tied to ground in the custom
-PCB. The EDP comparison requires measured core/BRAM power, except for the
-MOBY-DIC baseline estimate. The latency/energy plot
+PCB. FPGA EDP uses measured core/BRAM power, except for the
+MOBY-DIC baseline and the asterisked staged H1800 estimate in the paper figure. The latency/energy plot
 uses post-route estimates for unmeasured AccelMPC configurations, marked by an
 asterisk. Each such bubble uses the matching synthesis-derived latency.
 
@@ -112,6 +112,7 @@ a 1 ms period. A larger supported horizon does not imply operation at 1 kHz.
 Regenerate the figures from the consolidated `evaluation/data/benchmarks.csv`:
 
 ```bash
+python evaluation/paper_figures.py
 python evaluation/plot_benchmarks.py --skip-trajectory
 python evaluation/summarize_results.py --benchmarks-only
 ```
@@ -125,13 +126,19 @@ have no asterisk.
 
 The architecture radar uses measured solve latency and measured core/BRAM energy
 plus estimated auxiliary/I/O energy, on the same basis as the EDP comparison.
-BRAM and LUT utilization use matching uninstrumented solver/SPI builds in the
+BRAM and LUT utilization use uninstrumented solver builds in the
 consolidated CSV's `solver_*` fields. Maximum demonstrated horizons are H400 for
 full_sparse and H1800 for staged, not proven capacity limits. The “Logic” axis is LUT utilization
 as a percentage of the device's LUT capacity. At H40 this is 36.7% for staged and
-12.0% for full_sparse. Missing measured latency, energy or matched resource fields
+12.0% for full_sparse and 36.5% for Wu FPGA. Missing measured latency, energy or resource fields
 causes radar generation to fail rather than silently use power estimates.
 
-Radar labels show actual values; radial positions normalize costs to the worse
-design, with a further factor of 0.8 on BRAM for both mappings. Scalability uses
-the inverse largest demonstrated horizon.
+The paper radar labels show actual values; radial positions normalize costs to
+the worst of the three designs, with the same radial offset for every axis.
+The 1 kHz horizon axis uses the inverse largest integer horizon estimated from
+a linear latency fit to meet the 0.9 ms solve budget: H64 for staged, H17 for
+full_sparse and H46 for Wu FPGA. Fits use measured points through H400; the
+sweep displays a subset of horizons for readability. These fitted limits are not separate hardware
+measurements. PNG previews are tracked; PDF exports remain in ignored
+`evaluation/output/paper_figures/` for copying into the paper repository.
+`plot_benchmarks.py` also regenerates the earlier layouts and manuscript numbers.

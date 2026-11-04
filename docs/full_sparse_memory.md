@@ -13,7 +13,7 @@ including the solver source hash. H400 is the largest demonstrated horizon in
 this dataset; H100 works without BRAM spillover into LUTRAM. Neither value is a
 proof of an absolute capacity limit.
 
-At H40, the matching uninstrumented solver/SPI builds use 7,628 LUTs, 9,911
+At H40, the matching uninstrumented solver builds use 7,628 LUTs, 9,911
 registers, 80 DSPs and 26.5 BRAM tiles for full_sparse, versus 23,284 LUTs,
 22,209 registers, 150 DSPs and 27 BRAM tiles for AccelMPC staged (recorded as `staged_fused`). Instrumented
 Arty latency and energy are separate measurements; the radar combines these
