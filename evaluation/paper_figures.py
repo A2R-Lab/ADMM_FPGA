@@ -135,7 +135,7 @@ def figure1(rows):
                     continue
                 v = fn(r)
                 values.append(v)
-                estimated = r["resource_scope"] != "instrumented" and a in INSTRUMENTED
+                estimated = a == "mobydic_small" or (r["resource_scope"] != "instrumented" and a in INSTRUMENTED)
                 ax.bar(xs[a], v, width=width * 0.92, color=COLOR[a], label=LABEL[a] if (gi == 0 and label_legend) else None)
                 if estimated:
                     ax.plot(xs[a], v * 1.35, "*", color="black", ms=9, zorder=6, clip_on=False)
