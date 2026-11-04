@@ -263,22 +263,12 @@ inspect the loop latency, achieved II, and trip count in
 top-level synthesis report/XML and post-route reports in the point's `reports/`
 directory. The aggregate CSV records total solve cycles, not per-loop IIs.
 
-For the committed `2026-07-common-h40-radar` campaign (`H=40`, ten iterations,
-100 MHz), [benchmark_summary.csv](../evaluation/data/benchmark_summary.csv)
-contains:
-
-| Mapping | Solve cycles | Solve time (us) | LUTs | Registers | DSPs | BRAM tiles | Maximum demonstrated horizon |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| `full_sparse` | 148467 | 1484.67 | 9280 | 12051 | 77 | 78.5 | 90 |
-| `staged_a` | 136507 | 1365.07 | 22127 | 26540 | 80 | 36 | 1350 |
-
-Cycles are HLS solve latencies; resources are post-route counts. Transport is
-excluded. These rows describe the named campaign, not every horizon or the
-instrumented Arty power builds. The final column instead reports the largest
-successful horizon in the separate scalability sweeps on the same Artix-7 100T
-at 100 MHz and ten iterations. Its solve times are 3294.67 us for `full_sparse`
-at `H=90` and 44859.17 us for `staged_a` at `H=1350`; the resource and latency
-columns remain the matched `H=40` comparison.
+For current latency, energy and resource comparisons, see the
+[benchmark results](../evaluation/README.md#solver-benchmarks) and consolidated
+[benchmarks.csv](../evaluation/data/benchmarks.csv). The H40 resource comparison
+uses matching uninstrumented solver/SPI builds; latency and energy use the
+instrumented Arty measurements. Maximum horizons are demonstrated compilation
+points, not guarantees of operation at 1 kHz.
 
 ## Arithmetic and timing
 

@@ -84,3 +84,11 @@ video/constrainedStarTopView.MP4
 /video/narration/*.mp3
 /video/narration/*.wav
 /video/narration/*.srt
+
+# Local HLS exploration outputs
+/hls_greedy/
+
+# Generated FPGA implementation outputs
+*.bit
+*.dcp
+*.rpt

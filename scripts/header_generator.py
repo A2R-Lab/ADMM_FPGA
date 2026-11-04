@@ -396,7 +396,7 @@ try:
     from scipy import sparse
 except ImportError as exc:
     raise RuntimeError(
-        "scipy is required for sparse header generation. Activate ~/venv or install scipy."
+        "scipy is required for sparse header generation. Install scipy in the active Python environment."
     ) from exc
 
 P_sparse = sparse.block_diag(blocks, format="csc", dtype=np.float64)
@@ -446,7 +446,7 @@ try:
 except ImportError as exc:
     raise RuntimeError(
         "CHOLMOD sparse Cholesky requires scikit-sparse in the active Python environment. "
-        "Run `source ~/venv/bin/activate` and install scikit-sparse/SuiteSparse before "
+        "Install scikit-sparse/SuiteSparse in the active Python environment before "
         "large-horizon benchmark generation."
     ) from exc
 
@@ -664,6 +664,8 @@ def generate_runtime_config_header() -> str:
     lines.append(f"#define ADMM_ITERATIONS {int(ADMM_ITERATIONS)}\n")
     lines.append(f"#define ADMM_ENABLE_TRAJECTORY {1 if ADMM_ENABLE_TRAJECTORY else 0}\n")
     lines.append(f"#define ADMM_SOLVER_ARCH_STAGED_A {1 if ADMM_SOLVER_ARCH == 'staged_a' else 0}\n")
+    # Internal fixed-point mapping switch; float remains the numerical reference.
+    lines.append(f"#define ADMM_SOLVER_ARCH_STAGED_FUSED {1 if ADMM_SOLVER_ARCH == 'staged_a' and not ADMM_USE_FLOAT else 0}\n")
     lines.append(f"#define ADMM_SOLVER_ARCH_FULL_SPARSE {1 if ADMM_SOLVER_ARCH == 'full_sparse' else 0}\n")
     lines.append(f"#define ADMM_SOLVER_ARCH_NAME \"{ADMM_SOLVER_ARCH}\"\n")
     lines.append(f"#define ADMM_SOLVER_INPUT_WIDTH {int(ADMM_SOLVER_INPUT_WIDTH)}\n")
@@ -847,7 +849,11 @@ else:
 data = []
 data.append(generate_constants_header(constants))
 data.append(generate_matrix_header(L_banded, "L_banded"))
-data.append(generate_matrix_header(LT_banded, "LT_banded"))
+if ADMM_SOLVER_ARCH == "full_sparse":
+    # Retain dimension aliases for the public substitution interface.
+    data.append("#define LT_BANDED_ROWS L_BANDED_ROWS\n#define LT_BANDED_COLS L_BANDED_COLS\n")
+else:
+    data.append(generate_matrix_header(LT_banded, "LT_banded"))
 
 if ADMM_SOLVER_ARCH == "staged_a":
     A_stage_row_counts, A_stage_row_cols, A_stage_row_vals, A_stage_nnz_max = build_sparse_rows(A_stage)

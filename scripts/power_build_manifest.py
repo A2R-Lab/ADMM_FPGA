@@ -20,6 +20,7 @@ def main():
         (solver_dir/'admm_runtime_config.h').read_text(),re.M))
     data['trajectory_compiled']=trajectory_enabled
     source_names=['ADMM.cpp','data_types.h','admm_runtime_config.h','data.h']
+    source_names += [name for name in ('tinympc_solver.cpp','tinympc_solver.h') if (solver_dir/name).exists()]
     if trajectory_enabled:
         source_names.append('traj_data.h')
     data['solver_file_sha256']={name:hashlib.sha256((solver_dir/name).read_bytes()).hexdigest()

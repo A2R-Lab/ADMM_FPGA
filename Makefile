@@ -1,3 +1,6 @@
+# Both explicit and default builds must use the optimized staged tool policy.
+export ADMM_SOLVER_ARCH ?= staged_a
+
 # =============================================================================
 # ADMM FPGA - Top-Level Makefile
 # =============================================================================
@@ -67,7 +70,7 @@ XDC_DIR       := $(PROJ_ROOT)/vivado_project/vivado_project.srcs/constrs_1/new
 IP_DIR        := $(PROJ_ROOT)/vivado_project/vivado_project.gen/sources_1/ip/ADMM_solver_0
 
 # Source files
-HLS_SOURCES   := $(HLS_DIR)/ADMM.cpp $(HLS_DIR)/ADMM.h $(HLS_DIR)/data_types.h $(HLS_DIR)/admm_runtime_config.h
+HLS_SOURCES   := $(HLS_DIR)/ADMM.cpp $(HLS_DIR)/ADMM.h $(HLS_DIR)/data_types.h $(HLS_DIR)/admm_runtime_config.h $(HLS_DIR)/hls_config.cfg $(HLS_DIR)/hls_staged_config.cfg
 RTL_SOURCES   := $(wildcard $(RTL_DIR)/*.v) $(wildcard $(RTL_DIR)/*.sv) $(wildcard $(RTL_DIR)/*.vh)
 ifeq ($(BOARD),arty-power)
 XDC_SOURCES   := $(XDC_DIR)/constraints_arty_power.xdc
@@ -164,6 +167,14 @@ $(TRAJ_REFS) $(TRAJ_HEADER): $(TRAJ_SCRIPT) $(SCRIPTS_DIR)/crazyflie_model.py $(
 
 headers: $(DATA_HEADER) $(RUNTIME_CONFIG_HEADER)
 
+# Architecture is an environment setting: changing it must invalidate headers
+# even when all source timestamps are unchanged.
+EXPECTED_ADMM_ARCH := $(if $(ADMM_SOLVER_ARCH),$(ADMM_SOLVER_ARCH),staged_a)
+ifneq ($(shell grep -c '^\#define ADMM_SOLVER_ARCH_NAME "$(EXPECTED_ADMM_ARCH)"$$' $(RUNTIME_CONFIG_HEADER) 2>/dev/null),1)
+.PHONY: architecture-config-changed
+$(DATA_HEADER) $(RUNTIME_CONFIG_HEADER) $(RTL_DIR)/admm_autogen_params.vh: architecture-config-changed
+endif
+
 # Environment settings are not file dependencies. Regenerate an existing
 # trajectory-enabled header before reusing HLS artifacts for the power build.
 ifeq ($(BOARD),arty-power)
@@ -191,8 +202,8 @@ $(HLS_IP_MARKER): $(HLS_SOURCES) $(DATA_HEADER)
 	@echo "========================================="
 	@echo "Building HLS IP..."
 	@echo "========================================="
-	cd $(HLS_DIR) && $(MAKE) build
-	cd $(HLS_DIR) && $(MAKE) export
+	cd $(HLS_DIR) && $(MAKE) build $(if $(filter staged_a,$(ADMM_SOLVER_ARCH)),CONFIG=hls_staged_config.cfg,)
+	cd $(HLS_DIR) && $(MAKE) export $(if $(filter staged_a,$(ADMM_SOLVER_ARCH)),CONFIG=hls_staged_config.cfg,)
 	@mkdir -p $(dir $(HLS_IP_MARKER))
 	@touch $(HLS_IP_MARKER)
 
@@ -330,7 +341,7 @@ $(FLASH_BIN): $(BITSTREAM)
 	@echo "Flash binary already generated: $(FLASH_BIN)"
 
 # =============================================================================
-# Sync from remote (build on server, program locally)
+# Optional transfer of build artifacts from another machine
 # =============================================================================
 
 sync:
