@@ -29,17 +29,16 @@ campaign's measured solve latency. Bubble positions use measured FPGA
 cycle counts where available and synthesis-derived timing otherwise.
 TinyMPC MCU uses its recorded timing and a 287.1 mW active-power estimate. Both energy
 and EDP exclude communication and board support circuitry. Asterisked bubbles use
-post-route estimates where instrumented measurement builds failed; unmeasured
-AccelMPC configurations remain absent from the EDP comparison. The resource table and maximum-horizon results also use implementation reports;
+post-route estimates for unmeasured configurations. The paper EDP panel also
+includes the asterisked staged H1800 estimate. The resource table and maximum-horizon results also use implementation reports;
 they do not imply 1 kHz operation at the largest horizons. See [benchmark methodology](../docs/benchmarking.md#energy-and-timing-definitions)
 for measurement boundaries and the separate 100 µs feasibility reserve.
 The architecture radar uses measured latency and core/BRAM energy plus estimated
-auxiliary/I/O energy, matching the EDP comparison. Its BRAM/LUT utilization and
-maximum horizons come from implementation reports. Resource values use matching
-uninstrumented solver/SPI builds; horizons are demonstrated, not proven capacity
-limits. The “Logic” axis is LUT
+auxiliary/I/O energy, matching the EDP comparison. Its BRAM/LUT utilization comes
+from uninstrumented solver builds. Its 1 kHz horizon axis uses linear latency
+fits, rounded down to the largest integer within the solve budget. The “Logic” axis is LUT
 utilization as a percentage of the device's LUT capacity (36.7% staged versus
-12.0% full_sparse at H40); register utilization is reported separately in the table.
+12.0% full_sparse and 36.5% Wu FPGA at H40); register utilization is reported separately in the table.
 
 The [device power comparison CSV](data/device_power_comparison.csv) compares
 routed Artix-7 50T designs with matching 100T estimates using the same
@@ -58,7 +57,7 @@ publication benchmark CSV.
 | TinyMPC (MCU) | 20.899 | 6.000 | 125.396 |
 | Wu et al. FPGA | 0.769 | 0.271 | 0.208 |
 
-| Matched H40 solver/SPI resources | LUTs | FFs | BRAM tiles | DSPs |
+| Matched H40 solver resources | LUTs | FFs | BRAM tiles | DSPs |
 | --- | --- | --- | --- | --- |
 | AccelMPC staged | 23284.0 | 22209.0 | 27.0 | 150.0 |
 | AccelMPC full-sparse | 7628.0 | 9911.0 | 26.5 | 80.0 |
@@ -70,15 +69,27 @@ publication benchmark CSV.
 
 <!-- END GENERATED BENCHMARKS -->
 
-![Solve latency and energy versus horizon](figures/benchmark_latency_energy.png)
+The paper's benchmark figures come from `evaluation/paper_figures.py`, which reads
+`evaluation/data/benchmarks.csv`. Generate them with:
 
-![Energy-delay product comparison](figures/benchmark_edp_bars.png)
+```sh
+python evaluation/paper_figures.py
+```
 
-The paper's benchmark figures come from `evaluation/paper_figures.py`, which reads the same
-CSV: clustered latency, energy and EDP bars with ratios to `staged` (and the EDP of the FPGA
-designs at large horizons), the FPGA horizon sweep with energy-scaled markers, the 0.9 ms
-budget line and the block RAM ceilings, and the H40 radar with Wu et al. added on the
-instrumented-build resource basis.
+PNG and PDF exports go to ignored `evaluation/output/paper_figures/`. Only PNG
+previews are tracked in `evaluation/figures/`; copy the PDFs into the paper repository.
+The H40 radar uses the CSV's `solver_*` resources from uninstrumented solver
+builds. Wu's H40 routed build uses 23,110 LUTs,
+27,029 registers, 56 BRAM tiles and 136 DSPs, closes timing at 100 MHz (0.524 ns
+setup slack), and its generated solver/header hashes match the measured build.
+Latency and energy retain the board measurements. Its 1 kHz horizon is
+estimated from a linear latency fit and rounded down to the largest integer
+within the 0.9 ms budget. These are estimates, not separately measured points.
+The sweep shows selected horizons for readability; the fits use all measured
+points through H400. Its endpoint annotations retain the BRAM counts; the last
+successful builds do not establish absolute capacity limits.
+`plot_benchmarks.py` remains available for the earlier plot layouts and generated
+manuscript numbers; it uses the same consolidated dataset.
 
 ![Baseline comparison at H = 5 to 80](figures/fig1_dismissal_bars.png)
 
@@ -266,23 +277,23 @@ Run from the repository root with Python 3.10–3.12 in an isolated environment:
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install numpy==1.26.4 matplotlib==3.10.1
+python evaluation/paper_figures.py
 python evaluation/plot_benchmarks.py
 python evaluation/flight_metrics.py
 python evaluation/make_top_side_frame_table.py
 ```
 
 These commands use only bundled CSVs and panel images; no FPGA is required.
-The first produces latency/energy, EDP, H40 radar, figure-eight overlay and the
-iteration-budget table. The flight script writes text/CSV metrics and trajectory/
+The paper script produces the three current benchmark figures. The legacy plot
+script produces the earlier layouts, figure-eight overlay and iteration-budget table. The flight script writes text/CSV metrics and trajectory/
 bounds figures. The panel script composes the paper's video-frame figure from
 tracked PNGs. Original videos are needed only for its optional `--extract-panels`.
 
-To refresh the four bundled previews after regenerating the plots:
+To refresh the bundled previews after regenerating the plots:
 
 ```bash
 mkdir -p evaluation/figures
-cp evaluation/output/benchmark_latency_energy.png evaluation/figures/
-cp evaluation/output/benchmark_edp_bars.png evaluation/figures/
+cp evaluation/output/paper_figures/fig*.png evaluation/figures/
 cp evaluation/output/figure8_trajectory_overlay.png evaluation/figures/
 cp evaluation/output/dynamic_obstacle_bounds.png evaluation/figures/
 ```

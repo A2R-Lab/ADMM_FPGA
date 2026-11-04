@@ -92,3 +92,6 @@ video/constrainedStarTopView.MP4
 *.bit
 *.dcp
 *.rpt
+
+# Figure PDFs are exports; retain PNG previews only.
+/evaluation/figures/*.pdf
