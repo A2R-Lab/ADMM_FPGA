@@ -30,6 +30,9 @@ accumulator uses `ap_fixed<40,20,AP_RND,AP_SAT>`; coefficient widths are generat
 
 ## Outputs
 
+The accepted publication result is retained in
+[benchmarks.csv](../data/benchmarks.csv) under `mobydic_small`.
+
 Each build retains HLS latency reports and Vivado utilization, timing and power
 reports under its output directory. Power is a tool estimate, not a board
 measurement. Convert HLS cycle counts to latency using the 60 MHz operating
