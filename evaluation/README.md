@@ -49,11 +49,32 @@ power in watts, not a board measurement. Current 100T comparison fields remain
 blank until matching estimates are verified; no cross-device power saving is
 claimed for these rows. Numeric fields use decimal points.
 
+| Mapping | Artix-7 50T feasibility |
+| --- | --- |
+| AccelMPC staged | Does not fit (11 tested horizons) |
+| Wu et al. FPGA | Does not fit (10 tested horizons) |
+| AccelMPC full_sparse | **Timing-clean through H225** |
+
+100 MHz target, ten iterations, no measurement instrumentation. Failed-fit
+sweeps cover H5–250; H225 is the largest demonstrated timing-clean horizon.
+
 H225 is the largest demonstrated timing-clean horizon in this 50T sweep.
 Full_sparse H250/H275 failed timing, and H300/H350/H400 exceeded LUT-memory
 capacity. The current staged mapping failed implementation at all eleven tested
 horizons (H5, 10, 20, 30, 40, 50, 100, 150, 200, 225, 250). Failed builds are not
 included as successful CSV results.
+
+The evaluated Wu et al. (TinyMPC FPGA) float32 mapping also failed to fit the
+50T at all ten confirmed horizons (H5, 10, 20, 30, 40, 50, 100, 150, 200, 250),
+with a 100 MHz target, ten iterations, and no measurement instrumentation.
+HLS and RTL synthesis succeeded, but Vivado rejected placement with
+`DRC UTLZ-1`: every configuration required 136 DSP48E1 blocks, exceeding the
+50T's 120 available blocks. These are capacity failures, not timing failures;
+there are no post-route power or latency results to add to the CSV. This result
+applies to the evaluated mapping, not to all possible mappings of Wu's solver.
+The sweep used Vitis/Vivado 2025.2, repository commit
+`af621651a2e422b196f57f02a9df6bbf146a0550`, and TinyMPC FPGA upstream commit
+`bd1a6bd2348d2659652d0ae315f9eea8fea40c95`.
 
 <!-- BEGIN GENERATED BENCHMARKS -->
 
