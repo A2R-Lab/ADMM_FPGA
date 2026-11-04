@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import csv
 import os
+import sys
 import re
 import shutil
 import subprocess
@@ -61,6 +62,18 @@ def run_generation(
     if enable_trajectory:
         run_cmd(["python3", str(scripts_dir / "trajectory_generator.py")], cwd=repo_root, env=env)
     run_cmd(["python3", str(scripts_dir / "header_generator.py")], cwd=repo_root, env=env)
+
+
+def run_build_stage(repo_root: Path, *, board: str, target: str, horizon: int,
+                    admm_iters: int, enable_trajectory: bool) -> None:
+    # Make may regenerate headers, so it must inherit the same point settings.
+    env = os.environ.copy()
+    env.update(ADMM_HORIZON_LENGTH=str(horizon), ADMM_ITERATIONS=str(admm_iters),
+               ADMM_ENABLE_TRAJECTORY="1" if enable_trajectory else "0")
+    run_cmd(["make", f"BOARD={board}", f"PYTHON={sys.executable}", target],
+            cwd=repo_root, env=env)
+    verify_generated_config(repo_root, horizon=horizon, admm_iters=admm_iters,
+                            enable_trajectory=enable_trajectory)
 
 
 def read_text(path: Path) -> str:
@@ -430,8 +443,13 @@ def main() -> None:
 
                 # Rebuild HLS first so the csynth timing report and exported RTL
                 # both match the current horizon/iteration configuration.
-                run_cmd(["make", f"BOARD={args.board}", "hls"], cwd=repo_root)
-                run_cmd(["make", f"BOARD={args.board}", "vivado"], cwd=repo_root)
+                for target in ("hls", "vivado"):
+                    run_build_stage(repo_root, board=args.board, target=target,
+                                    horizon=horizon, admm_iters=admm_iters,
+                                    enable_trajectory=args.with_trajectory)
+
+                from power_campaign import timing_values
+                timing_values(reports_dir / "post_route_timing.rpt")
 
                 util = parse_utilization(read_text(reports_dir / "post_route_utilization.rpt"))
                 hls_report_text = read_text(hls_timing_report)
@@ -534,6 +552,16 @@ def main() -> None:
                 print(f"ERROR at H={horizon}, k={admm_iters}: {exc}")
                 if not args.continue_on_error:
                     raise
+            finally:
+                point_dir = archive_dir / f"h{horizon}_k{admm_iters}"
+                point_dir.mkdir(parents=True, exist_ok=True)
+                archive_reports(reports_dir, archive_dir, horizon, admm_iters)
+                archive_hls_report(hls_timing_report, archive_dir, horizon, admm_iters)
+                for name in ("data.h", "admm_runtime_config.h"):
+                    source = repo_root / "vitis_projects/ADMM" / name
+                    if source.exists():
+                        shutil.copy2(source, point_dir / name)
+
 
     print(f"\nSaved sweep CSV: {output_csv}")
     print(f"Saved per-horizon reports under: {archive_dir}")

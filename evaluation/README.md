@@ -40,13 +40,20 @@ fits, rounded down to the largest integer within the solve budget. The â€œLogicâ
 utilization as a percentage of the device's LUT capacity (36.7% staged versus
 12.0% full_sparse and 36.5% Wu FPGA at H40); register utilization is reported separately in the table.
 
-The [device power comparison CSV](data/device_power_comparison.csv) compares
-routed Artix-7 50T designs with matching 100T estimates using the same
-architecture, horizon and 10 ADMM iterations. Power is Vivado total on-chip power
-in watts. The percentage change is `100 * (50T / 100T - 1)`. The CSV also records
-50T distributed RAM LUT and BRAM tile counts. This device comparison records
-the earlier solver mappings, not the optimized mappings in the current
-publication benchmark CSV.
+The [device power comparison CSV](data/device_power_comparison.csv) records the
+current compact full_sparse 50T sweep (`implementation=compact_rhs`). The sweep
+has ten timing-clean points from H5 through H225 at 100 MHz and ten iterations,
+without measurement instrumentation. It records estimated post-route power,
+resources, timing, latency, and source provenance. Power is Vivado total on-chip
+power in watts, not a board measurement. Current 100T comparison fields remain
+blank until matching estimates are verified; no cross-device power saving is
+claimed for these rows. Numeric fields use decimal points.
+
+H225 is the largest demonstrated timing-clean horizon in this 50T sweep.
+Full_sparse H250/H275 failed timing, and H300/H350/H400 exceeded LUT-memory
+capacity. The current staged mapping failed implementation at all eleven tested
+horizons (H5, 10, 20, 30, 40, 50, 100, 150, 200, 225, 250). Failed builds are not
+included as successful CSV results.
 
 <!-- BEGIN GENERATED BENCHMARKS -->
 
