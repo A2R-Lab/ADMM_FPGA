@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Reproduce the 479-pair, ten-iteration rho sweep with a 0.1% saturation allowance.
 
-Run with ~/venv/bin/python and HLS_INCLUDE=/path/to/Vitis/include. Production
+Run with python and HLS_INCLUDE=/path/to/Vitis/include. Production
 sources/headers are never edited. See evaluation/README.md for the methodology.
 """
 from __future__ import annotations

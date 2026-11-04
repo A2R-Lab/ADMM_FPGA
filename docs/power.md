@@ -1,8 +1,11 @@
 # Reproduce the measured-power campaign
 
-This workflow builds and measures the 42 timing-clean FPGA architecture/horizon
-pairs selected from `evaluation/data/benchmark_summary.csv`: 10 full-sparse and
-32 staged configurations, each with 10 ADMM iterations. It uses the source revision
+This workflow builds and measures the current instrumented AccelMPC configurations
+selected from `evaluation/data/benchmarks.csv`, each with 10 ADMM iterations.
+Historical mappings and uninstrumented-only results are excluded. Recorded
+`staged_fused` points select the current `staged_a` implementation. Use
+`--compact-full-sparse` to reproduce the compact full-sparse mapping; the default
+uses the checkout's full-sparse source. It uses the source revision
 in this checkout, fixed-point arithmetic, a 100 MHz FPGA clock, and the committed
 256-state synthetic workload. Trajectory generation inside the solver is disabled;
 external DDR3 is unused.
@@ -134,10 +137,10 @@ reports and bitstream manifests are in `<campaign_dir>/ready/<configuration-id>/
 failed build logs are retained under `<campaign_dir>/work/`. Archive both directories
 with the exported summaries: generated results are not committed to Git.
 
-The October 2026 campaign summary is committed as
-[`evaluation/data/arty_power_measurements.csv`](../evaluation/data/arty_power_measurements.csv).
-It contains core/BRAM measurements for all planned configurations, with failed-build rows
-retained.
+Accepted publication results are consolidated in
+[`evaluation/data/benchmarks.csv`](../evaluation/data/benchmarks.csv).
+Failed and incomplete configurations remain in generated campaign summaries,
+not the publication dataset.
 
 Core/BRAM and monitored 5 V power have different boundaries. The 5 V reading includes
 other board loads and conversion losses. Both include the measurement instrumentation.

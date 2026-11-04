@@ -32,7 +32,7 @@ GENERATED = {'data.h', 'admm_runtime_config.h', 'traj_data.h', 'traj_data_raw.h'
              'trajectory_refs.csv', 'admm_autogen_params.vh'}
 CAMPAIGN_SCRIPTS = (
     'power_campaign.py', 'power_benchmark.py', 'power_workload.py',
-    'power_build_manifest.py',
+    'power_build_manifest.py', 'power_tiny.py', 'power_rtl_check.py',
     'header_generator.py', 'trajectory_generator.py', 'parameters.py',
     'crazyflie_model.py',
     'synth.tcl', 'impl.tcl', 'bitstream.tcl', 'program.tcl',
@@ -103,17 +103,19 @@ def clean_environment():
 
 
 def matrix(path):
-    # Same latency/power/stable-order ranking as paper best_rows, without its
-    # presentation exclusions. No dependency on plotting packages on the server.
+    # Reproduce current instrumented configurations, excluding historical mappings
+    # and solver-only builds that may not fit the measurement instrumentation.
     best = {}
     with Path(path).open(newline='') as f:
         for row in csv.DictReader(f):
-            if row['arch'] not in ('full_sparse', 'staged_a') or row['timing_clean'] != '1':
+            if row['arch'] not in ('full_sparse', 'staged_fused') or row['timing_clean'] != '1':
                 continue
-            if int(row['admm_iters']) != 10:
+            if (int(row['admm_iters']) != 10 or float(row['clock_mhz']) != 100
+                    or row['status'] != 'pass' or row['resource_scope'] != 'instrumented'):
                 continue
-            key = row['arch'], int(row['horizon'])
-            score = float(row['solve_us_cfg_clk']), float(row['route_power_total_w'])
+            arch = 'staged_a' if row['arch'] == 'staged_fused' else 'full_sparse'
+            key = arch, int(row['horizon'])
+            score = float(row['solve_us_cfg_clk']), float(row.get('measured_power_w') or row.get('route_power_total_w') or 'inf')
             if key not in best or score < best[key][0]:
                 best[key] = score, row
     points = []
@@ -125,6 +127,12 @@ def matrix(path):
     if not points:
         raise ValueError('No timing-clean FPGA configurations found')
     return points
+
+
+def comparison_matrix():
+    horizons = [40,10,5,20,30,50,60,70,80,90,100,150,160,200,250,275,300,320,400,500,600,640,704,768,800,900,950,1000,1023,1050,1100,1150,1250,1300,1350]
+    return [dict(id=f'{arch}_h{h}_k10',arch=arch,horizon=h,iterations=10,variant='baseline',historical={})
+            for h in horizons for arch in ('tinympc_fpga','staged_a')]
 
 
 def source_files(root):
@@ -139,10 +147,12 @@ def source_files(root):
     ):
         files += [p for p in (root / folder).iterdir()
                   if p.is_file() and p.suffix in suffixes and p.name not in GENERATED]
+    files += [p for p in (root/'evaluation/tinympc_fpga').rglob('*') if p.is_file() and (p.suffix == '.py' or p.name == 'model.json' or p.name in ('README.md','LICENSE','upstream_revision.txt')) and not {'__pycache__', 'output', 'results', 'comparison', 'validation'}.intersection(p.relative_to(root/'evaluation/tinympc_fpga').parts)]
+    files += [root/'evaluation/mobydic/quadrotor.py']
     files += [root / p for p in ('vitis_projects/ADMM/Makefile',
                                  'scripts/power_synthetic_states.csv',
                                  'scripts/requirements.txt',
-                                 'evaluation/data/benchmark_summary.csv')]
+                                 'evaluation/data/benchmarks.csv')]
     for p in files:
         if p.is_symlink():
             raise ValueError(f'Symlinks are not allowed in source snapshot: {p}')
@@ -154,13 +164,36 @@ def prepare(args):
     if campaign.exists():
         raise ValueError('Prepare requires a new campaign directory')
     files = source_files(ROOT)
+    compact = getattr(args, 'compact_full_sparse', False)
+    if getattr(args, 'horizons', None) and not compact:
+        raise ValueError('--horizons requires --compact-full-sparse')
     hashes = {str(p.relative_to(ROOT)): sha(p) for p in files}
     payload = {'schema': 1, 'source_hashes': hashes,
-               'points': matrix(ROOT / 'evaluation/data/benchmark_summary.csv'),
+               'points': comparison_matrix() if args.comparison else matrix(ROOT / 'evaluation/data/benchmarks.csv'),
                'clock_hz': 100_000_000, 'trajectory': False,
                'workload_records': 256, 'repetitions': 3, 'settle_s': 5,
                'idle_s': 3, 'target_active_s': 2, 'minimum_solves': 1024,
-               'smoke_ids': list(SMOKE), 'parameter_policy': 'frozen source defaults; sanitized environment'}
+               'smoke_ids': ['tinympc_fpga_h40_k10','staged_a_h40_k10','tinympc_fpga_h10_k10','staged_a_h10_k10'] if args.comparison else list(SMOKE), 'parameter_policy': 'frozen source defaults; sanitized environment'}
+    if compact:
+        payload['points'] = [point for point in matrix(ROOT / 'evaluation/data/benchmarks.csv')
+                             if point['arch'] == 'full_sparse']
+        payload['smoke_ids'] = ['full_sparse_h10_k10', 'full_sparse_h40_k10']
+        if getattr(args, 'horizons', None):
+            horizons = sorted(set(int(h) for h in args.horizons.split(',')))
+            if not horizons or min(horizons) < 1:
+                raise ValueError('Horizons must be positive integers')
+            payload['points'] = [dict(id=f'full_sparse_h{h}_k10', arch='full_sparse',
+                                      horizon=h, iterations=10, variant='baseline', historical={})
+                                 for h in horizons]
+            payload['smoke_ids'] = [point['id'] for point in payload['points'][:2]]
+        payload['mapping'] = 'shared L, banked AT indices, compact true-dual-port RHS'
+        source = (ROOT / 'vitis_projects/ADMM/ADMM.cpp').read_bytes()
+        original = b'    fp_t b_tmp[N_CONSTR];\n#if ADMM_SOLVER_ARCH_STAGED_FUSED'
+        replacement = b'    fp_t b_tmp[N_CONSTR];\n#pragma HLS BIND_STORAGE variable=b_tmp type=ram_t2p impl=bram\n#if ADMM_SOLVER_ARCH_STAGED_FUSED'
+        if source.count(original) != 1 or b'full_sparse_substitution' not in source:
+            raise ValueError('Compact campaign requires the shared-L source and one RHS binding site')
+        compact_source = source.replace(original, replacement)
+        hashes['vitis_projects/ADMM/ADMM.cpp'] = hashlib.sha256(compact_source).hexdigest()
     payload['campaign_id'] = digest(payload)
     temp = campaign.with_name(campaign.name + '.preparing-' + uuid.uuid4().hex[:8])
     (temp / 'source').mkdir(parents=True)
@@ -168,6 +201,8 @@ def prepare(args):
         dest = temp / 'source' / p.relative_to(ROOT)
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(p, dest)
+    if compact:
+        (temp / 'source/vitis_projects/ADMM/ADMM.cpp').write_bytes(compact_source)
     save(temp / 'campaign.json', payload)
     os.replace(temp, campaign)
     print(f'Prepared {len(payload["points"])} points at {campaign}\nCampaign: {payload["campaign_id"]}')
@@ -198,7 +233,7 @@ def resources(campaign, threads=8, requested=None, memory_gib=32, scratch_gib=40
     if limit.exists() and limit.read_text().strip() != 'max':
         available = min(available, int(limit.read_text()) - int(used.read_text()))
     disk = shutil.disk_usage(campaign).free
-    capacity = min(max(0, (cpus-4)//threads), max(0, int((available-16*GIB)//(memory_gib*GIB))),
+    capacity = min((max(0, (cpus-4)//threads) if threads else cpus-4), max(0, int((available-16*GIB)//(memory_gib*GIB))),
                    max(0, int((disk-40*GIB)//(scratch_gib*GIB))))
     jobs = min(8, capacity) if requested is None else requested
     if jobs < 1 or jobs > capacity:
@@ -232,7 +267,7 @@ def preflight(args):
 
 
 def select(m, ids=None, smoke=False):
-    wanted = set(SMOKE if smoke else ids.split(',') if ids else [p['id'] for p in m['points']])
+    wanted = set(m.get('smoke_ids',SMOKE) if smoke else ids.split(',') if ids else [p['id'] for p in m['points']])
     selected = [p for p in m['points'] if p['id'] in wanted]
     if wanted != {p['id'] for p in selected}:
         raise ValueError(f'Unknown point IDs: {wanted - {p["id"] for p in selected}}')
@@ -281,7 +316,7 @@ def timing_values(path):
 def golden(work, env, log):
     hls = work / 'vitis_projects/ADMM'
     exe = work / 'build/pilot_reference'
-    run(['g++', '-std=c++14', '-O1', '-Wno-unknown-pragmas', '-I'+env['XILINX_HLS']+'/include',
+    run(['g++', '-std=c++14', '-O1', '-ffp-contract=off', '-ftrivial-auto-var-init=zero', '-Wno-unknown-pragmas', '-I'+env['XILINX_HLS']+'/include',
          '-I'+str(hls), str(work/'tests/solver_reference.cpp'), str(hls/'ADMM.cpp'), '-o', str(exe)], work, env, log)
     output = subprocess.check_output([str(exe), str(work/'build/power/power_workload.mem'), '8'], cwd=work, env=env, text=True)
     lines = output.splitlines()
@@ -294,7 +329,7 @@ def golden(work, env, log):
         checksum = ((checksum << 1) | (checksum >> 31)) & 0xffffffff
         for word in words:
             checksum ^= word
-    return {'solves': 8, 'outputs_hex': lines, 'checksum': checksum, 'last_output_words': words}
+    return {'comparison': 'float_tolerance' if env.get('ADMM_SOLVER_ARCH')=='tinympc_fpga' else 'exact', 'solves': 8, 'outputs_hex': lines, 'checksum': checksum, 'last_output_words': words}
 
 
 def classify(stage, log):
@@ -306,6 +341,9 @@ def classify(stage, log):
 
 def build_point(campaign, m, point, threads, retry_failed):
     pid = point['id']
+    if (campaign/'STOP_NEW_BUILDS').exists():
+        print(f'{pid}: deferred by STOP_NEW_BUILDS',flush=True)
+        return False
     ready = campaign / 'ready' / pid
     state = campaign / 'state' / (pid+'.json')
     with locked(campaign / 'locks' / (pid+'.lock')):
@@ -332,6 +370,10 @@ def build_point(campaign, m, point, threads, retry_failed):
             env.update(ADMM_SOLVER_ARCH=point['arch'], ADMM_HORIZON_LENGTH=str(point['horizon']),
                        ADMM_ITERATIONS='10', ADMM_ENABLE_TRAJECTORY='0', ADMM_USE_FLOAT='0',
                        VIVADO_MAX_THREADS=str(threads))
+            if threads == 0:
+                # No campaign-imposed tool thread limit; let each tool schedule itself.
+                env.pop('VIVADO_MAX_THREADS', None)
+                env.pop('OMP_NUM_THREADS', None)
             variant = variants[name]
             for k, suffix in (('opt','OPT_DIRECTIVE'), ('place','PLACE_DIRECTIVE'), ('phys','PHYS_OPT_DIRECTIVE'),
                               ('route','ROUTE_DIRECTIVE'), ('place_subdirective','PLACE_SUBDIRECTIVE'),
@@ -345,11 +387,18 @@ def build_point(campaign, m, point, threads, retry_failed):
                     save(state, {'status':'building', 'stage':stage, 'point':point, 'variant':name,
                                  'attempt':str(attempt), 'campaign_id':m['campaign_id'], 'time':time.time()})
                     print(f'{pid}: {name} {stage}', flush=True)
-                    run(['make','BOARD=arty-power',f'PYTHON={sys.executable}',target], work, env, log)
+                    if point['arch']=='tinympc_fpga':
+                        from power_tiny import build_target
+                        build_target(work,target,env,log,run)
+                    else:
+                        run(['make','BOARD=arty-power',f'PYTHON={sys.executable}',target], work, env, log)
                 stage = 'timing'
                 timing = timing_values(work/'build/reports/post_route_timing.rpt')
                 stage, log = 'packaging', logs/'packaging.log'
-                run(['make','BOARD=arty-power',f'PYTHON={sys.executable}','bit'], work, env, log)
+                if point['arch']=='tinympc_fpga':
+                    build_target(work,'bit',env,log,run)
+                else:
+                    run(['make','BOARD=arty-power',f'PYTHON={sys.executable}','bit'], work, env, log)
                 manifest = read(work/'build/top_uart_power.json')
                 constants = manifest['solver_constants']
                 if (int(constants['HORIZON_LENGTH']) != point['horizon'] or manifest['trajectory_compiled']
@@ -358,6 +407,11 @@ def build_point(campaign, m, point, threads, retry_failed):
                     raise ValueError('Generated configuration mismatch')
                 stage, log = 'reference', logs/'reference.log'
                 expected = golden(work, env, log)
+                if (point['arch'] in ('tinympc_fpga','staged_a') or m.get('mapping')) and point['horizon'] in (10,40):
+                    stage, log = 'rtl_validation', logs/'rtl_validation.log'
+                    from power_rtl_check import check
+                    validation = check(work,env,log,expected,run)
+                    save(logs/'rtl_validation.json',validation)
                 temp = campaign/'ready'/('.'+pid+'-'+uuid.uuid4().hex)
                 temp.mkdir(parents=True)
                 for filename in ('top_uart_power.bit', 'top_uart_power.json'):
@@ -425,7 +479,10 @@ def validate_run(folder, info, expected_count, expected=None):
         raise ValueError('Invalid completion/status')
     if st['latency_min'] <= 0 or st['latency_min'] != st['latency_max']:
         raise ValueError('Unexpected variable solve latency')
-    if expected and (st['checksum'] != expected['checksum'] or st['last_output_words'] != expected['last_output_words']):
+    if expected and expected.get('comparison') == 'float_tolerance':
+        from power_tiny import validate_float_last
+        validate_float_last(st['last_output_words'],expected['last_output_words'])
+    elif expected and (st['checksum'] != expected['checksum'] or st['last_output_words'] != expected['last_output_words']):
         raise ValueError('Numerical pilot does not match C++')
     with (folder/'trace.csv').open(newline='') as f:
         rows = list(csv.DictReader(f))
@@ -460,7 +517,7 @@ def measure(args):
         'server_sha256': sha(args.campaign/'source/scripts/power_campaign.py'),
         'local_sha256': sha(Path(__file__)),
         'note': 'Frozen campaign sources and acquisition tools verified before measurement.'})
-    # Use the frozen host tools locally; future edits in the working repository
+    # Use the frozen acquisition tools; future edits in the working repository
     # must not silently change the acquisition protocol or interpretation.
     host = args.local/'host'/m['campaign_id']
     for name in ('scripts/power_benchmark.py', 'scripts/program_file.tcl'):
@@ -598,10 +655,15 @@ def aggregate(args):
                                      'raw_core_energy_uj':rail['energy_per_solve_j']*1e6,
                                      'incremental_core_energy_uj':rail['incremental_energy_per_solve_j']*1e6,
                                      'five_w':r['summary']['rails']['five']['active']['power_w'],
+                                     'five_energy_uj':r['summary']['rails']['five']['energy_per_solve_j']*1e6,
                                      'latency_us':r['status']['latency_total']/count/r['clock_hz']*1e6,
                                      'temperature_drift_c':r['summary']['temperature_change_c'],
                                      'checksum':r['status']['checksum']})
                         break
+            for measured in runs:
+                measured['raw_core_edp_uj_us']=measured['raw_core_energy_uj']*measured['latency_us']
+                measured['incremental_core_edp_uj_us']=measured['incremental_core_energy_uj']*measured['latency_us']
+                measured['five_edp_uj_us']=measured['five_energy_uj']*measured['latency_us']
             row['valid_repetitions']=len(runs)
             complete=base/'complete.json'
             if complete.exists() and not read(complete).get('valid'):
@@ -645,8 +707,13 @@ def main():
     for cmd in ('prepare','preflight','build','status','measure','aggregate'):
         s=sub.add_parser(cmd)
         s.add_argument('--campaign',type=Path,required=True)
+        if cmd=='prepare':
+            s.add_argument('--horizons', help='Comma-separated compact full_sparse horizons; default: current instrumented configurations')
+            group = s.add_mutually_exclusive_group()
+            group.add_argument('--comparison',action='store_true',help='Full staged_a/TinyMPC 100 MHz sweep')
+            group.add_argument('--compact-full-sparse',action='store_true',help='Compact full_sparse at current instrumented full_sparse horizons')
         if cmd in ('preflight','build'):
-            s.add_argument('--threads',type=int,default=8)
+            s.add_argument('--threads',type=int,default=8,help='Vivado thread cap; 0 leaves tool defaults unrestricted by the campaign')
             s.add_argument('--jobs',type=int)
             s.add_argument('--memory-gib',type=float,default=32,help='Planning RAM budget per worker (not a hard limit)')
             s.add_argument('--scratch-gib',type=float,default=40,help='Planning disk budget per worker')
@@ -663,7 +730,7 @@ def main():
     args=p.parse_args()
     args.campaign=args.campaign.resolve()
     if hasattr(args,'local'): args.local=args.local.resolve()
-    if hasattr(args,'threads') and args.threads<1: p.error('threads must be positive')
+    if hasattr(args,'threads') and args.threads<0: p.error('threads must be nonnegative')
     for name in ('memory_gib', 'scratch_gib', 'poll_seconds'):
         if hasattr(args,name) and getattr(args,name)<=0: p.error(name+' must be positive')
     if getattr(args,'smoke',False) and getattr(args,'ids',None): p.error('Use --smoke or --ids, not both')

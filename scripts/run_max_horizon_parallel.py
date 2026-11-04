@@ -8,7 +8,6 @@ import concurrent.futures
 import csv
 import json
 import os
-import shlex
 import shutil
 import subprocess
 import sys
@@ -246,7 +245,7 @@ def run_point(worker_id: int, worker_repo: Path, point: dict[str, object], args_
         env["VIVADO_ROUTE_SEED"] = str(seed_int)
 
     point_cmd = [
-        "python",
+        sys.executable,
         "scripts/run_max_horizon_point.py",
         "--arch",
         str(args_dict["arch"]),
@@ -265,11 +264,7 @@ def run_point(worker_id: int, worker_repo: Path, point: dict[str, object], args_
         *(["--skip-clean"] if args_dict["skip_clean"] else []),
         *(["--seed", str(seed_int)] if seed_int is not None else []),
     ]
-    cmd = [
-        "bash",
-        "-lc",
-        "source ~/venv/bin/activate && " + " ".join(shlex.quote(part) for part in point_cmd),
-    ]
+    cmd = point_cmd
     log_dir = out_dir / "parallel_logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     log_path = log_dir / f"worker{worker_id}_{slug}.log"
@@ -504,10 +499,9 @@ def main() -> int:
 
         if not args.no_aggregate:
             cmd = [
-                "bash",
-                "-lc",
-                "source ~/venv/bin/activate && python scripts/aggregate_max_horizon_results.py --run-dir "
-                + shlex.quote(str(out_dir)),
+                sys.executable,
+                "scripts/aggregate_max_horizon_results.py",
+                "--run-dir", str(out_dir),
             ]
             subprocess.run(cmd, cwd=repo_root, check=False)
 

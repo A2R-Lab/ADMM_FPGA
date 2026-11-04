@@ -51,10 +51,10 @@ puts "Constraints: $xdc_file"
 #------------------------------------------------------------------------------
 puts "Reading RTL sources..."
 set_property include_dirs [list $rtl_dir "$build_dir/power"] [current_fileset]
-read_verilog "$rtl_dir/top_uart.v"
+if {$top_module ne "top_uart_power"} { read_verilog "$rtl_dir/top_uart.v" }
 read_verilog "$rtl_dir/uart_rx.v"
 read_verilog "$rtl_dir/uart_tx.v"
-read_verilog "$rtl_dir/top_spi.v"
+if {$top_module ne "top_uart_power"} { read_verilog "$rtl_dir/top_spi.v" }
 read_verilog "$rtl_dir/spi_slave.v"
 read_verilog "$rtl_dir/spi_slave_word.v"
 
@@ -67,17 +67,26 @@ if {$top_module eq "top_uart_power"} {
 #------------------------------------------------------------------------------
 # Read HLS IP
 #------------------------------------------------------------------------------
-if {[file exists "$hls_export_dir/hdl/verilog"]} {
-    puts "Reading HLS IP from: $hls_export_dir"
-    
-    foreach f [glob -nocomplain $hls_export_dir/hdl/verilog/*.v] {
-        read_verilog $f
-    }
-} else {
-    puts "ERROR: HLS IP not found at $hls_export_dir"
-    puts "Run 'make hls' first."
-    exit 1
+# Missing initialization data is a build failure, never a usable bitstream.
+set_msg_config -id {Synth 8-4445} -new_severity ERROR
+if {$top_module eq "top_uart_power" && ![file exists "$build_dir/power/power_workload.mem"]} {
+    error "Power workload ROM is missing"
 }
+set hls_syn "$proj_root/vitis_projects/ADMM/ADMM/hls/syn/verilog"
+if {[file exists "$rtl_dir/power_tiny_adapter.sv"]} {
+    # Use generated operator creation scripts, including floating-point IP.
+    set old_pwd [pwd]
+    cd $hls_syn
+    foreach f [glob *.v] { read_verilog [file normalize $f] }
+    foreach f [glob -nocomplain *.dat] { add_files -norecurse [file normalize $f] }
+    foreach f [glob -nocomplain *.tcl] { source $f }
+} elseif {[file exists "$hls_export_dir/hdl/verilog"]} {
+    foreach f [glob "$hls_export_dir/hdl/verilog/*.v"] { read_verilog $f }
+} else { error "HLS RTL missing" }
+# The board workload uses a repository-relative ROM path. IP creation must not
+# leave synthesis in the HLS directory. HLS initialization files are registered
+# above and also resolve relative to their Verilog source files.
+cd $proj_root
 
 #------------------------------------------------------------------------------
 # Read Constraints
@@ -91,8 +100,16 @@ read_xdc "$xdc_dir/$xdc_file"
 #------------------------------------------------------------------------------
 puts "Running Synthesis..."
 
+# A staged_a post-synthesis mismatch disappears when hierarchy is retained
+# (with DSPs still enabled). Preserve hierarchy as a workaround; the precise
+# optimization responsible has not been isolated. See docs/arty_comparison.md.
+set flatten_mode rebuilt
+if {![info exists ::env(ADMM_SOLVER_ARCH)] || $::env(ADMM_SOLVER_ARCH) eq "staged_a"} {
+    set flatten_mode none
+}
+puts "Synthesis hierarchy policy: $flatten_mode"
 synth_design -top $top_module -part $part \
-    -flatten_hierarchy rebuilt \
+    -flatten_hierarchy $flatten_mode \
     -directive Default
 
 #------------------------------------------------------------------------------

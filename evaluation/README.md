@@ -11,54 +11,62 @@ and the scope of the supplied experiment data.
 
 ## Solver benchmarks
 
-The [benchmark CSV](data/benchmark_summary.csv) contains MCU timing measurements,
-implementation estimates and failed points. The table uses the same row selection
-as `plot_benchmarks.py`: timing-clean implementations, lowest latency then lowest
-power, with the figure's explicit readability exclusions. The default comparison
-uses 10 iterations; the common-horizon resource comparison is H40.
+The [benchmark CSV](data/benchmarks.csv) contains MCU timing measurements,
+implementation estimates and Arty measurements for valid completed points.
+The table uses the same row selection as `plot_benchmarks.py`: timing-clean
+implementations, lowest latency then lowest power, with the figure's explicit
+readability exclusions. The default comparison uses 10 iterations; the
+common-horizon resource comparison is H40. Publication plots select compact
+`full_sparse` and improved staged (recorded as `staged_fused`; built with
+`staged_a`). Historical `full_sparse_original` and `staged_a` rows are excluded.
 
-Both post-route power estimates and Arty measurements are available. At the
-measured configurations, the post-route benchmark estimates give more conservative
-power values. The latency/energy and EDP figures use measured Arty core/BRAM power
+Both post-route power estimates and Arty measurements are available.
+AccelMPC and TinyMPC FPGA (Wu et al.) use measured values where available.
+The latency/energy and EDP figures use measured Arty core/BRAM power
 plus matching estimated auxiliary/I/O supply contributions (VCCADC excluded because
 it is tied to ground in the custom PCB), with energy and EDP calculated using the
-campaign's measured solve latency. Bubble positions retain synthesis-derived FPGA
-timing for the latency comparison. 
-TinyMPC uses its recorded timing and a 287.1 mW active-power estimate. Both energy
+campaign's measured solve latency. Bubble positions use measured FPGA
+cycle counts where available and synthesis-derived timing otherwise.
+TinyMPC MCU uses its recorded timing and a 287.1 mW active-power estimate. Both energy
 and EDP exclude communication and board support circuitry. Asterisked bubbles use
 post-route estimates where instrumented measurement builds failed; unmeasured
-configurations remain absent from the EDP comparison. The resource table and maximum-horizon results also use implementation reports;
+AccelMPC configurations remain absent from the EDP comparison. The resource table and maximum-horizon results also use implementation reports;
 they do not imply 1 kHz operation at the largest horizons. See [benchmark methodology](../docs/benchmarking.md#energy-and-timing-definitions)
 for measurement boundaries and the separate 100 µs feasibility reserve.
 The architecture radar uses measured latency and core/BRAM energy plus estimated
 auxiliary/I/O energy, matching the EDP comparison. Its BRAM/LUT utilization and
-maximum horizons come from implementation reports. The “Logic” axis is LUT
-utilization as a percentage of the device's LUT capacity (34.9% staged versus
-14.6% full_sparse at H40); register utilization is reported separately in the table.
+maximum horizons come from implementation reports. Resource values use matching
+uninstrumented solver/SPI builds; horizons are demonstrated, not proven capacity
+limits. The “Logic” axis is LUT
+utilization as a percentage of the device's LUT capacity (36.7% staged versus
+12.0% full_sparse at H40); register utilization is reported separately in the table.
 
 The [device power comparison CSV](data/device_power_comparison.csv) compares
 routed Artix-7 50T designs with matching 100T estimates using the same
-architecture, horizon and 10 ADMM iterations. Power is Vivado total on-chip power 
-in watts. The percentage change is `100 * (50T / 100T - 1)`. The CSV also records 
-50T distributed RAM LUT and BRAM tile counts.
+architecture, horizon and 10 ADMM iterations. Power is Vivado total on-chip power
+in watts. The percentage change is `100 * (50T / 100T - 1)`. The CSV also records
+50T distributed RAM LUT and BRAM tile counts. This device comparison records
+the earlier solver mappings, not the optimized mappings in the current
+publication benchmark CSV.
 
 <!-- BEGIN GENERATED BENCHMARKS -->
 
 | H40 / 10 iterations | Solve (ms) | Energy (mJ) | EDP (mJ·ms) |
 | --- | --- | --- | --- |
-| Staged FPGA | 1.339 | 0.424 | 0.568 |
-| Full-sparse FPGA | 1.484 | 0.412 | 0.612 |
-| TinyMPC | 20.899 | 6.000 | 125.396 |
+| AccelMPC staged | 0.570 | 0.186 | 0.106 |
+| AccelMPC full-sparse | 2.008 | 0.474 | 0.952 |
+| TinyMPC (MCU) | 20.899 | 6.000 | 125.396 |
+| Wu et al. FPGA | 0.769 | 0.271 | 0.208 |
 
-| H40 FPGA resources | LUTs | FFs | BRAM tiles | DSPs |
+| Matched H40 solver/SPI resources | LUTs | FFs | BRAM tiles | DSPs |
 | --- | --- | --- | --- | --- |
-| Staged FPGA | 22127 | 26540 | 36 | 80 |
-| Full-sparse FPGA | 9280 | 12051 | 78.5 | 77 |
+| AccelMPC staged | 23284.0 | 22209.0 | 27.0 | 150.0 |
+| AccelMPC full-sparse | 7628.0 | 9911.0 | 26.5 | 80.0 |
 
 | Largest recorded timing-clean horizon | Horizon | Variables | Constraints | Solve (ms) |
 | --- | --- | --- | --- | --- |
-| Full-sparse FPGA | 90 | 1452 | 1632 | 3.295 |
-| Staged FPGA | 1350 | 21612 | 24312 | 44.859 |
+| AccelMPC staged | 1800 | 28812 | 32412 | 24.683 |
+| AccelMPC full-sparse | 400 | 6412 | 7212 | 19.648 |
 
 <!-- END GENERATED BENCHMARKS -->
 
@@ -147,7 +155,7 @@ in float and native `ap_fixed<32,10,AP_RND,AP_SAT>` arithmetic. Inputs are
 regenerated when no valid cache exists; candidate commands are not fed back into the plant.
 
 ```bash
-OPENBLAS_NUM_THREADS=1 ~/venv/bin/python evaluation/rho_saturation_sweep.py \
+OPENBLAS_NUM_THREADS=1 python evaluation/rho_saturation_sweep.py \
   --hls-include /path/to/Vitis/include --jobs 8
 ```
 
@@ -321,8 +329,9 @@ styles in the source scripts; exported figures should be regenerated.
 ## New power measurements
 
 The committed [Arty power measurements](../docs/power.md) report core/BRAM rail power.
-The [Arty power measurements CSV](data/arty_power_measurements.csv) contains the
-campaign summary for 42 planned configurations: 24 measured with three valid
-repetitions each and 18 marked failed.
+Current publication results are consolidated in [benchmarks.csv](data/benchmarks.csv);
+use the [Arty comparison workflow](../docs/arty_comparison.md) for new measurements.
 
 MOBY-DIC baseline: see [comparison and reproduction](mobydic/README.md).
+
+TinyMPC FPGA baseline: see [comparison and reproduction](tinympc_fpga/README.md).
