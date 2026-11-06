@@ -324,7 +324,7 @@ def figure3(rows, fits):
         "Energy/solve": (26.64, 5.04),
         "EDP": (0, -4.32),
         "LUT (Logic)": (6, 2),
-        "DSP (Arithmetic)": (0, -3),
+        "DSP (Arithmetic)": (0, -5),
         "BRAM\n(Memory)": (-20, 8),
         "1 kHz horizon": (-33.12, 5.04),
     }
