@@ -337,7 +337,7 @@ def figure3(rows, fits):
                     ha=tick.get_ha(), va=tick.get_va(), fontsize=16,
                     annotation_clip=False)
         tick.set_visible(False)
-    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.075), ncol=3, frameon=False, fontsize=14, columnspacing=1.2, handlelength=1.6)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.06), ncol=3, frameon=False, fontsize=14, columnspacing=1.2, handlelength=1.6)
     save(fig, "fig3_radar_h40")
 
 
