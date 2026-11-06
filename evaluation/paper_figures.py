@@ -273,8 +273,8 @@ def figure3(rows, fits):
                                 for key in ("solver_luts_used", "solver_bram_tiles_used", "solver_dsps_used")):
             raise ValueError(f"Missing uninstrumented H40 resources for {a}")
         raw[a] = {"Latency": latency_us(r) / 1e3, "Energy/solve": energy_uj(r) / 1e3, "EDP": edp(r) / 1e6,
-                  "Logic (LUT)": 100 * f(r, "solver_luts_used") / 63400, "DSP": 100 * f(r, "solver_dsps_used") / 240,
-                  "Block RAM": 100 * f(r, "solver_bram_tiles_used") / 135,
+                  "LUT (Logic)": 100 * f(r, "solver_luts_used") / 63400, "DSP (Arithmetic)": 100 * f(r, "solver_dsps_used") / 240,
+                  "BRAM (Memory)": 100 * f(r, "solver_bram_tiles_used") / 135,
                   "1 kHz horizon": feasible_horizon((s, b))}
     metrics = list(raw[archs[0]])
     # radial position: cost normalized to the worst design (1 = worst, smaller = better); capacity inverted
@@ -283,7 +283,7 @@ def figure3(rows, fits):
         vals = {a: (1 / raw[a][m] if m == "1 kHz horizon" else raw[a][m]) for a in archs}
         worst = max(vals.values())
         norm[m] = {a: 0.22 + 0.78 * vals[a] / worst for a in archs}
-    fmt = {"Latency": "{:.3f} ms", "Energy/solve": "{:.3f} mJ", "EDP": "{:.0f} µJ·ms", "Logic (LUT)": "{:.1f}%", "DSP": "{:.1f}%", "Block RAM": "{:.1f}%", "1 kHz horizon": "H = {:.0f}"}
+    fmt = {"Latency": "{:.3f} ms", "Energy/solve": "{:.3f} mJ", "EDP": "{:.0f} µJ·ms", "LUT (Logic)": "{:.1f}%", "DSP (Arithmetic)": "{:.1f}%", "BRAM (Memory)": "{:.1f}%", "1 kHz horizon": "H = {:.0f}"}
     angles = np.linspace(0, 2 * np.pi, len(metrics), endpoint=False)
     fig = plt.figure(figsize=(6.0, 6.0))
     ax = fig.add_subplot(111, polar=True)
@@ -301,9 +301,9 @@ def figure3(rows, fits):
         "Latency": [(0, -14, 'center'), (0, -14, 'center'), (0, 14, 'center')],
         "Energy/solve": [(-2, -14, 'center'), (-2, -14, 'center'), (-28, 10, 'center')],
         "EDP": [(-6, 13, 'center'), (-30, -13, 'center'), (-6, -14, 'center')],
-        "Logic (LUT)": [(-22, -10, 'center'), (0, -15, 'center'), (16, 8, 'left')],
-        "DSP": [(-12, -13, 'center'), (16, -6, 'left'), (28, 4, 'center')],
-        "Block RAM": [(12, 11, 'left'), (12, -14, 'left'), (-2, 14, 'center')],
+        "LUT (Logic)": [(-22, -10, 'center'), (0, -15, 'center'), (16, 8, 'left')],
+        "DSP (Arithmetic)": [(-12, -13, 'center'), (16, -6, 'left'), (28, 4, 'center')],
+        "BRAM (Memory)": [(12, 11, 'left'), (12, -14, 'left'), (-2, 14, 'center')],
         "1 kHz horizon": [(-26, -4, 'center'), (-10, -14, 'center'), (-24, 10, 'center')],
     }
     for a in archs:
@@ -323,9 +323,9 @@ def figure3(rows, fits):
         "Latency": (4.32, -11.52),
         "Energy/solve": (26.64, 5.04),
         "EDP": (0, -4.32),
-        "Logic (LUT)": (2.16, 6.48),
-        "DSP": (0, 0),
-        "Block RAM": (-30.24, -4.32),
+        "LUT (Logic)": (6, 2),
+        "DSP (Arithmetic)": (0, 0),
+        "BRAM (Memory)": (-14, -4.32),
         "1 kHz horizon": (-33.12, 5.04),
     }
     fig.canvas.draw()
