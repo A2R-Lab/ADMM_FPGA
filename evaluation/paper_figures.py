@@ -21,6 +21,7 @@ from pathlib import Path
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
+matplotlib.rcParams["pdf.fonttype"] = 42  # embed TrueType, not Type 3, for IEEE PDF checks
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
 
