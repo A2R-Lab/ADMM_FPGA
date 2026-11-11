@@ -1,0 +1,1 @@
+The controller predicts future motion and chooses motor commands while accounting for state and input constraints. A lightweight FPGA accelerates that optimization. External motion capture supplies position measurements; control computation is executed onboard.

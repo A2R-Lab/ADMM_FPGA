@@ -1,0 +1,1 @@
+Finally, the position limits change as obstacles move. Motion capture tracks the obstacles at one hundred and twenty hertz, and their positions update the controller's allowed interval. The onboard controller continues running at one kilohertz. Watch the drone respond as the boxes move.

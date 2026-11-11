@@ -1,0 +1,1 @@
+This custom six gram board carries the onboard FPGA accelerator.

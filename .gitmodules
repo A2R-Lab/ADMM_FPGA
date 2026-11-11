@@ -1,0 +1,6 @@
+[submodule "evaluation/mobydic/upstream"]
+	path = evaluation/mobydic/upstream
+	url = https://github.com/COMPsys-UNIGE/MOBY-DIC.git
+[submodule "evaluation/tinympc_fpga/upstream"]
+	path = evaluation/tinympc_fpga/upstream
+	url = https://github.com/KevinLikesDrinkingCoffee/tinympc_ip_gen.git

@@ -1,0 +1,1 @@
+Together, these experiments demonstrate onboard tracking and responses to changing constraints. Solver benchmarks at horizon forty and ten iterations show staged computing {mcu_speedup} times faster than Tiny MPC on the microcontroller, with {mcu_edp} times lower energy-delay product. Thank you for watching.
